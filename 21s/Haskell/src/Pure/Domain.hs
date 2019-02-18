@@ -3,31 +3,34 @@ module Pure.Domain
     Card (..),
     CardValue (..),
     CardType (..),
-    TwentyOneValue (..)
+    TwentyOneValue (..),
+    Player (..),
+    deck,
+    sam,
+    dealer,
+    Deck
   )
 where
-
-import Data.Set
 
 -------------------------------------------------------------------------------
 --                                   Types                                   --
 -------------------------------------------------------------------------------
 
-data CardValue = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | King | Queen | Ace deriving (Show, Enum, Bounded)
+data CardValue = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | King | Queen | Ace deriving (Show, Enum, Bounded, Eq, Ord)
 
-data CardType = Club | Diamond | Heart | Spade deriving (Show)
+data CardType = Clubs | Diamonds | Hearts | Spades deriving (Show, Bounded, Enum, Eq, Ord)
 
 data Card = Card {
   cValue :: CardValue,
   cType :: CardType
-  } deriving (Show)
+  } deriving (Show, Eq, Ord)
 
 data Player = Player {
-  hand :: Set[Card],
+  hand :: [Card],
   name :: String
-  } deriving (Show)
+  } deriving (Show, Eq)
 
-type Deck = Set[Card]
+type Deck = [Card]
 
 -------------------------------------------------------------------
 --                           typeClasses                         --
@@ -57,10 +60,10 @@ instance TwentyOneValue CardValue where
 ----------------------------------------------------------
 
 sam :: Player
-sam = Player {hand=empty, name="Sam"}
+sam = Player {hand=[], name="Sam"}
 
 dealer :: Player
-dealer = Player {hand=empty, name="Dealer"}
+dealer = Player {hand=[], name="Dealer"}
 
 deck :: Deck
-deck = undefined
+deck = [Card {cValue=x, cType=y} | x <- [minBound..], y <- [minBound..]]

@@ -24,8 +24,8 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
-  - containers
-
+  - mtl
+  - random-shuffle
 executables:
   Haskell-exe:
     main:                Main.hs
