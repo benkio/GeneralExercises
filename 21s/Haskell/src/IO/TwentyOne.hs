@@ -30,7 +30,16 @@ drawACard = do
   put (tail nnd)
   return (head nnd)
 
--- gameLoop :: StateT GameState IO ()
--- gameLoop = do
---   gs <- get
-  
+checkBlackjack :: Player -> IO Bool
+checkBlackjack p = if (hasBlackjack p)
+    then putStrLn ( name p ++ " BLACKJACK!!") >> return True
+    else return False
+
+gameLoop :: StateT GameState IO ()
+gameLoop = do
+  gs <- get
+  checkSam <- lift $ checkBlackjack $ properPlayer gs
+  checkDealer <- lift $ checkBlackjack $ dealerPlayer gs
+  if (checkSam || checkDealer)
+  then return ()
+  else undefined 
