@@ -1,4 +1,4 @@
-module Lib
+module IO.TwentyOne
     ( someFunc
     ) where
 

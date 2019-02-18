@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import IO.TwentyOne
 
 main :: IO ()
 main = someFunc
