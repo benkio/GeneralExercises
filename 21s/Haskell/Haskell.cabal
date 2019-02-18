@@ -4,13 +4,13 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 57505319f3fab95b0a42202cc4d1d959a7e07fedf75613f4bb0bf80090805005
+-- hash: c08fa5d97d3ac17806fe66ad8313b2a91ca50c6a14d9d30c070eac2c79056895
 
 name:           Haskell
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/Haskell#readme>
-homepage:       https://github.com/githubuser/Haskell#readme
-bug-reports:    https://github.com/githubuser/Haskell/issues
+homepage:       https://github.com/benkio/GeneralExercises#readme
+bug-reports:    https://github.com/benkio/GeneralExercises/issues
 author:         Enrico Benini
 maintainer:     benkio89@gmail.com
 copyright:      2019 Enrico Benini
@@ -27,12 +27,14 @@ source-repository head
 library
   exposed-modules:
       IO.TwentyOne
+      Pure.Domain
   other-modules:
       Paths_Haskell
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , containers
   default-language: Haskell2010
 
 executable Haskell-exe

@@ -1,13 +1,12 @@
 name:                Haskell
 version:             0.1.0.0
-github:              "githubuser/Haskell"
+github:              "benkio/GeneralExercises"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2019 Author name here"
+author:              "Enrico Benini"
+maintainer:          "benkio89@gmail.com"
+copyright:           "2019 Enrico Benini"
 
 extra-source-files:
-- README.md
 - ChangeLog.md
 
 # Metadata used when publishing your package
@@ -24,6 +23,8 @@ dependencies:
 
 library:
   source-dirs: src
+  dependencies:
+  - containers
 
 executables:
   Haskell-exe:
