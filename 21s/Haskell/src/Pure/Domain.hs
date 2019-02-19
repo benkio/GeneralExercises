@@ -5,6 +5,7 @@ module Pure.Domain
     CardType (..),
     TwentyOneValue (..),
     Player (..),
+    GameState (..),
     deck,
     sam,
     dealer,
@@ -32,6 +33,11 @@ data Player = Player {
 
 type Deck = [Card]
 
+data GameState = GameState {
+  properPlayer :: Player,
+  dealerPlayer :: Player,
+  gameStateDeck   :: Deck
+  }
 -------------------------------------------------------------------
 --                           typeClasses                         --
 -------------------------------------------------------------------

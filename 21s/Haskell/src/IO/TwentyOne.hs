@@ -4,19 +4,15 @@ module IO.TwentyOne
 
 import Pure.Domain
 import Pure.Rules
+import Pure.ControlFlow
 import Control.Monad.State.Lazy
 import Control.Monad.Error.Class
 import Control.Applicative
 import System.Random.Shuffle
 
+
 someFunc :: IO ()
 someFunc = shuffleM deck >>= game
-
-data GameState = GameState {
-  properPlayer :: Player,
-  dealerPlayer :: Player,
-  gameStateDeck   :: Deck
-  }
 
 initialState :: StateT [Card] IO GameState
 initialState = do
@@ -41,27 +37,11 @@ newCardToPlayer gs playerSelection updateGs = do
   put newGs
   return ()
 
-checkBlackjack :: Player -> IO Bool
-checkBlackjack p = if (hasBlackjack p)
-    then putStrLn ( name p ++ " BLACKJACK!!") >>
-         putStrLn ( "Hand of " ++ name p ++ ": " ++ show (hand p)) >>
-         return True
-    else putStrLn ( "Hand of " ++ name p ++ ": " ++ show (hand p)) >>
-         return False
-
-checkLost :: Player -> IO Bool
-checkLost p = if (hasLost p)
-  then putStrLn (name p ++ " HAS LOST!!!(" ++ show (score p) ++ ")") >>
-       putStrLn ( "Hand of " ++ name p ++ ": " ++ show (hand p)) >>
-       return True
-  else putStrLn ( "Hand of " ++ name p ++ ": " ++ show (hand p)) >>
-       return False
-
 gameLoop :: StateT GameState IO ()
 gameLoop = catchError (do
   setup
-  playerDrawingPhase samDrawTurn 
-  playerDrawingPhase dealerDrawTurn 
+  playerDrawingPhase $ drawTurnPattern (hasMoreThen17 . properPlayer) properPlayer (\gst p d' -> gst {properPlayer=p, gameStateDeck=d'})
+  playerDrawingPhase $ drawTurnPattern (\gs -> (dealerPlayer gs) > (properPlayer gs)) dealerPlayer (\gst p d' -> gst {dealerPlayer=p, gameStateDeck=d'})
   winnerPhase
   ) (\err -> liftIO $ putStrLn "End of the Game")
 
@@ -76,48 +56,30 @@ game d = do
 setup :: StateT GameState IO ()
 setup = do
   gs <- get
-  checkSam <- lift $ checkBlackjack $ properPlayer gs
-  checkDealer <- lift $ checkBlackjack $ dealerPlayer gs
-  if (checkSam || checkDealer)
-  then throwError $ error "blackjack"
-  else return ()
+  blackjacks <- liftIO $ mapM (\p -> return (hasBlackjack p) >>= \b -> putStrLn (blackjackMessage b p) >> return b) [properPlayer gs, dealerPlayer gs]
+  if (foldr (||) False blackjacks) then throwError $ error "blackjack"  else return ()
 
 
 playerDrawingPhase :: StateT GameState IO Player -> StateT GameState IO ()
 playerDrawingPhase playerDrawTurn = do
   playerState <- playerDrawTurn
-  checkPlayer <- lift $ checkLost $ playerState
-  if (checkPlayer)
+  let playerLost = hasLost playerState
+  lift $  putStrLn $ lostMessage playerLost playerState
+  if playerLost
     then throwError $ error "player lost"
     else return ()
 
-samDrawTurn :: StateT GameState IO Player
-samDrawTurn = do
-  gs <- get
-  if (hasMoreThen17 (properPlayer gs))
-    then return (properPlayer gs)
-    else do
-    newCardToPlayer gs properPlayer (\gst p d' -> gst {properPlayer=p, gameStateDeck=d'})
-    samDrawTurn
-
-dealerDrawTurn :: StateT GameState IO Player
-dealerDrawTurn = do
-  gs <- get
-  if ((dealerPlayer gs) > (properPlayer gs))
-    then return (dealerPlayer gs)
-    else do
-    newCardToPlayer gs dealerPlayer (\gst p d' -> gst {dealerPlayer=p, gameStateDeck=d'})
-    dealerDrawTurn
+drawTurnPattern :: (GameState -> Bool) -> (GameState -> Player) -> (GameState -> Player -> Deck -> GameState) -> StateT GameState IO Player
+drawTurnPattern exitCondition playerExtraciton gameStateUpdate = 
+  do
+    gs <- get
+    if (exitCondition gs)
+    then return (playerExtraciton gs)
+    else newCardToPlayer gs dealerPlayer gameStateUpdate >>
+         drawTurnPattern exitCondition playerExtraciton gameStateUpdate
 
 winnerPhase :: StateT GameState IO ()
 winnerPhase = do
   gs <- get
-  let dealer = dealerPlayer gs
-  let dScore = show (score dealer)
-  let sam = properPlayer gs
-  let sScore = show (score sam)
-  liftIO $
-    case (compare dealer sam) of GT -> putStrLn $ "The dealer win the game: " ++ dScore ++ " over " ++ sScore
-                                 EQ -> putStrLn $ "Tie game at " ++ dScore
-                                 LT -> putStrLn $ (name sam) ++ " wins the game: " ++ sScore ++ " over " ++ dScore
+  liftIO $ putStrLn $ pickAWinner gs
   return ()

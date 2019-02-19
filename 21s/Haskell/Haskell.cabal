@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2361a0fcf0bf63c0334ca121e559d1de3821f9d549322eb9998f71f5952ed609
+-- hash: 8e63f8dcc3bd20e3e992821d48e720c8c1657874d2856ba2b1ce8ff3b1e16556
 
 name:           Haskell
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 library
   exposed-modules:
       IO.TwentyOne
+      Pure.ControlFlow
       Pure.Domain
       Pure.Rules
   other-modules:
