@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8e63f8dcc3bd20e3e992821d48e720c8c1657874d2856ba2b1ce8ff3b1e16556
+-- hash: 91bf5fc39866de3bc2785f6d3ba00276eb537d833e46312e5ccb25c9372c5853
 
 name:           Haskell
 version:        0.1.0.0
@@ -56,6 +56,7 @@ test-suite Haskell-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Pure.DomainSpec
       Paths_Haskell
   hs-source-dirs:
       test
@@ -63,4 +64,5 @@ test-suite Haskell-test
   build-depends:
       Haskell
     , base >=4.7 && <5
+    , hspec
   default-language: Haskell2010
