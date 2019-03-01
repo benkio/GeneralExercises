@@ -1,41 +1,45 @@
-module IO.TwentyOne
-    ( someFunc
-    ) where
+{-# LANGUAGE FlexibleContexts #-}
+module IO.TwentyOne where
 
 import Pure.Domain
 import Pure.Rules
 import Pure.ControlFlow
 import Control.Monad.State.Lazy
+import Control.Monad.Random
 import Control.Monad.Error.Class
 import Control.Applicative
 import System.Random.Shuffle
 
 
-someFunc :: IO ()
+someFunc :: MonadRandom m => m ()
 someFunc = shuffleM deck >>= game
 
-initialState :: StateT [Card] IO GameState
+game :: (Monad m, MonadRandom m) => [Card] -> m ()
+game d = do
+  gs <- evalStateT initialState d
+  _ <- execStateT gameLoop gs
+  return ()
+
+
+initialState :: (MonadRandom mr,
+              MonadTrans (m [Card]),
+              Monad (m [Card] mr),
+              MonadState [Card] (m [Card] mr)) => m [Card] mr GameState
 initialState = do
   samCards <- replicateM 2 drawACard
   dealerCards <- replicateM 2 drawACard
   d <- get
   return (GameState (sam {hand=samCards}) (dealer {hand=dealerCards}) d)
 
-drawACard :: StateT [Card] IO Card
+drawACard :: (MonadRandom mr,
+              MonadTrans (m [Card]),
+              Monad (m [Card] mr),
+              MonadState [Card] (m [Card] mr)) => m [Card] mr Card
 drawACard = do
   d <- get
   nnd <- if (null d) then lift (shuffleM deck) else return d
   put (tail nnd)
   return (head nnd)
-
-newCardToPlayer :: GameState -> (GameState -> Player) -> (GameState -> Player -> Deck -> GameState) -> StateT GameState IO ()
-newCardToPlayer gs playerSelection updateGs = do
-  (nCard, nDeck) <- liftIO $ runStateT drawACard (gameStateDeck gs)
-  let newGs = let statePlayer = playerSelection gs
-                  newStatePlayer = statePlayer {hand=nCard:(hand statePlayer)}
-              in updateGs gs newStatePlayer nDeck
-  put newGs
-  return ()
 
 gameLoop :: StateT GameState IO ()
 gameLoop = catchError (do
@@ -45,20 +49,25 @@ gameLoop = catchError (do
   winnerPhase
   ) (\err -> liftIO $ putStrLn "End of the Game")
 
-game :: [Card] -> IO ()
-game d = do
-  gs <- evalStateT initialState d
-  _ <- execStateT gameLoop gs
-  return ()
-
--- return nothing if I want to continue otherwise return unit. I compose then all the phases with <|>
-
-setup :: StateT GameState IO ()
+setup :: (Monad m,
+          MonadIO (ms GameState m),
+          MonadState GameState (ms GameState m),
+          MonadError e0 (ms GameState m)) => ms GameState m ()
 setup = do
   gs <- get
   blackjacks <- liftIO $ mapM (\p -> return (hasBlackjack p) >>= \b -> putStrLn (blackjackMessage b p) >> return b) [properPlayer gs, dealerPlayer gs]
   if (foldr (||) False blackjacks) then throwError $ error "blackjack"  else return ()
 
+
+newCardToPlayer :: GameState -> (GameState -> Player) -> (GameState -> Player -> Deck -> GameState) -> StateT GameState IO ()
+newCardToPlayer gs playerSelection updateGs = do
+  nCard <- drawACard (gameStateDeck gs)
+  nDeck <- get
+  let newGs = let statePlayer = playerSelection gs
+                  newStatePlayer = statePlayer {hand=nCard:(hand statePlayer)}
+              in updateGs gs newStatePlayer nDeck
+  put newGs
+  return ()
 
 playerDrawingPhase :: StateT GameState IO Player -> StateT GameState IO ()
 playerDrawingPhase playerDrawTurn = do

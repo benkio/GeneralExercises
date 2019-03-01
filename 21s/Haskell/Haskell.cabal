@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 07f9b9a672e8239ed41b58effb41734dba9560918643b1e1387623804530dbd4
+-- hash: ac2d39f01b846701cf055fcf5fa8ed4b2890a8e7a87c65c251b110555b4220e1
 
 name:           Haskell
 version:        0.1.0.0
@@ -35,7 +35,8 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      MonadRandom
+    , base >=4.7 && <5
     , mtl
     , random-shuffle
   default-language: Haskell2010

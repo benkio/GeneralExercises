@@ -26,6 +26,7 @@ library:
   dependencies:
   - mtl
   - random-shuffle
+  - MonadRandom
 executables:
   Haskell-exe:
     main:                Main.hs
