@@ -2,29 +2,27 @@ module Pure.RulesSpec where
 
 import Pure.Rules
 import Pure.Domain
+import DataArbitraryInstances
 import Data.List
 import Test.Hspec
 import Test.QuickCheck
 
-instance Arbitrary CardValue where
-  arbitrary = elements (enumFrom (toEnum 0))
-instance Arbitrary CardType where
-  arbitrary = elements (enumFrom (toEnum 0))
-instance Arbitrary Card where
-  arbitrary = do
-    cv <- arbitrary :: Gen CardValue
-    ct <- arbitrary :: Gen CardType
-    return $ Card {cValue = cv, cType = ct}
-
-pairOfCardsExcept :: [CardValue] -> Gen [Card]
-pairOfCardsExcept excludeCards =
-  suchThat ((vector 2) :: Gen [Card]) (\cs -> null $ excludeCards `intersect` map cValue cs)
+generateCards :: [CardValue] -> Int -> Gen [Card]
+generateCards excludeCards numberOfCards =
+  suchThat ((vector numberOfCards) :: Gen [Card]) (\cs -> null $ excludeCards `intersect` map cValue cs)
 
 validPairOfCards :: Gen[Card]
-validPairOfCards = pairOfCardsExcept [Ace]
+validPairOfCards = generateCards [Ace] 2
 
 validPairOfCardsLowScore :: Gen [Card]
-validPairOfCardsLowScore = pairOfCardsExcept (enumFromTo Nine Ace)
+validPairOfCardsLowScore = generateCards (enumFromTo Nine Ace) 2
+
+invalidCardHand :: Gen [Card]
+invalidCardHand = generateCards (enumFromTo Two Five) 4
+
+blackjackHand :: Gen [Card]
+blackjackHand =
+  suchThat (listOf (arbitrary :: Gen Card)) (\cs -> getHandValue cs == 21)
 
 playerRulesCheck :: (Player -> Bool) -> [Card] -> Bool
 playerRulesCheck f cs = f $Player {name="test", hand=cs}
@@ -35,7 +33,7 @@ spec =
     context "with a pair of cards of value under blackjack" $ do
       let cardGenerator = (oneof [validPairOfCards, validPairOfCardsLowScore])
       describe "getHandValue" $ do
-        it "should return a value less then 21" $ property $
+        it "should return a value lower then 21" $ property $
           forAll cardGenerator (\cs -> (getHandValue cs) < 21)
       describe "hasLost" $ do
         it "should return false" $ property $
@@ -51,7 +49,23 @@ spec =
       describe "hasMoreThen17" $ do
         it "should return false" $ property $
           forAll validPairOfCardsLowScore (playerRulesCheck (not . hasMoreThen17))
-
+    context "Wiith a card hand exeeding 21" $ do
+      describe "getHandValue" $ do
+        it "should return a value bigger then 21" $ property $
+          forAll invalidCardHand (\cs -> (getHandValue cs) > 21)
+      describe "hasLost" $ do
+        it "should return false" $ property $
+          forAll invalidCardHand (playerRulesCheck hasLost)
+      describe "hasBlackjack" $ do
+        it "should return false" $ property $
+          forAll invalidCardHand (playerRulesCheck (not . hasBlackjack))
+    context "Blackjack hand" $ do
+      describe "getHandValue" $ do
+        it "should return a value bigger then 21" $ property $
+          forAll blackjackHand (\cs -> (getHandValue cs) == 21)
+      describe "hasBlackjack" $ do
+        it "should return true" $ property $
+          forAll blackjackHand (playerRulesCheck hasBlackjack)
 
 main :: IO ()
 main = hspec spec

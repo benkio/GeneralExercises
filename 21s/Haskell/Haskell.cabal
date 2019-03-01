@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9c012bb3e63f37ab81ae8a036abbdb39c82992771219aab2465fa8d4d9b06a28
+-- hash: 07f9b9a672e8239ed41b58effb41734dba9560918643b1e1387623804530dbd4
 
 name:           Haskell
 version:        0.1.0.0
@@ -56,6 +56,8 @@ test-suite Haskell-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      DataArbitraryInstances
+      Pure.ControlFlowSpec
       Pure.DomainSpec
       Pure.RulesSpec
       Paths_Haskell
