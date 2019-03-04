@@ -11,11 +11,11 @@ import Control.Applicative
 import System.Random.Shuffle
 
 
-someFunc :: (MonadIO m,
+entryPoint :: (MonadIO m,
              MonadRandom m,
              MonadError e00 m) =>
   m ()
-someFunc = do
+entryPoint = do
   sDeck <- (shuffleM deck)
   let gs = gameState sDeck
   game gs
