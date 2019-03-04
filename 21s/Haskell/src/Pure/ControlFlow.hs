@@ -19,7 +19,7 @@ blackjackMessage b p =
       h = hand p
       s = score p
   in if b
-    then  n ++ " BLACKJACK!!" ++
+    then  n ++ " BLACKJACK!!\n" ++
           "Hand of " ++ n ++ ": " ++ show h
     else  "Hand of " ++ n ++ ": " ++ show h
 

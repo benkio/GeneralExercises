@@ -6,6 +6,7 @@ module Pure.Domain
     TwentyOneValue (..),
     Player (..),
     GameState (..),
+    gameState,
     deck,
     sam,
     dealer,
@@ -73,3 +74,6 @@ dealer = Player {hand=[], name="Dealer"}
 
 deck :: Deck
 deck = [Card {cValue=x, cType=y} | x <- [minBound..], y <- [minBound..]]
+
+gameState :: Deck -> GameState
+gameState d = GameState {properPlayer=sam, dealerPlayer=dealer, gameStateDeck=d}
