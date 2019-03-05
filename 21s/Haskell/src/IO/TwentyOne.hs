@@ -7,12 +7,13 @@ import Pure.ControlFlow
 import Control.Monad.State.Lazy
 import Control.Monad.Random
 import Control.Monad.Error.Class
-import Control.Applicative
 import System.Random.Shuffle
-
+import IO.Algebras
+import Prelude hiding (putStrLn)
 
 entryPoint :: (MonadIO m,
              MonadRandom m,
+             MonadConsole m,
              MonadError e00 m) =>
   m ()
 entryPoint = do
@@ -22,6 +23,7 @@ entryPoint = do
 
 game :: (MonadIO m,
          MonadRandom m,
+         MonadConsole m,
          MonadError e00 m) =>
   GameState ->
   m ()
@@ -59,10 +61,10 @@ drawACard = do
 
 gameLoop :: (MonadRandom mr,
               MonadTrans (m GameState),
-              MonadIO (m GameState mr),
               Monad (m GameState mr),
               MonadState GameState (m GameState mr),
-              MonadError e0 (m GameState mr)) =>
+              MonadError e0 (m GameState mr),
+              MonadConsole mr) =>
   m GameState mr ()
 gameLoop = catchError (do
   setup
@@ -71,16 +73,17 @@ gameLoop = catchError (do
   dealerP <- drawTurnPattern (\gs -> (dealerPlayer gs) > (properPlayer gs)) dealerPlayer (\gst p d' -> gst {dealerPlayer=p, gameStateDeck=d'})
   playerDrawingPhase dealerP
   winnerPhase
-  ) (\err -> liftIO $ putStrLn "End of the Game")
+  ) (\err -> lift $ putStrLn "End of the Game")
 
 setup :: (Monad m,
-          MonadIO (ms GameState m),
           MonadState GameState (ms GameState m),
+          MonadTrans (ms GameState),
+          MonadConsole m,
           MonadError e0 (ms GameState m)) =>
   ms GameState m ()
 setup = do
   gs <- get
-  blackjacks <- liftIO $ mapM (\p -> return (hasBlackjack p) >>= \b -> putStrLn (blackjackMessage b p) >> return b) [properPlayer gs, dealerPlayer gs]
+  blackjacks <- lift $ mapM (\p -> return (hasBlackjack p) >>= \b -> putStrLn (blackjackMessage b p) >> return b) [properPlayer gs, dealerPlayer gs]
   if (foldr (||) False blackjacks) then throwError $ error "blackjack"  else return ()
 
 
@@ -103,15 +106,15 @@ newCardToPlayer playerSelection updateGs = do
 
 playerDrawingPhase :: (MonadRandom mr,
                        MonadTrans (m GameState),
-                       MonadIO (m GameState mr),
                        Monad (m GameState mr),
                        MonadState GameState (m GameState mr),
+                       MonadConsole mr,
                        MonadError e0 (m GameState mr)) =>
   Player ->
   m GameState mr ()
 playerDrawingPhase playerState = do
   let playerLost = hasLost playerState
-  liftIO $  putStrLn $ lostMessage playerLost playerState
+  lift $  putStrLn $ lostMessage playerLost playerState
   if playerLost
     then throwError $ error "player lost"
     else return ()
@@ -133,11 +136,12 @@ drawTurnPattern exitCondition playerExtraciton gameStateUpdate =
          drawTurnPattern exitCondition playerExtraciton gameStateUpdate
 
 winnerPhase :: (MonadTrans (m GameState),
-                MonadIO (m GameState mr),
                 Monad (m GameState mr),
+                Monad mr,
+                MonadConsole mr,
                 MonadState GameState (m GameState mr)) =>
   m GameState mr ()
 winnerPhase = do
   gs <- get
-  liftIO $ putStrLn $ pickAWinner gs
+  lift $ putStrLn $ pickAWinner gs
   return ()
