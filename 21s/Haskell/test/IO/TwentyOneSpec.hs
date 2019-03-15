@@ -4,6 +4,7 @@ import Pure.Domain
 import Test.Hspec
 import Test.QuickCheck
 import Control.Monad.State.Lazy
+import Control.Monad.Random.Lazy
 import IO.EffectfulInstances
 import IO.TwentyOne
 import Data.List
@@ -27,7 +28,10 @@ callWinnerPhase gs = runState (do
   return result) []
 
 spec :: Spec
-spec = winnerPhaseSpec
+spec =
+  describe "TwentyOneSpec" $ do
+    winnerPhaseSpec
+    drawTurnPatternSpec
 
 winnerPhaseSpec :: Spec
 winnerPhaseSpec =
@@ -45,7 +49,17 @@ winnerPhaseSpec =
          result = null stack == False && isInfixOf "Tie game at " (head stack)
      result `shouldBe` True
    
-
+drawTurnPatternSpec :: Spec
+drawTurnPatternSpec =
+  describe "drawTurnPattern" $ do
+    it "Return the expected player if the exit condition is true" $ do
+      let initialGs = gameState []
+          result = runRand (
+            runStateT (drawTurnPattern (\_ -> True) properPlayer (\_ _ _ -> initialGs)) initialGs
+            ) ()
+      result `shouldBe` ((sam, initialGs), ())
+    it "Return: the expected player with the first card of the deck and an updated Gamestate if the exit condition is not met once" $
+      pending
 
 
 main :: IO ()

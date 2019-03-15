@@ -38,7 +38,7 @@ data GameState = GameState {
   properPlayer :: Player,
   dealerPlayer :: Player,
   gameStateDeck   :: Deck
-  } deriving (Show)
+  } deriving (Show, Eq)
 -------------------------------------------------------------------
 --                           typeClasses                         --
 -------------------------------------------------------------------
