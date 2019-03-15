@@ -114,7 +114,7 @@ playerDrawingPhase :: (MonadRandom mr,
   m GameState mr ()
 playerDrawingPhase playerState = do
   let playerLost = hasLost playerState
-  lift $  putStrLn $ lostMessage playerLost playerState
+  lift $ putStrLn $ lostMessage playerLost playerState
   if playerLost
     then throwError $ error "player lost"
     else return ()
@@ -132,7 +132,7 @@ drawTurnPattern exitCondition playerExtraciton gameStateUpdate =
     gs <- get
     if (exitCondition gs)
     then return (playerExtraciton gs)
-    else newCardToPlayer dealerPlayer gameStateUpdate >>
+    else newCardToPlayer playerExtraciton gameStateUpdate >>
          drawTurnPattern exitCondition playerExtraciton gameStateUpdate
 
 winnerPhase :: (MonadTrans (m GameState),

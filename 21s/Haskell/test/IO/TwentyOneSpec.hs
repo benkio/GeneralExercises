@@ -58,9 +58,16 @@ drawTurnPatternSpec =
             runStateT (drawTurnPattern (\_ -> True) properPlayer (\_ _ _ -> initialGs)) initialGs
             ) ()
       result `shouldBe` ((sam, initialGs), ())
-    it "Return: the expected player with the first card of the deck and an updated Gamestate if the exit condition is not met once" $
-      pending
-
+    it "Return: the expected player with the first card of the deck and an updated Gamestate if the exit condition is not met once" $ do
+      let initialGs = gameState deck
+          exitCond = (==51) . length . gameStateDeck
+          updateStateFn = \gs p d -> gs {properPlayer=p, gameStateDeck=d}
+          result = runRand (
+            runStateT (drawTurnPattern exitCond properPlayer updateStateFn) initialGs
+                           ) ()
+          expectedPlayer = sam {hand=[Card {cValue = Two, cType = Clubs}]}
+          expectedGs = (gameState (tail deck)) {properPlayer=expectedPlayer}
+      result `shouldBe` ((expectedPlayer, expectedGs), ())
 
 main :: IO ()
 main = hspec spec
