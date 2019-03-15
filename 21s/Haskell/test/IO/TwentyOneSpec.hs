@@ -10,10 +10,17 @@ import Data.List
 
 dealerWinnerGameState :: GameState
 dealerWinnerGameState = (gameState []) {
-  dealerPlayer=sam {hand=[Card {cValue=Seven, cType=Diamonds}]}
+  dealerPlayer=dealer {hand=[Card {cValue=Seven, cType=Diamonds}]}
   }
 
-callWinnerPhase :: GameState -> (GameState, [String]) --StateT GameState TestConsole ()
+playerWinnerGameState :: GameState
+playerWinnerGameState = (gameState []) {
+  properPlayer=sam {hand=[Card {cValue=Seven, cType=Diamonds}]}
+  }
+tieGameState :: GameState
+tieGameState = (gameState [])
+
+callWinnerPhase :: GameState -> (GameState, [String])
 callWinnerPhase gs = runState (do
   put []
   result <- execStateT winnerPhase gs
@@ -29,10 +36,14 @@ winnerPhaseSpec =
      let stack = snd $ callWinnerPhase dealerWinnerGameState
          result = null stack == False && isInfixOf "The dealer win the game: " (head stack)
      result `shouldBe` True
-   it "prints out a player winning message when the player wins" $
-     True `shouldBe` False
-   it "prints out a tie message" $
-     True `shouldBe` False
+   it "prints out a player winning message when the player wins" $ do
+     let stack = snd $ callWinnerPhase playerWinnerGameState
+         result = null stack == False && isInfixOf "wins the game: " (head stack)
+     result `shouldBe` True
+   it "prints out a tie message" $ do
+     let stack = snd $ callWinnerPhase tieGameState
+         result = null stack == False && isInfixOf "Tie game at " (head stack)
+     result `shouldBe` True
    
 
 
