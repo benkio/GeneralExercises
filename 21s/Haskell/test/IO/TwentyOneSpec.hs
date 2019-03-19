@@ -8,6 +8,8 @@ import Control.Monad.Random.Lazy
 import IO.EffectfulInstances
 import IO.TwentyOne
 import Data.List
+import Data.Functor.Identity
+import Control.Exception
 
 dealerWinnerGameState :: GameState
 dealerWinnerGameState = (gameState []) {
@@ -22,17 +24,24 @@ tieGameState :: GameState
 tieGameState = (gameState [])
 
 callWinnerPhase :: GameState -> (GameState, [String])
-callWinnerPhase gs = runState (do
+callWinnerPhase gs = runIdentity $ runTestConsole [] $ callWinnerPhase' gs 
+
+callWinnerPhase' :: GameState -> TestConsole Identity GameState
+callWinnerPhase' gs = do
   put []
   result <- execStateT winnerPhase gs
-  return result) []
+  return result
+
+callplayerDrawingState :: Player -> GameState -> TestConsole (TestError TestRandom) GameState
+callplayerDrawingState p gs = execStateT (playerDrawingPhase p) gs
 
 spec :: Spec
 spec =
   describe "TwentyOneSpec" $ do
     winnerPhaseSpec
     drawTurnPatternSpec
-
+    playerDrawingPhaseSpec
+    
 winnerPhaseSpec :: Spec
 winnerPhaseSpec =
   describe "winnerPhase" $ do
@@ -68,6 +77,16 @@ drawTurnPatternSpec =
           expectedPlayer = sam {hand=[Card {cValue = Two, cType = Clubs}]}
           expectedGs = (gameState (tail deck)) {properPlayer=expectedPlayer}
       result `shouldBe` ((expectedPlayer, expectedGs), ())
+
+playerDrawingPhaseSpec :: Spec
+playerDrawingPhaseSpec =
+  describe "playerDrawingPhase" $ do
+    context "When the player in input has lost" $
+      it "Throw an error and add a println" $
+        pending
+    context "When the player in input is still in game" $
+      it "Add a println and return ()" $
+        pending
 
 main :: IO ()
 main = hspec spec

@@ -50,5 +50,5 @@ tests:
     - Haskell
     - hspec
     - QuickCheck
-    - mtl
+    - mtl >= 2.2
     - MonadRandom
