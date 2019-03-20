@@ -5,9 +5,11 @@ import Test.Hspec
 import Test.QuickCheck
 import Control.Monad.State.Lazy
 import Control.Monad.Random.Lazy
+import Control.Monad.Except
 import IO.EffectfulInstances
 import IO.TwentyOne
 import Data.List
+import Data.Either
 import Data.Functor.Identity
 import Control.Exception
 
@@ -24,16 +26,16 @@ tieGameState :: GameState
 tieGameState = (gameState [])
 
 callWinnerPhase :: GameState -> (GameState, [String])
-callWinnerPhase gs = runIdentity $ runTestConsole [] $ callWinnerPhase' gs 
+callWinnerPhase gs = runState (callWinnerPhase' gs) []
 
-callWinnerPhase' :: GameState -> TestConsole Identity GameState
+callWinnerPhase' :: GameState -> State [String] GameState
 callWinnerPhase' gs = do
   put []
   result <- execStateT winnerPhase gs
   return result
 
-callplayerDrawingState :: Player -> GameState -> TestConsole (TestError TestRandom) GameState
-callplayerDrawingState p gs = execStateT (playerDrawingPhase p) gs
+callplayerDrawingState :: Player -> GameState -> Either SomeException (GameState, [String])
+callplayerDrawingState p gs = evalRand (runExceptT $ runStateT (execStateT (playerDrawingPhase p) gs) []) ()
 
 spec :: Spec
 spec =
@@ -81,9 +83,13 @@ drawTurnPatternSpec =
 playerDrawingPhaseSpec :: Spec
 playerDrawingPhaseSpec =
   describe "playerDrawingPhase" $ do
-    context "When the player in input has lost" $
-      it "Throw an error and add a println" $
-        pending
+    context "When the player in input has lost" $ do
+      let initialGs = gameState deck
+          lostPlayer = sam {hand=take 10 deck}
+      it "Throw an error and add a println" $ do
+        let result = callplayerDrawingState lostPlayer initialGs
+        (isLeft result) `shouldBe` True
+        ((isInfixOf "HAS LOST!!!" . show . fromLeft (error "test failed")) result) `shouldBe` True
     context "When the player in input is still in game" $
       it "Add a println and return ()" $
         pending
