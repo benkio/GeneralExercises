@@ -88,9 +88,9 @@ drawTurnPatternSpec =
 playerDrawingPhaseSpec :: Spec
 playerDrawingPhaseSpec =
   describe "playerDrawingPhase" $ do
+    let initialGs = gameState deck
     context "When the player in input has lost" $ do
-      let initialGs = gameState deck
-          lostPlayer = sam {hand=take 10 deck}
+      let lostPlayer = sam {hand=take 10 deck}
       it "Throw an error and add a println" $ do
         let result = callplayerDrawingState lostPlayer initialGs
         let resultStack = (snd . runIdentity) $ callplayerDrawingStateStack lostPlayer initialGs
@@ -98,8 +98,11 @@ playerDrawingPhaseSpec =
         ((isInfixOf "Player Lost" . show . fromLeft (error "test failed")) result) `shouldBe` True
         ((isInfixOf "HAS LOST!!!" . head) resultStack) `shouldBe` True
     context "When the player in input is still in game" $
-      it "Add a println and return ()" $
-        pending
+      it "Add a println and return ()" $ do
+        let result = callplayerDrawingState sam initialGs
+        let resultStack = (snd . runIdentity) $ callplayerDrawingStateStack sam initialGs
+        (isRight result) `shouldBe` True
+        ((isInfixOf "Hand of Sam: " . head) resultStack) `shouldBe` True
 
 main :: IO ()
 main = hspec spec
