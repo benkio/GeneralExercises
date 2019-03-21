@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module IO.TwentyOneSpec where
 
 import Pure.Domain
@@ -8,6 +9,7 @@ import Control.Monad.Random.Lazy
 import Control.Monad.Except
 import IO.EffectfulInstances
 import IO.TwentyOne
+import IO.Algebras
 import Data.List
 import Data.Either
 import Data.Functor.Identity
@@ -34,8 +36,11 @@ callWinnerPhase' gs = do
   result <- execStateT winnerPhase gs
   return result
 
-callplayerDrawingState :: Player -> GameState -> Either SomeException (GameState, [String])
+callplayerDrawingState :: Player -> GameState -> Either IOException (GameState, [String])
 callplayerDrawingState p gs = evalRand (runExceptT $ runStateT (execStateT (playerDrawingPhase p) gs) []) ()
+
+callplayerDrawingStateStack :: Player -> GameState -> Identity (GameState, [String])
+callplayerDrawingStateStack p gs = runStateT (execStateT (playerDrawingPhase p) gs) []
 
 spec :: Spec
 spec =
@@ -88,8 +93,10 @@ playerDrawingPhaseSpec =
           lostPlayer = sam {hand=take 10 deck}
       it "Throw an error and add a println" $ do
         let result = callplayerDrawingState lostPlayer initialGs
+        let resultStack = (snd . runIdentity) $ callplayerDrawingStateStack lostPlayer initialGs
         (isLeft result) `shouldBe` True
-        ((isInfixOf "HAS LOST!!!" . show . fromLeft (error "test failed")) result) `shouldBe` True
+        ((isInfixOf "Player Lost" . show . fromLeft (error "test failed")) result) `shouldBe` True
+        ((isInfixOf "HAS LOST!!!" . head) resultStack) `shouldBe` True
     context "When the player in input is still in game" $
       it "Add a println and return ()" $
         pending

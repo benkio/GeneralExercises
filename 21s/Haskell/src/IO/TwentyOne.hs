@@ -6,7 +6,9 @@ import Pure.Rules
 import Pure.ControlFlow
 import Control.Monad.State.Lazy
 import Control.Monad.Random
-import Control.Monad.Error.Class
+import Control.Monad.Except
+import Control.Exception
+import Control.Exception.Base
 import System.Random.Shuffle
 import IO.Algebras
 import Prelude hiding (putStrLn)
@@ -14,7 +16,7 @@ import Prelude hiding (putStrLn)
 entryPoint :: (MonadIO m,
              MonadRandom m,
              MonadConsole m,
-             MonadError e00 m) =>
+             MonadError IOException m) =>
   m ()
 entryPoint = do
   sDeck <- (shuffleM deck)
@@ -24,7 +26,7 @@ entryPoint = do
 game :: (MonadIO m,
          MonadRandom m,
          MonadConsole m,
-         MonadError e00 m) =>
+         MonadError IOException m) =>
   GameState ->
   m ()
 game initialGs = do
@@ -34,10 +36,10 @@ game initialGs = do
 
 
 initialState :: (MonadRandom mr,
-                 MonadTrans (m GameState),
-                 Monad (m GameState mr),
-                 MonadState GameState (m GameState mr)) =>
-  m GameState mr ()
+                 MonadTrans (t),
+                 Monad (t mr),
+                 MonadState GameState (t mr)) =>
+  t mr ()
 initialState = do
   samCards <- replicateM 2 drawACard
   dealerCards <- replicateM 2 drawACard
@@ -48,10 +50,10 @@ initialState = do
   return ()
 
 drawACard :: (MonadRandom mr,
-              MonadTrans (m GameState),
-              Monad (m GameState mr),
-              MonadState GameState (m GameState mr)) =>
-  m GameState mr Card
+              MonadTrans t,
+              Monad (t mr),
+              MonadState GameState (t mr)) =>
+  t mr Card
 drawACard = do
   gs <- get
   let d = gameStateDeck gs
@@ -60,40 +62,43 @@ drawACard = do
   return (head nnd)
 
 gameLoop :: (MonadRandom mr,
-              MonadTrans (m GameState),
-              Monad (m GameState mr),
-              MonadState GameState (m GameState mr),
-              MonadError e0 (m GameState mr),
+             MonadTrans t,
+             Monad (t mr),
+             MonadState GameState (t mr),
+             MonadError IOException (t mr),
               MonadConsole mr) =>
-  m GameState mr ()
-gameLoop = catchError (do
-  setup
-  samP <- drawTurnPattern (hasMoreThen17 . properPlayer) properPlayer (\gst p d' -> gst {properPlayer=p, gameStateDeck=d'})
-  playerDrawingPhase samP
-  dealerP <- drawTurnPattern (\gs -> (dealerPlayer gs) > (properPlayer gs)) dealerPlayer (\gst p d' -> gst {dealerPlayer=p, gameStateDeck=d'})
-  playerDrawingPhase dealerP
-  winnerPhase
+  t mr ()
+gameLoop = catchError (
+  do
+    setup
+    samP <- drawTurnPattern (hasMoreThen17 . properPlayer) properPlayer (\gst p d' -> gst {properPlayer=p, gameStateDeck=d'})
+    playerDrawingPhase samP
+    dealerP <- drawTurnPattern (\gs -> (dealerPlayer gs) > (properPlayer gs)) dealerPlayer (\gst p d' -> gst {dealerPlayer=p, gameStateDeck=d'})
+    playerDrawingPhase dealerP
+    winnerPhase
   ) (\err -> lift $ putStrLn "End of the Game")
 
-setup :: (Monad m,
-          MonadState GameState (ms GameState m),
-          MonadTrans (ms GameState),
-          MonadConsole m,
-          MonadError e0 (ms GameState m)) =>
-  ms GameState m ()
+setup  :: (MonadError IOException (t m),
+           MonadState GameState (t m),
+           MonadConsole m,
+           MonadTrans t,
+           Monad m) =>
+          t m ()
 setup = do
   gs <- get
   blackjacks <- lift $ mapM (\p -> return (hasBlackjack p) >>= \b -> putStrLn (blackjackMessage b p) >> return b) [properPlayer gs, dealerPlayer gs]
-  if (foldr (||) False blackjacks) then throwError $ error "blackjack"  else return ()
+  if (foldr (||) False blackjacks)
+    then (liftEither . Left . userError . show) Blackjack
+    else liftEither $ Right ()
 
 
 newCardToPlayer :: (MonadRandom mr,
-                    MonadTrans (m GameState),
-                    Monad (m GameState mr),
-                    MonadState GameState (m GameState mr)) =>
+                    MonadTrans t,
+                    Monad (t mr),
+                    MonadState GameState (t mr)) =>
   (GameState -> Player) ->
   (GameState -> Player -> Deck -> GameState) ->
-  m GameState mr ()
+  t mr ()
 newCardToPlayer playerSelection updateGs = do
   nCard <- drawACard
   gs <- get
@@ -104,29 +109,26 @@ newCardToPlayer playerSelection updateGs = do
   put newGs
   return ()
 
-playerDrawingPhase :: (MonadRandom mr,
-                       MonadTrans (m GameState),
-                       Monad (m GameState mr),
-                       MonadState GameState (m GameState mr),
-                       MonadConsole mr,
-                       MonadError e0 (m GameState mr)) =>
-  Player ->
-  m GameState mr ()
+playerDrawingPhase :: (MonadError IOException (t m),
+                       MonadConsole m,
+                       MonadTrans t,
+                       Monad m) =>
+                      Player -> t m ()
 playerDrawingPhase playerState = do
   let playerLost = hasLost playerState
   lift $ putStrLn $ lostMessage playerLost playerState
   if playerLost
-    then throwError $ error "player lost"
-    else return ()
+    then (liftEither . Left . userError . show) PlayerLost
+    else liftEither $ Right ()
 
 drawTurnPattern :: (MonadRandom mr,
-                    MonadTrans (m GameState),
-                    Monad (m GameState mr),
-                    MonadState GameState (m GameState mr)) =>
+                    MonadTrans t,
+                    Monad (t mr),
+                    MonadState GameState (t mr)) =>
   (GameState -> Bool) ->
   (GameState -> Player) ->
   (GameState -> Player -> Deck -> GameState) ->
-  m GameState mr Player
+  t mr Player
 drawTurnPattern exitCondition playerExtraciton gameStateUpdate =
   do
     gs <- get
@@ -135,12 +137,12 @@ drawTurnPattern exitCondition playerExtraciton gameStateUpdate =
     else newCardToPlayer playerExtraciton gameStateUpdate >>
          drawTurnPattern exitCondition playerExtraciton gameStateUpdate
 
-winnerPhase :: (MonadTrans (m GameState),
-                Monad (m GameState mr),
+winnerPhase :: (MonadTrans t,
+                Monad (t mr),
                 Monad mr,
                 MonadConsole mr,
-                MonadState GameState (m GameState mr)) =>
-  m GameState mr ()
+                MonadState GameState (t mr)) =>
+  t mr ()
 winnerPhase = do
   gs <- get
   lift $ putStrLn $ pickAWinner gs

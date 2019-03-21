@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Pure.Domain
   (
     Card (..),
@@ -6,6 +7,7 @@ module Pure.Domain
     TwentyOneValue (..),
     Player (..),
     GameState (..),
+    GameExitCondition(..),
     gameState,
     deck,
     sam,
@@ -21,6 +23,8 @@ where
 data CardValue = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | King | Queen | Ace deriving (Show, Enum, Bounded, Eq, Ord)
 
 data CardType = Clubs | Diamonds | Hearts | Spades deriving (Show, Bounded, Enum, Eq, Ord)
+
+data GameExitCondition = Blackjack | PlayerLost
 
 data Card = Card {
   cValue :: CardValue,
@@ -39,13 +43,13 @@ data GameState = GameState {
   dealerPlayer :: Player,
   gameStateDeck   :: Deck
   } deriving (Show, Eq)
+
 -------------------------------------------------------------------
 --                           typeClasses                         --
 -------------------------------------------------------------------
 
 class (Enum a) => TwentyOneValue a where
   to21Value :: a -> Int
-
 
 instance TwentyOneValue CardValue where
   to21Value Two    = 2
@@ -62,7 +66,11 @@ instance TwentyOneValue CardValue where
   to21Value Queen  = 10
   to21Value Ace    = 11
 
-----------------------------------------------------------
+instance Show GameExitCondition where
+  show Blackjack = "Blackjack"
+  show PlayerLost = "Player Lost"
+
+-- ----------------------------------------------------------
 --                    Starting Values                   --
 ----------------------------------------------------------
 
