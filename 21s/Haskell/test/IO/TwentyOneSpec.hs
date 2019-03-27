@@ -42,12 +42,26 @@ callplayerDrawingState p gs = evalRand (runExceptT $ runStateT (execStateT (play
 callplayerDrawingStateStack :: Player -> GameState -> Identity (GameState, [String])
 callplayerDrawingStateStack p gs = runStateT (execStateT (playerDrawingPhase p) gs) []
 
+callNewCardToPlayer :: (GameState -> Player) ->
+                       (GameState -> Player -> Deck -> GameState) ->
+                       GameState ->
+                       GameState
+callNewCardToPlayer playerExtraction gameStateUpdate initialGamestate =
+  evalRand (execStateT (newCardToPlayer playerExtraction gameStateUpdate) initialGamestate) ()
+callSetup :: GameState -> Either IOException (GameState, [String])
+callSetup gs = runStateT (execStateT setup gs) []
+
+callSetupStack :: GameState -> Identity (GameState, [String])
+callSetupStack gs = runStateT (execStateT setup gs) []
+  
 spec :: Spec
 spec =
   describe "TwentyOneSpec" $ do
     winnerPhaseSpec
     drawTurnPatternSpec
     playerDrawingPhaseSpec
+    newCardToPlayerSpec
+    setupSpec
     
 winnerPhaseSpec :: Spec
 winnerPhaseSpec =
@@ -104,5 +118,45 @@ playerDrawingPhaseSpec =
         (isRight result) `shouldBe` True
         ((isInfixOf "Hand of Sam: " . head) resultStack) `shouldBe` True
 
+newCardToPlayerSpec :: Spec
+newCardToPlayerSpec =
+  describe "newCardToPlayer" $ do
+    let initialGs = gameState deck
+        updateGSSam = (properPlayer, (\gst p d' -> gst {properPlayer=p, gameStateDeck=d'}))
+        updateGSDealer = (dealerPlayer, (\gst p d' -> gst {dealerPlayer=p, gameStateDeck=d'}))
+    it "should add a new card to the player hands when called with player functions" $ do
+      let newGamestate = callNewCardToPlayer (fst updateGSSam) (snd updateGSSam) initialGs
+          expectedPlayer = sam {hand=[(head deck)]}
+      properPlayer newGamestate `shouldBe` expectedPlayer
+    it "should add a new card to the dealer hands when called with player functions" $ do
+      let newGamestate = callNewCardToPlayer (fst updateGSDealer) (snd updateGSDealer) initialGs
+          expectedPlayer = dealer {hand=[(head deck)]}
+      dealerPlayer newGamestate `shouldBe` expectedPlayer
+
+setupSpec :: Spec
+setupSpec =
+  describe "setup" $ do
+    context "in the happy path" $ do
+      let initialGoodGs = gameState deck
+      it "should always print the hands of both players to stdout" $ do
+        let stack = (snd . runIdentity . callSetupStack) initialGoodGs
+        length stack `shouldBe` 2
+        (foldl (&&) True . map (isInfixOf "Hand of")) stack `shouldBe` True
+      it "should return the same gamestate in input" $ do
+        let result = callSetup initialGoodGs
+        isRight result `shouldBe` True
+        (fst . fromRight undefined) result `shouldBe` initialGoodGs
+    context "if someone has a blackjack" $ do
+      let blackJackPlayer = sam {hand=[Card {cValue = Ace, cType = Clubs}, Card {cValue = Queen, cType = Hearts}]}
+          initialFailGs = (gameState deck) {properPlayer= blackJackPlayer}
+      it "should always print the blackjack expected message to stdout" $ do
+        let stack = (snd . runIdentity. callSetupStack) initialFailGs
+        length stack `shouldBe` 2
+        (foldl (||) True . map (isInfixOf "BLACKJACK!!")) stack `shouldBe` True
+      it "should return the error" $ do
+        let result = callSetup initialFailGs
+        isLeft result `shouldBe` True
+        fromLeft undefined result `shouldBe` (userError . show) Blackjack
+      
 main :: IO ()
 main = hspec spec
