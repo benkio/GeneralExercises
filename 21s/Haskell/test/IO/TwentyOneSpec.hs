@@ -53,6 +53,9 @@ callSetup gs = runStateT (execStateT setup gs) []
 
 callSetupStack :: GameState -> Identity (GameState, [String])
 callSetupStack gs = runStateT (execStateT setup gs) []
+
+callDrawACard :: GameState -> (Card, GameState)
+callDrawACard gs = evalRand (runStateT (drawACard) gs) ()
   
 spec :: Spec
 spec =
@@ -62,6 +65,7 @@ spec =
     playerDrawingPhaseSpec
     newCardToPlayerSpec
     setupSpec
+    drawACardSpec
     
 winnerPhaseSpec :: Spec
 winnerPhaseSpec =
@@ -157,6 +161,23 @@ setupSpec =
         let result = callSetup initialFailGs
         isLeft result `shouldBe` True
         fromLeft undefined result `shouldBe` (userError . show) Blackjack
-      
+
+drawACardSpec :: Spec
+drawACardSpec =
+  describe "drawACard" $ do
+    context "current GameState has a non-empty deck" $ do
+      let initialGs = gameState deck
+      it "should return the top card from the GameState Deck and set a new GameState" $ do
+        let (card, gs) = callDrawACard initialGs
+        card `shouldBe` (head deck)
+        gs `shouldBe` initialGs {gameStateDeck=(tail deck)}
+    context "current GameState has an empty deck" $ do
+      let emptyDeckGs = gameState []
+          shuffledDeck = [Card {cValue = Four, cType = Diamonds},Card {cValue = Nine, cType = Clubs},Card {cValue = Four, cType = Hearts},Card {cValue = Two, cType = Hearts},Card {cValue = Jack, cType = Diamonds},Card {cValue = King, cType = Hearts},Card {cValue = Nine, cType = Spades},Card {cValue = Five, cType = Clubs},Card {cValue = Five, cType = Diamonds},Card {cValue = Two, cType = Clubs},Card {cValue = Five, cType = Spades},Card {cValue = Six, cType = Clubs},Card {cValue = Six, cType = Diamonds},Card {cValue = Six, cType = Hearts},Card {cValue = Nine, cType = Hearts},Card {cValue = Four, cType = Spades},Card {cValue = Seven, cType = Clubs},Card {cValue = Seven, cType = Diamonds},Card {cValue = Queen, cType = Diamonds},Card {cValue = Seven, cType = Hearts},Card {cValue = Two, cType = Spades},Card {cValue = Eight, cType = Clubs},Card {cValue = Eight, cType = Diamonds},Card {cValue = Ten, cType = Diamonds},Card {cValue = Eight, cType = Hearts},Card {cValue = Two, cType = Diamonds},Card {cValue = Nine, cType = Diamonds},Card {cValue = Ten, cType = Clubs},Card {cValue = Ten, cType = Hearts},Card {cValue = Four, cType = Clubs},Card {cValue = Jack, cType = Clubs},Card {cValue = Jack, cType = Hearts},Card {cValue = Jack, cType = Spades},Card {cValue = Three, cType = Clubs},Card {cValue = King, cType = Diamonds},Card {cValue = Queen, cType = Clubs},Card {cValue = Three, cType = Hearts},Card {cValue = Queen, cType = Hearts},Card {cValue = Queen, cType = Spades},Card {cValue = Ace, cType = Clubs},Card {cValue = Ace, cType = Diamonds},Card {cValue = Ace, cType = Hearts},Card {cValue = Ace, cType = Spades},Card {cValue = Three, cType = Diamonds},Card {cValue = Five, cType = Hearts},Card {cValue = Seven, cType = Spades},Card {cValue = Ten, cType = Spades},Card {cValue = King, cType = Spades},Card {cValue = Six, cType = Spades},Card {cValue = Three, cType = Spades},Card {cValue = King, cType = Clubs},Card {cValue = Eight, cType = Spades}]
+      it "should return a card with a GameState deck shuffled" $ do
+        let (card, gs) = callDrawACard emptyDeckGs
+        card `shouldBe` (head shuffledDeck)
+        gs `shouldBe` emptyDeckGs {gameStateDeck=(tail shuffledDeck)}
+
 main :: IO ()
 main = hspec spec
