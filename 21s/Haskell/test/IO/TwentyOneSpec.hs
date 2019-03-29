@@ -56,6 +56,9 @@ callSetupStack gs = runStateT (execStateT setup gs) []
 
 callDrawACard :: GameState -> (Card, GameState)
 callDrawACard gs = evalRand (runStateT (drawACard) gs) ()
+
+callInitialState  :: GameState -> GameState
+callInitialState gs = evalRand (execStateT (initialState) gs) ()
   
 spec :: Spec
 spec =
@@ -66,6 +69,7 @@ spec =
     newCardToPlayerSpec
     setupSpec
     drawACardSpec
+    initialStateSpec
     
 winnerPhaseSpec :: Spec
 winnerPhaseSpec =
@@ -178,6 +182,16 @@ drawACardSpec =
         let (card, gs) = callDrawACard emptyDeckGs
         card `shouldBe` (head shuffledDeck)
         gs `shouldBe` emptyDeckGs {gameStateDeck=(tail shuffledDeck)}
+
+initialStateSpec :: Spec
+initialStateSpec =
+  describe "initialStateSpec" $ do
+    let initialGs = gameState deck
+    it "should return a GameState containing the expected deck and players with expected hands" $ do
+      let result = callInitialState initialGs
+      (properPlayer result) `shouldBe` sam {hand=take 2 deck}
+      (dealerPlayer result) `shouldBe` dealer {hand=(take 2 . drop 2) deck}
+      (gameStateDeck result) `shouldBe` (drop 4 deck)
 
 main :: IO ()
 main = hspec spec
