@@ -46,4 +46,11 @@ object InputGenerator {
     costumerID <- costumerGen.getOrElse(Arbitrary(Gen.nonEmptyListOf[Char](Arbitrary.arbChar.arbitrary).map(_.mkString)).arbitrary)
     total <- totalAmount.getOrElse(Gen.choose(0, Int.MaxValue))
   } yield Bill(costumerID, Money.of(CurrencyUnit.GBP, total))
+
+  val rawInput : Gen[RawInput] = for {
+    vn <- validNumbers
+    time <- localTime()
+    costumerID <- Arbitrary(Gen.nonEmptyListOf[Char](Arbitrary.arbChar.arbitrary).map(_.mkString)).arbitrary
+  } yield RawInput(costumerID, vn, time.toString)
+  val rawInputs = Gen.listOfN(5, rawInput)
 }
