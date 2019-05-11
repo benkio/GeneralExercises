@@ -11,11 +11,15 @@ import scala.io._
 object Main extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = for {
-    rawInput <- Parser.inputStream("/calls.log").use((inputStream: BufferedSource) => Parser.readRawInput(inputStream))
+    output <- program(args.headOption)
+    _ <- IO(println(output))
+  } yield ExitCode.Success
+
+  def program(filePath : Option[String]) : IO[String] = for {
+    rawInput <- Parser.inputStream(filePath.getOrElse("/calls.log")).use((inputStream: BufferedSource) => Parser.readRawInput(inputStream))
     optCalls: Option[List[Call]] = InputValidation.validate(rawInput)
     calls <- optCalls.fold(IO.raiseError[List[Call]](new Exception("validation error")))(IO.pure(_))
     bills = PhoneReport(calls).map(FeeCalculatorWithPromotion.calculate(_))
-    _ <- IO(bills.foreach((b: Bill) => println(b)))
-  } yield ExitCode.Success
-
+    result <- IO(bills.map((b: Bill) => b.toString).mkString("\n"))
+  } yield result
 }
