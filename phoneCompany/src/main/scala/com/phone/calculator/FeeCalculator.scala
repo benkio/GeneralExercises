@@ -13,7 +13,8 @@ trait FeeCalculator {
   val standardRatePerSecond : Money = Money.of(CurrencyUnit.GBP, 0.05)
   val overflowRatePerSecond : Money = Money.of(CurrencyUnit.GBP, 0.03)
 
-  def isWithinStandardRate(call : Call) : Boolean = ???
+  def isWithinStandardRate(call : Call) : Boolean =
+    call.duration.isBefore(standardRateDuration) || call.duration.equals(standardRateDuration)
 
   def calculate(call : Call) : Money = ???
   def calculate(call : PhoneReport) : Bill = ???
