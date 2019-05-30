@@ -24,7 +24,10 @@ dependencies:
 
 library:
   source-dirs: src
-
+  dependencies:
+  - time
+  - text
+  - text-format
 executables:
   phoneCompany-exe:
     main:                Main.hs
