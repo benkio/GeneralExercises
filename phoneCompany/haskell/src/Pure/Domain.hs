@@ -1,4 +1,7 @@
-module Pure.Domain where
+module Pure.Domain(
+  CallLog(..),
+  Call(..),
+  number) where
 
 import           Data.Time.Clock
 import           Data.Text
