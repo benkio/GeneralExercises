@@ -25,9 +25,11 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
-  - time
+  - hourglass
   - text
   - text-format
+  - regex-compat
+  - split
 executables:
   phoneCompany-exe:
     main:                Main.hs
