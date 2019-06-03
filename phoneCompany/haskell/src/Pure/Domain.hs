@@ -21,7 +21,7 @@ data Call = Call { cCostumerId :: String,
 
 type Number = Text
 
-number :: String -> Maybe [Text]
+number :: String -> Maybe [Number]
 number s = (fmap . fmap) pack (matchRegex (mkRegex "([0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9])") s)
 
 -- String in format hh:mm:ss
