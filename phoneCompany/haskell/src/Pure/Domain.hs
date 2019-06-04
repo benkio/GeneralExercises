@@ -15,11 +15,38 @@ data CallLog = CallLog { clCostumerId :: String,
                          clCalled :: String,
                          clDuration :: String }
 
-data Call = Call { cCostumerId :: String,
-                   cCalled :: Number,
-                   cDuration :: Duration }
+data Call = OverflowCall String Number Duration | StandardRateCall String Number Duration
+
+class CallDetail a where
+  costumerId :: a -> String
+  called :: a -> Number
+  duration :: a -> Duration
+
+instance CallDetail Call where
+  costumerId (OverflowCall x _ _) = x
+  costumerId (StandardRateCall x _ _) = x
+  called (OverflowCall _ x _) = x
+  called (StandardRateCall _ x _) = x
+  duration (OverflowCall _ _ x) = x
+  duration (StandardRateCall _ _ x) = x
 
 type Number = Text
+
+standardRateDuration = Duration {
+  durationHours = Hours 0,
+  durationMinutes = Minutes 3,
+  durationSeconds = Seconds 0,
+  durationNs = NanoSeconds 0
+  }
+
+isWithinStandardRate :: Duration -> Bool
+isWithinStandardRate d = d <= standardRateDuration
+
+call :: String -> Number -> Duration -> Call
+call cId called duration =
+  if (isWithinStandardRate duration)
+  then StandardRateCall cId called duration
+  else OverflowCall cId called duration
 
 number :: String -> Maybe [Number]
 number s = (fmap . fmap) pack (matchRegex (mkRegex "([0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9])") s)
@@ -29,7 +56,7 @@ parseDuration :: String -> Maybe Duration
 parseDuration s = do
   let sp = splitOn ":" s
   stringParsed <- if (Prelude.length sp == 3) then Just sp else Nothing
-  resultList <-  traverse (\s -> readMaybe s :: Maybe Int64) stringParsed
+  resultList <-  traverse (\x -> readMaybe x :: Maybe Int64) stringParsed
   return Duration {
      durationHours = Hours $ resultList !! 0       -- ^ number of hours
     , durationMinutes = Minutes $ resultList !! 1     -- ^ number of minutes

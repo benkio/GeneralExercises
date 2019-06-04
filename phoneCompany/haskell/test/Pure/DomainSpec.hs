@@ -1,8 +1,8 @@
 module Pure.DomainSpec where
 
-import Pure.Domain
-import Test.Hspec
-import Test.QuickCheck
+import           Pure.Domain
+import           Test.Hspec
+import           Test.QuickCheck
 import qualified Data.List as L
 import           Data.Maybe
 import           Data.Text (unpack)
