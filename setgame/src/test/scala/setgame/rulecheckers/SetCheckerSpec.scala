@@ -4,22 +4,22 @@ import org.scalacheck.Properties
 import org.scalacheck.Prop.forAll
 import setgame.inputgenerator.InputGenerator
 import setgame.domain._
-import setgame.rulecheckers.SetChecker
+import setgame.rulecheckers.GameSetChecker
 import org.scalatest._
 
-object SetCheckerSpec extends Properties("SetChecker") {
+object GameSetCheckerSpec extends Properties("GameSetChecker") {
 
   property("same card three times") = forAll(InputGenerator.cardGenerator) {
-    (c : Card) => SetChecker.check(c, c, c)
+    (c : Card) => GameSetChecker.check(c, c, c)
   }
 
   property("same card two times and another different card") =
     forAll(InputGenerator.generateDistinct(InputGenerator.cardGenerator, 2)) {
-      (lc : List[Card]) => !SetChecker.check(lc(0), lc(0), lc(1))
+      (lc : List[Card]) => !GameSetChecker.check(lc(0), lc(0), lc(1))
     }
 }
 
-class SetCheckerSpec extends WordSpec with Matchers {
+class GameSetCheckerSpec extends WordSpec with Matchers {
 
   val validDifferentCardInput : List[(Card, Card, Card)] =
     List(
@@ -42,10 +42,10 @@ class SetCheckerSpec extends WordSpec with Matchers {
 	Card(Diamond	, Red	,One	,Stripe),
 	Card(Diamond	, Red	,Three	,Outline)))
 
-  "SetChecker" should {
+  "GameSetChecker" should {
     "complex valid example" in {
       validDifferentCardInput
-        .map(t => SetChecker.check(t._1, t._2, t._3))
+        .map(t => GameSetChecker.check(t._1, t._2, t._3))
         .foldLeft(true)(_ && _)
     }
   }

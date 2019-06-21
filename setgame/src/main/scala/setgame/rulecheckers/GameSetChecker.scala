@@ -2,7 +2,7 @@ package setgame.rulecheckers
 
 import setgame.domain._
 
-object SetChecker extends Checker[Card] {
+object GameSetChecker extends Checker[Card] {
 
   def check(card1: Card, card2 : Card, card3: Card) : Boolean =
     ShapeChecker.check(card1.shape, card2.shape, card3.shape) &&
