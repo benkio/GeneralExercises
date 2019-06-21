@@ -26,17 +26,16 @@ object Deck {
 
 object GameBoard {
 
-  def apply(deck : Deck) : (GameBoard, Deck) = {
+  def apply(deck : Deck, players: Set[Player]) : GameState = {
     val (cards, newDeck) = Deck.drawCards(12, deck)
-    (new GameBoard(cards), newDeck)
+    GameState(players, newDeck, new GameBoard(cards))
   }
 
   /**
     * Called to refill the board after a player successful set or after a round without sets
     */
-  def refill(board : GameBoard, deck : Deck) : (GameBoard, Deck) = {
-    val (cards, newDeck) = Deck.drawCards(3, deck)
-    (new GameBoard(board.cards ++ cards), newDeck)
+  def refill(gamestate : GameState) : GameState = {
+    val (cards, newDeck) = Deck.drawCards(3, gamestate.deck)
+    GameState(gamestate.players, newDeck, new GameBoard(gamestate.board.cards ++ cards))
   }
-
 }
