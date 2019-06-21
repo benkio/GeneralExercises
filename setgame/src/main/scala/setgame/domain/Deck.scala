@@ -2,7 +2,8 @@ package setgame.domain
 
 import scala.util.Random
 
-case class Deck private(cards: Set[Card])
+case class Deck(cards: Set[Card]) //No private constructor for testing purposes
+case class GameBoard private(cards: Set[Card])
 
 object Deck {
 
@@ -15,4 +16,26 @@ object Deck {
         sd <- Shading.values
       } yield Card(sp, c, n, sd)).toSet
   )
+
+  def drawCards(n : Int, deck : Deck) : (Set[Card], Deck) =
+    if (deck.cards.size >= n)
+      (deck.cards.take(n), new Deck(deck.cards.drop(n)))
+    else drawCards(n, Deck())
+}
+
+object GameBoard {
+
+  def apply(deck : Deck) : (GameBoard, Deck) = {
+    val (cards, newDeck) = Deck.drawCards(12, deck)
+    (new GameBoard(cards), newDeck)
+  }
+
+  /**
+    * Called to refill the board after a player successful set or after a round without sets
+    */
+  def refill(board : GameBoard, deck : Deck) : (GameBoard, Deck) = {
+    val (cards, newDeck) = Deck.drawCards(3, deck)
+    (new GameBoard(cards), newDeck)
+  }
+
 }

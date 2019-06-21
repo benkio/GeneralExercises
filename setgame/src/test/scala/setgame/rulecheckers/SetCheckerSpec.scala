@@ -7,7 +7,7 @@ import setgame.domain._
 import setgame.rulecheckers.GameSetChecker
 import org.scalatest._
 
-object GameSetCheckerSpec extends Properties("GameSetChecker") {
+object GameSetCheckerScalaCheckSpec extends Properties("GameSetChecker") {
 
   property("same card three times") = forAll(InputGenerator.cardGenerator) {
     (c : Card) => GameSetChecker.check(c, c, c)
