@@ -46,7 +46,7 @@ class GameSetCheckerSpec extends WordSpec with Matchers {
     "complex valid example" in {
       validDifferentCardInput
         .map(t => GameSetChecker.check(t._1, t._2, t._3))
-        .foldLeft(true)(_ && _)
+        .foldLeft(true)(_ && _) shouldEqual true
     }
   }
 }
