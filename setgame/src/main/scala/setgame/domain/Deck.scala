@@ -2,8 +2,9 @@ package setgame.domain
 
 import scala.util.Random
 
-case class Deck(cards: Set[Card]) //No private constructor for testing purposes
-case class GameBoard private(cards: Set[Card])
+//No private constructor for testing purposes
+case class Deck(cards: Set[Card])
+case class GameBoard(cards: Set[Card])
 
 object Deck {
 
@@ -35,7 +36,7 @@ object GameBoard {
     */
   def refill(board : GameBoard, deck : Deck) : (GameBoard, Deck) = {
     val (cards, newDeck) = Deck.drawCards(3, deck)
-    (new GameBoard(cards), newDeck)
+    (new GameBoard(board.cards ++ cards), newDeck)
   }
 
 }
