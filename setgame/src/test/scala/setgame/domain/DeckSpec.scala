@@ -91,8 +91,8 @@ class DeckSpec extends WordSpec with Matchers {
     "return the same deck and empty set if the requested input is 0" in {
       (for {
         d <- Deck()
-        (resultCards, resultDeck) <-Deck.drawCards(0).run(new Deck(Set.empty[Card]))
-      } yield resultCards.size == 0 && resultDeck == d)
+        result <- Deck.drawCards(0).run(new Deck(Set.empty[Card]))
+      } yield result._2.size == 0 && result._1 == d)
       .unsafeRunSync shouldEqual true
     }
   }
