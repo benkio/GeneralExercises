@@ -8,49 +8,57 @@ import org.scalacheck.Gen
 
 object GameBoardScalaCheckSpec extends Properties("GameBoard") {
 
-  property("apply always return a board of 12 cards") =
-    forAll(Gen.const("")) { (s : String) =>
-      GameBoard(Deck(), Set.empty[Player]).board.cards.size == 12 }
-
-  property("apply returns always a deck with the total max minus 12") =
-    forAll(Gen.const("")) { (s : String) =>
-      GameBoard(Deck(), Set.empty[Player]).deck.cards.size == 69
+  property("build always return a board of 12 cards") =
+    forAll(Gen.const("")) { (s : String) => (for {
+      d <- Deck()
+      board <- GameBoard.build.runA(d)
+    } yield board)
+      .unsafeRunSync.cards.size == 12
     }
 
-  property("apply returns always a deck with the total max minus 12 when input deck is empty") =
+  property("build returns always a deck with the total max minus 12") =
+    forAll(Gen.const("")) { (s : String) => (for {
+      d <- Deck()
+      deck <- GameBoard.build.runS(d)
+    } yield deck)
+      .unsafeRunSync.cards.size  == 69
+    }
+
+  property("build returns always a deck with the total max minus 12 when input deck is empty") =
     forAll(Gen.const("")) { (s : String) =>
-      GameBoard(new Deck(Set.empty[Card]), Set.empty[Player]).deck.cards.size == 69
+      GameBoard.build.runS(new Deck(Set.empty[Card]))
+        .unsafeRunSync
+        .cards.size == 69
     }
 
   property("refill always return a board of 3 cards if the input board is empty") =
-    forAll(Gen.const("")) { (s : String) => {
-      val deck = Deck()
-      GameBoard.refill(
-        GameState(
-          Set.empty[Player],
-          deck,
-          GameBoard(Set.empty[Card]))
-      ).board.cards.size == 3
-    }}
+    forAll(Gen.const("")) { (s : String) => (for {
+      deck <- Deck()
+      board <- GameBoard.refill(
+        GameBoard(Set.empty[Card])
+      ).runA(deck)
+    } yield board).unsafeRunSync.cards.size == 3
+    }
 
   property("refill returns always a deck with the total max minus 3 and a board with plus 3 elements") =
     forAll(Gen.const("")) {
-      (s : String) => {
-        val deck = Deck()
-        val gs = GameBoard(deck, Set.empty[Player])
-        val result = GameBoard.refill(gs)
-        result.deck.cards.size == 66 && result.board.cards.size == 15
-      }
+      (s : String) => (for {
+         gs <- GameBoard.build
+        result <- GameBoard.refill(gs)
+      } yield result)
+        .runF
+        .flatMap(f => Deck().flatMap(f(_)))
+        .map { case (deck : Deck, board : GameBoard) =>
+          deck.cards.size == 66 && board.cards.size == 15
+        }
+      .unsafeRunSync
     }
 
   property("refill returns always a deck with the total max minus 3 if the input deck is empty") =
     forAll(Gen.const("")) { (s : String) =>
       GameBoard.refill(
-        GameState(
-          Set.empty[Player],
-          Deck(Set.empty[Card]),
           GameBoard(Set.empty[Card])
-        )
-      ).deck.cards.size == 78
+      ).runS(Deck(Set.empty[Card]))
+        .unsafeRunSync.cards.size == 78
     }
 }

@@ -10,6 +10,8 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-effect" % "2.0.0-M4",
       "org.typelevel" %% "cats-core" % "2.0.0-M4",
+      "com.github.julien-truffaut" %%  "monocle-core"  % "1.6.0-RC1",
+      "com.github.julien-truffaut" %%  "monocle-macro"  % "1.6.0-RC1",
       "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
       "org.scalatest" %% "scalatest" % "3.0.8" % "test"
     )
