@@ -38,6 +38,7 @@ object GameBoard {
   val build : StateT[IO, Deck, GameBoard] =
     Deck.drawCards(12).map((cards) => new GameBoard(cards))
 
+  //Warning, loop if n > 12
   def drawCards(deck : Deck, n : Int = 1) : StateT[IO, GameBoard, Set[Card]] =
     StateT( (board : GameBoard) =>
     if (board.cards.size >= n)

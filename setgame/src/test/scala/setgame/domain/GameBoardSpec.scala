@@ -8,6 +8,30 @@ import org.scalacheck.Gen
 
 object GameBoardScalaCheckSpec extends Properties("GameBoard") {
 
+  property("drawCards returns always the expected number of cards") =
+    forAll(Gen.chooseNum(0, 12)) { (n : Int) => (for {
+      d <- Deck()
+      deckNBoard <- GameBoard.build.run(d)
+      cards <- GameBoard.drawCards(deckNBoard._1, n).runA(deckNBoard._2)
+    } yield cards).unsafeRunSync.size == n
+    }
+
+  property("drawCards returns always a deck with the total max minus the drawed ones") =
+    forAll(Gen.chooseNum(0, 12)) { (n : Int) => (for {
+      d <- Deck()
+      deckNBoard <- GameBoard.build.run(d)
+      resultDeck <- GameBoard.drawCards(deckNBoard._1, n).runS(deckNBoard._2)
+    } yield resultDeck.cards).unsafeRunSync.size == (12-n)
+    }
+
+  property("drawCards rebuild a new deck if the deck is empty") =
+    forAll(Gen.chooseNum(1, 12)) { (n : Int) => (for {
+      d <- Deck()
+      deckNBoard <- GameBoard.build.run(d)
+      resultDeck <- GameBoard.drawCards(new Deck(Set.empty[Card]), n).runS(deckNBoard._2)
+    } yield resultDeck.cards).unsafeRunSync.size == (12-n)
+    }
+
   property("build always return a board of 12 cards") =
     forAll(Gen.const("")) { (s : String) => (for {
       d <- Deck()
