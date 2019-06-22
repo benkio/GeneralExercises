@@ -6,7 +6,10 @@ case class GameSet(card1: Card, card2: Card, card3: Card)
 
 object GameSet {
 
-  def apply(card1 : Card, card2 : Card, card3 : Card) : Option[GameSet] =
-    if (GameSetChecker.check(card1, card2, card3)) Some(new GameSet(card1, card2, card3))
-    else None
+  def apply(cards : Set[Card]) : Option[GameSet] = {
+    val cardsSeq : Seq[Card] = cards.toSeq
+    if (cards.size == 3 &&
+      GameSetChecker.check(cardsSeq(0), cardsSeq(1), cardsSeq(2)))
+      Some(new GameSet(cardsSeq(0), cardsSeq(1), cardsSeq(2)))
+    else None}
 }

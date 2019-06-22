@@ -15,7 +15,6 @@ object Player {
   val dumbPlayerStrategy : StateT[IO, GameState, Option[GameSet]] =
     ???
 
-
   // Take the game state
   // the player try to guess the set
   // player score update
