@@ -11,5 +11,6 @@ object GameSet {
     if (cards.size == 3 &&
       GameSetChecker.check(cardsSeq(0), cardsSeq(1), cardsSeq(2)))
       Some(new GameSet(cardsSeq(0), cardsSeq(1), cardsSeq(2)))
-    else None}
+    else None
+  }
 }
