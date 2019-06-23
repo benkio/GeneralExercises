@@ -21,6 +21,19 @@ object GemeStateScalaCheckSpec extends Properties("GameState") {
         result.isSuccess && result.get == expectedWinner
       }
     }
+
+  property("playerScores should return the list of all scores") =
+    forAll(Gen.listOf(Gen.posNum[Int])) {
+      (l : List[Int]) => {
+        val inputPlayers = l.map(score => Player(UUID.randomUUID, score)).toSet
+        val result = GameState.playerScores(GameState(
+          inputPlayers,
+          Deck(Set.empty[Card]),
+          GameBoard.build.runA(Deck(Set.empty[Card])).unsafeRunSync
+        ))
+        result == l || (result.forall(l.contains(_)) && result.diff(l).isEmpty)
+      }
+    }
 }
 
 class GameStateSpec extends WordSpec with Matchers {

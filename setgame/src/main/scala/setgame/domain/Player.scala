@@ -6,10 +6,14 @@ import cats.data._
 import cats.implicits._
 import cats.effect._
 import monocle.Lens
+import monocle.macros.GenLens
 
 case class Player(id : UUID, score : Int)
 
 object Player {
+
+  val idLens = GenLens[Player](_.id)
+  val scoreLens = GenLens[Player](_.score)
 
   // Just select the first 3 card on the board an call check for a gameset
   val dumbPlayerStrategy : StateT[IO, GameState, Option[GameSet]] =
