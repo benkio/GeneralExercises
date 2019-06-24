@@ -11,12 +11,12 @@ object GemeStateScalaCheckSpec extends Properties("GameState") {
   property("winner should select the player with the best score") =
     forAll(Gen.nonEmptyListOf(Gen.posNum[Int])) {
       (l : List[Int]) => {
-        val inputPlayers = l.map(score => Player(UUID.randomUUID, score)).toSet
+        val inputPlayers = l.map(score => Player.apply.copy(score = score)).toSet
         val expectedWinner = inputPlayers.maxBy(_.score)
         val result = GameState.winner(GameState(
           inputPlayers,
-          Deck(Set.empty[Card]),
-          GameBoard.build.runA(Deck(Set.empty[Card])).unsafeRunSync
+          Deck(List.empty[Card]),
+          GameBoard.build.runA(Deck(List.empty[Card])).unsafeRunSync
         ))
         result.isSuccess && result.get == expectedWinner
       }
@@ -25,11 +25,11 @@ object GemeStateScalaCheckSpec extends Properties("GameState") {
   property("playerScores should return the list of all scores") =
     forAll(Gen.listOf(Gen.posNum[Int])) {
       (l : List[Int]) => {
-        val inputPlayers = l.map(score => Player(UUID.randomUUID, score)).toSet
+        val inputPlayers = l.map(score => Player.apply.copy(score = score)).toSet
         val result = GameState.playerScores(GameState(
           inputPlayers,
-          Deck(Set.empty[Card]),
-          GameBoard.build.runA(Deck(Set.empty[Card])).unsafeRunSync
+          Deck(List.empty[Card]),
+          GameBoard.build.runA(Deck(List.empty[Card])).unsafeRunSync
         ))
         result == l || (result.forall(l.contains(_)) && result.diff(l).isEmpty)
       }
@@ -42,8 +42,8 @@ class GameStateSpec extends WordSpec with Matchers {
     "return a failure if the list of players is empty" in {
       GameState.winner(GameState(
         Set.empty[Player],
-        Deck(Set.empty[Card]),
-          GameBoard.build.runA(Deck(Set.empty[Card])).unsafeRunSync
+        Deck(List.empty[Card]),
+          GameBoard.build.runA(Deck(List.empty[Card])).unsafeRunSync
         )).isFailure == true
     }
   }

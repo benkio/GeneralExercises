@@ -34,12 +34,20 @@ object PlayerScalaCheckSpec extends Properties("Player") {
         ).unsafeRunSync == true
   }
 
+  property("apply returns always players with 0 score and unique UUID") =
+    forAll(Gen.posNum[Int]){
+      (n : Int) => {
+        val players = List.fill(n)(Player.apply)
+        players.forall(_.score == 0) && players.map(_.id).distinct.size == n
+      }
+  }
+
   property("dumbPlayerStrategy return the same gamestate + None if the first 3 cards of the board are not a set") =
     forAll(InputGenerator.generateDistinct(InputGenerator.cardGenerator, 2)) {
       (inputCards : List[Card]) => {
-        val deck : Deck = Deck(Set(inputCards(0),
+        val deck : Deck = Deck(List(inputCards(0),
           inputCards(0),
-          inputCards(1)) ++ Set.fill(20)(inputCards(0)))
+          inputCards(1)) ++ List.fill(20)(inputCards(0)))
         gameStateTTestPattern[Option[GameSet]](
           deck,
           Set.empty[Player],
@@ -53,10 +61,10 @@ object PlayerScalaCheckSpec extends Properties("Player") {
   property("move should return the same input gamestate if the player guess wrong") =
         forAll(InputGenerator.generateDistinct(InputGenerator.cardGenerator, 2)) {
       (inputCards : List[Card]) => {
-        val deck : Deck = Deck(Set(inputCards(0),
+        val deck : Deck = Deck(List(inputCards(0),
           inputCards(0),
-          inputCards(1)) ++ Set.fill(20)(inputCards(0)))
-        val player = Player(UUID.fromString("25b16c86-096d-4186-bf1d-6a975cad2364"), 0)
+          inputCards(1)) ++ List.fill(20)(inputCards(0)))
+        val player = Player.apply
         gameStateTTestPattern[Unit](
           deck,
           Set(player),
@@ -79,7 +87,6 @@ class PlayerSpec extends WordSpec with Matchers {
       .map((lt : List[(Card, Card, Card)]) =>
         Deck(
           lt.flatMap { case (c1, c2, c3) => List(c1, c2, c3) }
-            .toSet
         )
       )
 
@@ -105,7 +112,7 @@ class PlayerSpec extends WordSpec with Matchers {
     "return a gamestate with the input player having the current score + 1 if the first 3 cards of the board are a set" in {
       validDecksInput
         .forall((d : Deck) => {
-          val player = Player(UUID.fromString("25b16c86-096d-4186-bf1d-6a975cad2364"), 0)
+          val player = Player.apply
           PlayerScalaCheckSpec.gameStateTTestPattern[Unit](
             d,
             Set(player),

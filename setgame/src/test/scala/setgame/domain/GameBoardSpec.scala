@@ -28,7 +28,7 @@ object GameBoardScalaCheckSpec extends Properties("GameBoard") {
     forAll(Gen.chooseNum(1, 12)) { (n : Int) => (for {
       d <- Deck()
       deckNBoard <- GameBoard.build.run(d)
-      resultDeck <- GameBoard.drawCards(new Deck(Set.empty[Card]), n).runS(deckNBoard._2)
+      resultDeck <- GameBoard.drawCards(new Deck(List.empty[Card]), n).runS(deckNBoard._2)
     } yield resultDeck.cards).unsafeRunSync.size == (12-n)
     }
 
@@ -50,7 +50,7 @@ object GameBoardScalaCheckSpec extends Properties("GameBoard") {
 
   property("build returns always a deck with the total max minus 12 when input deck is empty") =
     forAll(Gen.const("")) { (s : String) =>
-      GameBoard.build.runS(new Deck(Set.empty[Card]))
+      GameBoard.build.runS(new Deck(List.empty[Card]))
         .unsafeRunSync
         .cards.size == 69
     }
@@ -59,7 +59,7 @@ object GameBoardScalaCheckSpec extends Properties("GameBoard") {
     forAll(Gen.const("")) { (s : String) => (for {
       deck <- Deck()
       board <- GameBoard.refill(
-        GameBoard(Set.empty[Card])
+        GameBoard(List.empty[Card])
       ).runA(deck)
     } yield board).unsafeRunSync.cards.size == 3
     }
@@ -81,8 +81,8 @@ object GameBoardScalaCheckSpec extends Properties("GameBoard") {
   property("refill returns always a deck with the total max minus 3 if the input deck is empty") =
     forAll(Gen.const("")) { (s : String) =>
       GameBoard.refill(
-          GameBoard(Set.empty[Card])
-      ).runS(Deck(Set.empty[Card]))
+          GameBoard(List.empty[Card])
+      ).runS(Deck(List.empty[Card]))
         .unsafeRunSync.cards.size == 78
     }
 }

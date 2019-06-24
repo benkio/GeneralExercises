@@ -25,7 +25,7 @@ object DeckScalaCheckSpec extends Properties("Deck") {
   property("drawCards rebuild a new deck if the deck is empty") =
     forAll(Gen.chooseNum(1, 81)) { (n : Int) =>
       Deck.drawCards(n)
-        .runS(new Deck(Set.empty[Card]))
+        .runS(new Deck(List.empty[Card]))
         .unsafeRunSync
         .cards.size == (81-n)
     }
