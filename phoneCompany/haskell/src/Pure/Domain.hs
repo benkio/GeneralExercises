@@ -1,8 +1,12 @@
+{-# LANGUAGE DataKinds #-}
+
 module Pure.Domain(
   CallLog(..),
   Call(..),
+  call,
   number,
-  parseDuration) where
+  parseDuration,
+  isWithinStandardRate) where
 
 import           Data.Hourglass
 import           Data.List.Split
@@ -10,6 +14,10 @@ import           Data.Int
 import           Data.Text (Text, pack)
 import           Text.Regex
 import           Text.Read
+import qualified Money
+
+
+ -- Types Declaration ---------------------------------------------------
 
 data CallLog = CallLog { clCostumerId :: String,
                          clCalled :: String,
@@ -32,6 +40,8 @@ instance CallDetail Call where
 
 type Number = Text
 
+ -- Standard Values ----------------------------------------------
+
 standardRateDuration = Duration {
   durationHours = Hours 0,
   durationMinutes = Minutes 3,
@@ -39,8 +49,13 @@ standardRateDuration = Duration {
   durationNs = NanoSeconds 0
   }
 
+standardRate = Money.discrete 5 :: Money.Discrete "GBP" "penny"
+overflowRate = Money.discrete 3 :: Money.Discrete "GBP" "penny"
+
 isWithinStandardRate :: Duration -> Bool
 isWithinStandardRate d = d <= standardRateDuration
+
+-- Types Constructors --------------------------------
 
 call :: String -> Number -> Duration -> Call
 call cId called duration =

@@ -39,6 +39,9 @@ packages:
 # (e.g., acme-missiles-0.3)
 # extra-deps: []
 
+extra-deps:
+- safe-money-0.9
+
 # Override default flag values for local packages and extra-deps
 # flags: {}
 
