@@ -22,6 +22,7 @@ import qualified Money
 data CallLog = CallLog { clCostumerId :: String,
                          clCalled :: String,
                          clDuration :: String }
+               deriving Show
 
 data Call = OverflowCall String Number Duration | StandardRateCall String Number Duration
 
@@ -42,6 +43,7 @@ type Number = Text
 
  -- Standard Values ----------------------------------------------
 
+standardRateDuration :: Duration
 standardRateDuration = Duration {
   durationHours = Hours 0,
   durationMinutes = Minutes 3,
@@ -49,8 +51,10 @@ standardRateDuration = Duration {
   durationNs = NanoSeconds 0
   }
 
-standardRate = Money.discrete 5 :: Money.Discrete "GBP" "penny"
-overflowRate = Money.discrete 3 :: Money.Discrete "GBP" "penny"
+standardRate :: Money.Discrete "GBP" "penny"
+standardRate = Money.discrete 5
+overflowRate :: Money.Discrete "GBP" "penny"
+overflowRate = Money.discrete 3
 
 isWithinStandardRate :: Duration -> Bool
 isWithinStandardRate d = d <= standardRateDuration
