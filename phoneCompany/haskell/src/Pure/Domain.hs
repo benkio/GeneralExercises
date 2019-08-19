@@ -3,6 +3,7 @@
 module Pure.Domain(
   CallLog(..),
   Call(..),
+  CallDetail(..),
   call,
   number,
   parseDuration,

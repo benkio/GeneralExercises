@@ -4,7 +4,9 @@ module Parsing.ParseInput where
 
 -- TODO: IMPLEMENT
 import Pure.Domain
+import Pure.Transformation
 import Data.List.Split
+import Data.Maybe
 import System.IO
 
 parseCallsLog :: String -> IO [CallLog]
@@ -15,3 +17,9 @@ parseCallsLog inputFile = do
   where
     listToRecord l = CallLog {..}
       where [clCostumerId, clCalled, clDuration] = l
+
+parseCalls ::  String -> IO [Call]
+parseCalls inputFile = do
+  callLogs <- parseCallsLog inputFile
+  let maybeCalls = fmap validateInput callLogs
+  return $ catMaybes maybeCalls
