@@ -26,6 +26,7 @@ data CallLog = CallLog { clCostumerId :: String,
                deriving Show
 
 data Call = OverflowCall String Number Duration | StandardRateCall String Number Duration
+  deriving Show
 
 class CallDetail a where
   costumerId :: a -> String

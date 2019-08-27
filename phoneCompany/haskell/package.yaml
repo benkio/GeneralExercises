@@ -31,6 +31,7 @@ library:
   - text-format
   - regex-compat
   - split
+  - containers
 executables:
   phoneCompany-exe:
     main:                Main.hs
@@ -55,5 +56,6 @@ tests:
     - QuickCheck
     - text
     - hourglass
+    - containers
     - text-builder
     - phoneCompany
