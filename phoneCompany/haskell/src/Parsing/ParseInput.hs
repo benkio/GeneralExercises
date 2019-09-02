@@ -2,7 +2,6 @@
 
 module Parsing.ParseInput where
 
--- TODO: IMPLEMENT
 import Pure.Domain
 import Pure.Transformation
 import Data.List.Split
