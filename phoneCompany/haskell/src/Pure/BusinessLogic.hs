@@ -6,9 +6,17 @@ import Pure.Domain
 import Data.List
 import qualified Data.Map.Strict as M
 import Money
+import Data.Hourglass
+
+class Invoice a where
+  invoice :: a -> Money.Discrete "GBP" "penny"
+
+instance Invoice Call where
+  invoice (OverflowCall _ _ d) = (toEnum . (* (fromEnum overflowRate)) . fromEnum . toSeconds) d
+  invoice (StandardRateCall _ _ d) = (toEnum .(* (fromEnum standardRate)) . fromEnum .toSeconds) d
 
 instance Ord Call where
-  (<=) c1 c2 = (duration c1) <= (duration c2)
+  (<=) c1 c2 = (invoice c1) <= (invoice c2)
 
 
 -- callToChage :: Call -> Money.Discrete "GBP" "penny"

@@ -15,6 +15,7 @@ import           Data.Hourglass
 -- import Money
 import           Test.Hspec
 import           Test.QuickCheck
+import Data.Maybe
 
 spec :: Spec
 spec =
@@ -27,9 +28,15 @@ spec =
          let
            result :: [Call]
            result = (head . elems .filterLongerCall) (singleton "testKey" cs)
-           maxElem = maximumBy (\c1 c2 -> (duration c1) `compare` (duration c2)) cs
+           maxElem = maximumBy (\c1 c2 -> (invoice c1) `compare` (invoice c2)) cs
          in result `shouldNotContain` [maxElem]
       )
+    describe "invoice" $ do
+      let stardardCallTest = call "costumer" ((fromJust . number) "222-222-222") ((fromJust . parseDuration) "00:02:00")
+      let overflowCallTest = call "costumer" ((fromJust . number) "222-222-222") ((fromJust. parseDuration) "00:05:00")
+      it "should convert a Standard Rate Call to Money based on the standard rate" $ pending
+      it "should convert a Overflow Rate Call to Money based on the standard rate" $ pending
+
 
 main :: IO ()
 main = hspec spec

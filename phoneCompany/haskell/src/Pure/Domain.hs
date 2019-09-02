@@ -6,6 +6,8 @@ module Pure.Domain(
   CallDetail(..),
   call,
   number,
+  overflowRate,
+  standardRate,
   parseDuration,
   isWithinStandardRate) where
 
