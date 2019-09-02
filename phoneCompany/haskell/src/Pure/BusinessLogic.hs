@@ -4,6 +4,7 @@ module Pure.BusinessLogic where
 
 import Pure.Domain
 import Data.List
+import Data.Foldable
 import qualified Data.Map.Strict as M
 import Money
 import Data.Hourglass
@@ -25,11 +26,15 @@ instance Invoice Call where
 instance Ord Call where
   (<=) c1 c2 = (invoice c1) <= (invoice c2)
 
+removeMaximum :: [Call] -> [Call]
+removeMaximum cs = let maxElem = maximumBy compare cs
+                   in filter (\c -> c /= maxElem) cs
+
 filterLongerCall :: M.Map String [Call] -> M.Map String [Call]
 filterLongerCall m = fmap removeMaximum m
-                     where
-                       removeMaximum :: [Call] -> [Call]
-                       removeMaximum cs = let
-                         maxElem :: Call
-                         maxElem = maximumBy compare cs
-                         in filter (\c -> c /= maxElem) cs
+
+calculateCostumerInvoice :: M.Map String [Call] -> M.Map String (Money.Discrete "GBP" "penny")
+calculateCostumerInvoice = fmap (foldl (+) (Money.discrete 0) . fmap (invoice))
+
+businessLogic :: M.Map String [Call] -> M.Map String (Money.Discrete "GBP" "penny")
+businessLogic = calculateCostumerInvoice . filterLongerCall
