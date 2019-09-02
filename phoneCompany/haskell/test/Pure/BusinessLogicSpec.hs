@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 module Pure.BusinessLogicSpec where
 
 import Prelude hiding (filter)
@@ -12,7 +13,7 @@ import Data.Map.Strict (
   )
 import Data.List
 import           Data.Hourglass
--- import Money
+import Money
 import           Test.Hspec
 import           Test.QuickCheck
 import Data.Maybe
@@ -34,9 +35,10 @@ spec =
     describe "invoice" $ do
       let stardardCallTest = call "costumer" ((fromJust . number) "222-222-222") ((fromJust . parseDuration) "00:02:00")
       let overflowCallTest = call "costumer" ((fromJust . number) "222-222-222") ((fromJust. parseDuration) "00:05:00")
-      it "should convert a Standard Rate Call to Money based on the standard rate" $ pending
-      it "should convert a Overflow Rate Call to Money based on the standard rate" $ pending
-
+      it "should convert a Standard Rate Call to Money based on the standard rate" $ do
+        invoice stardardCallTest `shouldBe` (Money.discrete 600 :: Money.Discrete "GBP" "penny" )
+      it "should convert a Overflow Rate Call to Money based on the standard rate" $ do
+        invoice overflowCallTest `shouldBe` (Money.discrete 1260 :: Money.Discrete "GBP" "penny" )
 
 main :: IO ()
 main = hspec spec

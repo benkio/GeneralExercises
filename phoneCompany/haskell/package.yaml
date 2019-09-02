@@ -58,4 +58,5 @@ tests:
     - hourglass
     - containers
     - text-builder
+    - safe-money
     - phoneCompany

@@ -8,6 +8,7 @@ module Pure.Domain(
   number,
   overflowRate,
   standardRate,
+  standardRateDuration,
   parseDuration,
   isWithinStandardRate) where
 
