@@ -1,0 +1,68 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 2b20abb6de33d40195ce1bf80e0e49f6da4f2728ee5a1329b0e3d6b44501e5e2
+
+name:           watchList
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/servant#readme>
+homepage:       https://github.com/benkio/GeneralExercises#readme
+bug-reports:    https://github.com/benkio/GeneralExercises/issues
+author:         Enrico Benini
+maintainer:     benkio89@gmail.com
+copyright:      2019 Enrico Benini
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/benkio/GeneralExercises
+
+library
+  exposed-modules:
+      Api.Contract
+      Api.Implementation.EchoEndpoint
+      Api.Implementation.Route
+      Api.Implementation.SampleEndpoint
+  other-modules:
+      Paths_watchList
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , servant-server
+  default-language: Haskell2010
+
+executable watchList-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_watchList
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , warp
+    , watchList
+  default-language: Haskell2010
+
+test-suite servant-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_watchList
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , servant
+    , watchList
+  default-language: Haskell2010
