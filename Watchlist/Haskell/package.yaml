@@ -26,6 +26,7 @@ library:
   source-dirs: src
   dependencies:
     - servant-server
+    - refined
 
 executables:
   watchList-exe:
