@@ -21,6 +21,8 @@ newtype User      = User { userId :: (Refined AlphanumericSizeThree String) }
   deriving (Eq, Hashable)
 newtype Store     = Store (HashMap User WatchList)
 
+instance (Hashable x, Predicate p x) => Hashable (Refined p x)
+
 data AlphanumericSizeThree = AlphanumericSizeThree
   deriving (Generic)
 
