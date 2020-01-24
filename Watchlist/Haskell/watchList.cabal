@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 62c9c9185cd0e0884eeee28f9d01439fc0966ee7eefc375aa3aaf1defc36143b
+-- hash: c09f8a3dc200fe902cba2beefba1d74681c2920cdce83fb745af675aaedd01d4
 
 name:           watchList
 version:        0.1.0.0
@@ -28,7 +28,7 @@ source-repository head
 library
   exposed-modules:
       Api.Contract
-      Api.Domain.WatchlistItem
+      Api.Domain
       Api.Implementation.EchoEndpoint
       Api.Implementation.Route
       Api.Implementation.SampleEndpoint
@@ -38,8 +38,10 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , hashable
     , refined
     , servant-server
+    , unordered-containers
   default-language: Haskell2010
 
 executable watchList-exe

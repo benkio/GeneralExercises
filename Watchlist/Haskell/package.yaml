@@ -27,6 +27,8 @@ library:
   dependencies:
     - servant-server
     - refined
+    - unordered-containers
+    - hashable
 
 executables:
   watchList-exe:
