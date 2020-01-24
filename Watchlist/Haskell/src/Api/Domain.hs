@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 
 module Api.Domain where
@@ -12,17 +13,22 @@ import Data.Char
 import Data.Typeable
 import Data.HashMap.Lazy
 import Control.Monad
+import GHC.Generics (Generic)
 
 newtype ContentID = ContentID (Refined (SizeEqualTo 4) String) deriving (Eq)
 newtype WatchList = WatchList [ContentID]
-newtype UserId    = UserId String                                deriving (Eq, Hashable)
-newtype User      = User { userId :: UserId }                    deriving (Eq, Hashable)
+newtype User      = User { userId :: (Refined AlphanumericSizeThree String) }
+  deriving (Eq, Hashable)
 newtype Store     = Store (HashMap User WatchList)
 
-instance Predicate UserId String where
+data AlphanumericSizeThree = AlphanumericSizeThree
+  deriving (Generic)
+
+instance Predicate AlphanumericSizeThree String where
   validate p x = do
     _ <- validate (SizeEqualTo 3) x
-    _ <- unless (foldl' isAlpha True x) $ return () -- do throwRefineOtherException (typeOf p) ( "Not an alphanumeric string" )
+    _ <- unless (isAlphanumeric x) $ do
+      throwRefineOtherException (typeOf p) $ "Value is not even."
     return ()
 
 instance Semigroup WatchList where
@@ -31,10 +37,13 @@ instance Semigroup WatchList where
 instance Monoid WatchList where
   mempty = WatchList []
 
+isAlphanumeric :: String -> Bool
+isAlphanumeric = foldl' isAlpha True
+
 emptyStore :: Store
 emptyStore = Store empty
 
-createUser :: String -> Either RefineException UserId
+createUser :: String -> Either RefineException User
 createUser = refine
 
 deleteFromWatchList :: ContentID -> WatchList -> WatchList
