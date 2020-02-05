@@ -9,10 +9,10 @@ import Data.Either
 
 -- TestData -------------------------------------------------------------------
 user :: User
-user = User { userId = "abc" }
+user = fromRight (error "the test user should be valid") $ createUser "abc"
 
 content :: ContentID
-content = ContentID (fromRight undefined (refine @(SizeEqualTo 4) "1234"))
+content = fromRight (error "the test content should be valid") $ createContent "1234"
 
 wl :: WatchList
 wl = WatchList [content]

@@ -10,11 +10,12 @@ module Api.Domain(
   deleteContent,
   addContent,
   createUser,
+  createContent,
   emptyStore,
   Store(..),
-  ContentID(..),
+  ContentID,
   WatchList(..),
-  User(..)) where
+  User) where
 
 import qualified Data.List as L
 import Refined
@@ -25,7 +26,7 @@ import Data.HashMap.Lazy
 import Control.Monad
 import GHC.Generics (Generic)
 
-newtype ContentID = ContentID (Refined (SizeEqualTo 4) String) deriving (Eq)
+newtype ContentID = ContentID String deriving (Eq)
 newtype WatchList = WatchList [ContentID]
 newtype User      = User { userId :: String }
   deriving (Eq, Hashable)
@@ -55,6 +56,10 @@ emptyStore = Store empty
 
 createUser :: String -> Either RefineException User
 createUser s = fmap (User . unrefine) (refine @AlphanumericSizeThree @String s)
+
+createContent :: String -> Either RefineException ContentID
+createContent s = fmap (ContentID . unrefine) (refine @(SizeEqualTo 4) @String s)
+
 
 deleteFromWatchList :: ContentID -> WatchList -> WatchList
 deleteFromWatchList c (WatchList l) = WatchList $ L.delete c l
