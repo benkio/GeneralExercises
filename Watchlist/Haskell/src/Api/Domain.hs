@@ -1,13 +1,23 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 
-module Api.Domain where
+module Api.Domain(
+  deleteContent,
+  addContent,
+  createUser,
+  emptyStore,
+  Store(..),
+  ContentID(..),
+  WatchList(..),
+  User(..)) where
 
-import Refined
 import qualified Data.List as L
+import Refined
 import Data.Hashable
 import Data.Char
 import Data.Typeable
@@ -17,20 +27,18 @@ import GHC.Generics (Generic)
 
 newtype ContentID = ContentID (Refined (SizeEqualTo 4) String) deriving (Eq)
 newtype WatchList = WatchList [ContentID]
-newtype User      = User { userId :: (Refined AlphanumericSizeThree String) }
+newtype User      = User { userId :: String }
   deriving (Eq, Hashable)
 newtype Store     = Store (HashMap User WatchList)
-
-instance (Hashable x, Predicate p x) => Hashable (Refined p x)
 
 data AlphanumericSizeThree = AlphanumericSizeThree
   deriving (Generic)
 
-instance Predicate AlphanumericSizeThree String where
+instance  Predicate AlphanumericSizeThree String where
   validate p x = do
-    _ <- validate (SizeEqualTo 3) x
+    _ <- validate @(SizeEqualTo 3) undefined x
     _ <- unless (isAlphanumeric x) $ do
-      throwRefineOtherException (typeOf p) $ "Value is not even."
+      throwRefine (RefineNotException (typeOf p))
     return ()
 
 instance Semigroup WatchList where
@@ -40,13 +48,13 @@ instance Monoid WatchList where
   mempty = WatchList []
 
 isAlphanumeric :: String -> Bool
-isAlphanumeric = foldl' isAlpha True
+isAlphanumeric = L.foldl' (\b c -> (isAlpha c) && b) True
 
 emptyStore :: Store
 emptyStore = Store empty
 
 createUser :: String -> Either RefineException User
-createUser = refine
+createUser s = fmap (User . unrefine) (refine @AlphanumericSizeThree @String s)
 
 deleteFromWatchList :: ContentID -> WatchList -> WatchList
 deleteFromWatchList c (WatchList l) = WatchList $ L.delete c l

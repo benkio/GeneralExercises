@@ -53,3 +53,5 @@ tests:
     dependencies:
     - servant
     - watchList
+    - hspec
+    - refined
