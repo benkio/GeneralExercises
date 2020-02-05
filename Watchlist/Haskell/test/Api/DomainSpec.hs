@@ -25,7 +25,18 @@ spec = do
   describe "deleteContent" $ do
     it "deletes existing content" $ pending
   describe "addContent" $ do
-    it "adds new content for the user into the store " $ pending
+    it "adds new content for the user into the store " $ pending-- do
+      -- resultStore <- addContent user content emptyStore
+      -- resultStore `shouldSatisfy`
   describe "createUser" $ do
-    it "creates an user starting from it's id" $ pending
-    it "fails if the input ids is not alphanumeric and of size 3" $ pending
+    it "creates an user starting from it's id" $
+      isRight $ createUser "abc"
+    it "fails if the input ids is not alphanumeric" $
+      isLeft $ createUser "ab#"
+    it "fails if the input ids is not of size 3" $
+      isLeft $ createUser "iiiiiiiii"
+  describe "createContent"  $ do
+    it "creates a content ID" $
+      isRight $ createContent "abcd"
+    it "fails if the input length is not equal to 4" $
+      isLeft $ createContent "iiiiiiiii"
