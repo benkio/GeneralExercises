@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 17851e9f618e1cfeea84a0165de94f9e8da6b22409c22286e3db7917837d737c
+-- hash: 7e68441e889ff6a14aa0cabff49eb5e84d45d3749b1f770e9d2a29ee564693c7
 
 name:           watchList
 version:        0.1.0.0
@@ -71,5 +71,6 @@ test-suite servant-test
     , hspec
     , refined
     , servant
+    , unordered-containers
     , watchList
   default-language: Haskell2010

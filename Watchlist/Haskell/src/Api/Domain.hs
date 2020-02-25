@@ -9,6 +9,7 @@
 module Api.Domain(
   deleteContent,
   addContent,
+  getUserContent,
   createUser,
   createContent,
   emptyStore,
@@ -22,15 +23,15 @@ import Refined
 import Data.Hashable
 import Data.Char
 import Data.Typeable
-import Data.HashMap.Lazy
+import qualified Data.HashMap.Lazy as HS
 import Control.Monad
 import GHC.Generics (Generic)
 
 newtype ContentID = ContentID String deriving (Eq)
-newtype WatchList = WatchList [ContentID]
+newtype WatchList = WatchList [ContentID] deriving (Eq)
 newtype User      = User { userId :: String }
   deriving (Eq, Hashable)
-newtype Store     = Store (HashMap User WatchList)
+newtype Store     = Store (HS.HashMap User WatchList) deriving (Eq)
 
 data AlphanumericSizeThree = AlphanumericSizeThree
   deriving (Generic)
@@ -52,7 +53,7 @@ isAlphanumeric :: String -> Bool
 isAlphanumeric = L.foldl' (\b c -> (isAlpha c) && b) True
 
 emptyStore :: Store
-emptyStore = Store empty
+emptyStore = Store HS.empty
 
 createUser :: String -> Either RefineException User
 createUser s = fmap (User . unrefine) (refine @AlphanumericSizeThree @String s)
@@ -60,14 +61,16 @@ createUser s = fmap (User . unrefine) (refine @AlphanumericSizeThree @String s)
 createContent :: String -> Either RefineException ContentID
 createContent s = fmap (ContentID . unrefine) (refine @(SizeEqualTo 4) @String s)
 
-
 deleteFromWatchList :: ContentID -> WatchList -> WatchList
 deleteFromWatchList c (WatchList l) = WatchList $ L.delete c l
 
 addContent :: User -> ContentID -> Store -> Store
 addContent user content (Store s) =
-   Store $ insertWith (<>) user (WatchList [content]) s
+   Store $ HS.insertWith (<>) user (WatchList [content]) s
 
 deleteContent :: User -> ContentID -> Store -> Store
 deleteContent user content (Store s) =
-  Store $ adjust (deleteFromWatchList content) user s
+  Store $ HS.adjust (deleteFromWatchList content) user s
+
+getUserContent :: User -> Store -> Maybe WatchList
+getUserContent user (Store hm) = HS.lookup user hm

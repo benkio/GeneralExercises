@@ -55,3 +55,4 @@ tests:
     - watchList
     - hspec
     - refined
+    - unordered-containers
