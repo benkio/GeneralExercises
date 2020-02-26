@@ -14,7 +14,7 @@ module Api.Domain(
   createContent,
   emptyStore,
   Store(..),
-  ContentID,
+  ContentID(..),
   WatchList(..),
   User) where
 
@@ -22,23 +22,24 @@ import qualified Data.List as L
 import Refined
 import Data.Hashable
 import Data.Char
+import Data.Text
 import Data.Typeable
 import qualified Data.HashMap.Lazy as HS
 import Control.Monad
 import GHC.Generics (Generic)
 
-newtype ContentID = ContentID String deriving (Eq)
+newtype ContentID = ContentID Text deriving (Eq)
 newtype WatchList = WatchList [ContentID] deriving (Eq)
-newtype User      = User { userId :: String }
+newtype User      = User { userId :: Text }
   deriving (Eq, Hashable)
 newtype Store     = Store (HS.HashMap User WatchList) deriving (Eq)
 
 data AlphanumericSizeThree = AlphanumericSizeThree
   deriving (Generic)
 
-instance  Predicate AlphanumericSizeThree String where
+instance  Predicate AlphanumericSizeThree Text where
   validate p x = do
-    _ <- validate @(SizeEqualTo 3) undefined x
+    _ <- validate @(SizeEqualTo 3) undefined (unpack x)
     _ <- unless (isAlphanumeric x) $ do
       throwRefine (RefineNotException (typeOf p))
     return ()
@@ -49,17 +50,17 @@ instance Semigroup WatchList where
 instance Monoid WatchList where
   mempty = WatchList []
 
-isAlphanumeric :: String -> Bool
-isAlphanumeric = L.foldl' (\b c -> (isAlpha c) && b) True
+isAlphanumeric :: Text -> Bool
+isAlphanumeric = L.foldl' (\b c -> (isAlpha c) && b) True . unpack
 
 emptyStore :: Store
 emptyStore = Store HS.empty
 
 createUser :: String -> Either RefineException User
-createUser s = fmap (User . unrefine) (refine @AlphanumericSizeThree @String s)
+createUser s = fmap (User . unrefine) (refine @AlphanumericSizeThree @Text (pack s))
 
 createContent :: String -> Either RefineException ContentID
-createContent s = fmap (ContentID . unrefine) (refine @(SizeEqualTo 4) @String s)
+createContent s = fmap (ContentID . pack . unrefine) (refine @(SizeEqualTo 4) @String s)
 
 deleteFromWatchList :: ContentID -> WatchList -> WatchList
 deleteFromWatchList c (WatchList l) = WatchList $ L.delete c l
