@@ -16,7 +16,7 @@ getContentEndpoint :: UserRequest -> AppM WatchListResponse
 getContentEndpoint UserRequest{userId=usr} = do
   state <- ask
   inputStore <- (liftIO . readTVarIO . store) state
-  inputUser <- (liftEither . first (\_ -> err400) . createUser) usr
+  inputUser <- validateUser usr
   result <- liftEither
     (case (getUserContent inputUser inputStore) of
                           Nothing -> Left err404
@@ -24,10 +24,16 @@ getContentEndpoint UserRequest{userId=usr} = do
   return $ WatchListResponse (getContent result)
 
 addUserEndpoint :: UserRequest -> AppM NoContent
-addUserEndpoint = undefined
+addUserEndpoint UserRequest{userId=usr} = do
+  inputUser <- validateUser usr
+  undefined
+
 
 addContentEndpoint :: AddContentRequest -> AppM WatchListResponse
 addContentEndpoint = undefined
 
 deleteContentEndpoint :: DeleteContentRequest -> AppM WatchListResponse
 deleteContentEndpoint = undefined
+
+validateUser :: String -> AppM User
+validateUser = liftEither . first (\_ -> err400) . createUser
