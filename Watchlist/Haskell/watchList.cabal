@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 051bd164d05b5ad7267546d45ca4c25f11089d2132329c2d77e80a3700010a44
+-- hash: 66ad042cddfa552e7d97015dc3f5b6944ba8a8ca03593f368dcccae6892212a2
 
 name:           watchList
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       Api.Domain
       Api.Request
       Api.Response
+      Api.State
   other-modules:
       Paths_watchList
   hs-source-dirs:
@@ -39,8 +40,10 @@ library
       aeson
     , base >=4.7 && <5
     , hashable
+    , mtl
     , refined
     , servant-server
+    , stm
     , text
     , unordered-containers
   default-language: Haskell2010

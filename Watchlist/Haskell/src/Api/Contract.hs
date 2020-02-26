@@ -11,9 +11,8 @@ type API = "v1" :> "content" :> (
   ReqBody '[JSON] UserRequest          :> Get '[JSON] WatchListResponse    :<|>
   ReqBody '[JSON] AddContentRequest    :> Post '[JSON] WatchListResponse   :<|>
   ReqBody '[JSON] DeleteContentRequest :> Delete '[JSON] WatchListResponse :<|>
-  ReqBody '[JSON] CreateUserRequest    :> PostCreated '[JSON] NoContent
+  ReqBody '[JSON] UserRequest    :> PostCreated '[JSON] NoContent
   )
-
 
 api :: Proxy API
 api = Proxy

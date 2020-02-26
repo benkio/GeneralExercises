@@ -5,14 +5,10 @@
 module Api.Request where
 
 import GHC.Generics
-import Api.Domain
 import Data.Aeson
-import Data.Text
+import Api.Domain
 
-instance FromJSON ContentID where
-  parseJSON (String content) = withText "Text" pure content <$> ContentID
-
-newtype UserRequest = UserRequest { userId :: String }
+newtype UserRequest = UserRequest { userId :: String } deriving (Generic, FromJSON)
 data AddContentRequest = AddContentRequest {
   userId :: String ,
     content :: [ContentID]
@@ -20,7 +16,4 @@ data AddContentRequest = AddContentRequest {
 data DeleteContentRequest = DeleteContentRequest {
   userId :: String,
     content :: [ContentID]
-  } deriving (Generic, FromJSON)
-data CreateUserRequest = CreateUserRequest {
-  userId :: String
   } deriving (Generic, FromJSON)

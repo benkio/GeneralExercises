@@ -31,6 +31,8 @@ library:
     - hashable
     - aeson
     - text
+    - stm
+    - mtl
 
 executables:
   watchList-exe:

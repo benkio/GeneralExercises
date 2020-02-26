@@ -27,6 +27,7 @@ import Data.Typeable
 import qualified Data.HashMap.Lazy as HS
 import Control.Monad
 import GHC.Generics (Generic)
+import Data.Aeson
 
 newtype ContentID = ContentID Text deriving (Eq)
 newtype WatchList = WatchList [ContentID] deriving (Eq)
@@ -36,6 +37,8 @@ newtype Store     = Store (HS.HashMap User WatchList) deriving (Eq)
 
 data AlphanumericSizeThree = AlphanumericSizeThree
   deriving (Generic)
+
+-- Instances ------------------------------------------------------------------
 
 instance  Predicate AlphanumericSizeThree Text where
   validate p x = do
@@ -49,6 +52,15 @@ instance Semigroup WatchList where
 
 instance Monoid WatchList where
   mempty = WatchList []
+
+instance FromJSON ContentID where
+  parseJSON (String content) = withText "Text" (\s -> return (ContentID s)) (String content)
+
+instance ToJSON ContentID where
+  toJSON (ContentID content) = toJSON content
+
+
+-- Functions & Constructors ----------------------------------------
 
 isAlphanumeric :: Text -> Bool
 isAlphanumeric = L.foldl' (\b c -> (isAlpha c) && b) True . unpack
