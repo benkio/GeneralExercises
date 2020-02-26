@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 module Api.Endpoint where
 
 import Api.Domain
@@ -5,15 +6,28 @@ import Api.State
 import Api.Request
 import Api.Response
 import Servant
+import Control.Monad.Reader
+import Control.Monad.IO.Class
+import Control.Monad.Except
+import Data.Bifunctor
+import Control.Concurrent.STM.TVar
 
-getContent :: UserRequest -> AppM WatchListResponse
-getContent = undefined
+getContentEndpoint :: UserRequest -> AppM WatchListResponse
+getContentEndpoint UserRequest{userId=usr} = do
+  state <- ask
+  inputStore <- (liftIO . readTVarIO . store) state
+  inputUser <- (liftEither . first (\_ -> err400) . createUser) usr
+  result <- liftEither
+    (case (getUserContent inputUser inputStore) of
+                          Nothing -> Left err404
+                          Just x -> Right x)
+  return $ WatchListResponse (getContent result)
 
-addUser :: UserRequest -> AppM NoContent
-addUser = undefined
+addUserEndpoint :: UserRequest -> AppM NoContent
+addUserEndpoint = undefined
 
-addContent :: AddContentRequest -> AppM WatchListResponse
-addContent = undefined
+addContentEndpoint :: AddContentRequest -> AppM WatchListResponse
+addContentEndpoint = undefined
 
-deleteContent :: DeleteContentRequest -> AppM WatchListResponse
-deleteContent = undefined
+deleteContentEndpoint :: DeleteContentRequest -> AppM WatchListResponse
+deleteContentEndpoint = undefined

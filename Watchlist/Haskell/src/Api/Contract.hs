@@ -21,7 +21,7 @@ api :: Proxy API
 api = Proxy
 
 server :: ServerT API AppM
-server = E.getContent :<|> E.addContent :<|> E.deleteContent :<|> E.addUser
+server = E.getContentEndpoint :<|> E.addContentEndpoint :<|> E.deleteContentEndpoint :<|> E.addUserEndpoint
 
 app :: State -> Application
 app s = serve api $ hoistServer api ((flip runReaderT) s) server

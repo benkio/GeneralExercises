@@ -9,6 +9,7 @@
 module Api.Domain(
   deleteContent,
   addContent,
+  getContent,
   getUserContent,
   createUser,
   createContent,
@@ -87,3 +88,6 @@ deleteContent user content (Store s) =
 
 getUserContent :: User -> Store -> Maybe WatchList
 getUserContent user (Store hm) = HS.lookup user hm
+
+getContent :: WatchList -> [ContentID]
+getContent (WatchList c) = c
