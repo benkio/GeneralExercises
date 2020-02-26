@@ -6,19 +6,22 @@ import Servant
 import Api.Domain
 import Api.Request
 import Api.Response
+import qualified Api.Endpoint as E
+import Api.State
+import Control.Monad.Reader
 
 type API = "v1" :> "content" :> (
-  ReqBody '[JSON] UserRequest          :> Get '[JSON] WatchListResponse    :<|>
-  ReqBody '[JSON] AddContentRequest    :> Post '[JSON] WatchListResponse   :<|>
-  ReqBody '[JSON] DeleteContentRequest :> Delete '[JSON] WatchListResponse :<|>
-  ReqBody '[JSON] UserRequest    :> PostCreated '[JSON] NoContent
+  ReqBody '[JSON] UserRequest          :> Get         '[JSON] WatchListResponse :<|>
+  ReqBody '[JSON] AddContentRequest    :> Post        '[JSON] WatchListResponse :<|>
+  ReqBody '[JSON] DeleteContentRequest :> Delete      '[JSON] WatchListResponse :<|>
+  ReqBody '[JSON] UserRequest          :> PostCreated '[JSON] NoContent
   )
 
 api :: Proxy API
 api = Proxy
 
-server :: Server API
-server = undefined -- echoEndpoint :<|> sampleEndpoint
+server :: ServerT API AppM
+server = E.getContent :<|> E.addContent :<|> E.deleteContent :<|> E.addUser
 
-app :: Application
-app = serve api server
+app :: State -> Application
+app s = serve api $ hoistServer api ((flip runReaderT) s) server
