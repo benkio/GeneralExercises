@@ -36,7 +36,8 @@ addContentEndpoint AddContentRequest{userId=usr, content=cs} = do
   _ <- getUserContentAppM inputUser inputStore --404 check
   let newStore = addContent inputUser cs inputStore
   _ <- writeStore newStore
-  result <- getUserContentAppM inputUser inputStore
+  updatedStore <- readStore
+  result <- getUserContentAppM inputUser updatedStore
   return $ WatchListResponse (getContent result)
 
 deleteContentEndpoint :: DeleteContentRequest -> AppM WatchListResponse
@@ -46,7 +47,8 @@ deleteContentEndpoint DeleteContentRequest{userId=usr, content=cs} = do
   _ <- getUserContentAppM inputUser inputStore --404 check
   let newStore = foldl' (flip (deleteContent inputUser)) inputStore cs
   _ <- writeStore newStore
-  result <- getUserContentAppM inputUser inputStore
+  updatedStore <- readStore
+  result <- getUserContentAppM inputUser updatedStore
   return $ WatchListResponse (getContent result)
 
 -- Common Logic ---------------------------------------

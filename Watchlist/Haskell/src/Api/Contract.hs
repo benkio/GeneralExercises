@@ -10,12 +10,11 @@ import qualified Api.Endpoint as E
 import Api.State
 import Control.Monad.Reader
 
-type API = "v1" :> "content" :> (
-  ReqBody '[JSON] UserRequest          :> Get         '[JSON] WatchListResponse :<|>
-  ReqBody '[JSON] AddContentRequest    :> Post        '[JSON] WatchListResponse :<|>
-  ReqBody '[JSON] DeleteContentRequest :> Delete      '[JSON] WatchListResponse :<|>
-  ReqBody '[JSON] UserRequest          :> PostCreated '[JSON] NoContent
-  )
+type API =
+  "v1" :> "content" :> ReqBody '[JSON] UserRequest          :> Get         '[JSON] WatchListResponse :<|>
+  "v1" :> "content" :> ReqBody '[JSON] AddContentRequest    :> Post        '[JSON] WatchListResponse :<|>
+  "v1" :> "content" :> ReqBody '[JSON] DeleteContentRequest :> Delete      '[JSON] WatchListResponse :<|>
+  "v1" :> "user"    :> ReqBody '[JSON] UserRequest          :> PostCreated '[JSON] NoContent
 
 api :: Proxy API
 api = Proxy

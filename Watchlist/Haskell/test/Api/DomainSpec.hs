@@ -30,10 +30,22 @@ spec = do
           resultstore = deleteContent user content store
         in resultstore == Store (HS.insert user (WatchList []) HS.empty)
   describe "addContent" $ do
-    it "adds new content for the user into the store " $ do
+    it "adds new content for the user into the store " $
       let store = addContent user [content] emptyStore
           expectedStore = Store (HS.insert user wl HS.empty)
         in store == expectedStore
+  describe "addUser" $ do
+    it "adds a new user to the input store" $
+      let (Store hs) = addUser user emptyStore
+      in HS.member user hs
+    it "ignore the input if the user is already present" $
+      let
+        initialStore = Store (HS.singleton user wl)
+        result = addUser user initialStore
+      in result == initialStore
+  describe "getContent" $ do
+    it "extract the content ids from a Watchlist" $
+      getContent wl == [content]
   describe "getUserContent" $ do
     it "show the content of a user" $ do
       let store = Store (HS.insert user wl HS.empty)
@@ -54,12 +66,3 @@ spec = do
       isRight $ createContent "abcd"
     it "fails if the input length is not equal to 4" $
       isLeft $ createContent "iiiiiiiii"
-  describe "addUser" $ do
-    it "adds a new user to the input store" $
-      let (Store hs) = addUser user emptyStore
-      in HS.member user hs
-    it "ignore the input if the user is already present" $
-      let
-        initialStore = Store (HS.singleton user wl)
-        result = addUser user initialStore
-      in result == initialStore

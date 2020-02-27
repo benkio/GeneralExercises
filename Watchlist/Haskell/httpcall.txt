@@ -1,0 +1,38 @@
+# HTTP calls to the API
+# get user content
+
+GET http://localhost:8080/v1/content
+Content-type: application/json;charset=utf-8
+
+{
+  "userId": "abc"
+}
+
+# Add user
+
+POST http://localhost:8080/v1/user
+Content-type: application/json;charset=utf-8
+
+{
+  "userId": "abd"
+}
+
+# add user content
+
+POST http://localhost:8080/v1/content
+Content-type: application/json;charset=utf-8
+
+{
+  "userId": "abc",
+  "content": ["culo"]
+}
+
+# delete user content
+
+DELETE http://localhost:8080/v1/content
+Content-type: application/json;charset=utf-8
+
+{
+  "userId": "abc",
+  "content": ["culo"]
+}
