@@ -17,3 +17,15 @@ newEmptyStateStore = atomically $ newTVar emptyStore
 
 newEmptyState :: IO State
 newEmptyState = fmap (\var -> State { store = var }) newEmptyStateStore
+
+readStore :: AppM Store
+readStore = do
+    state <- ask
+    result <- (liftIO . atomically . readTVar . store) state
+    return result
+
+writeStore :: Store -> AppM ()
+writeStore newStore = do
+  state <- ask
+  _ <- liftIO . atomically $ writeTVar (store state) newStore
+  return ()

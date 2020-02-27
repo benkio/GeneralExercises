@@ -9,6 +9,7 @@
 module Api.Domain(
   deleteContent,
   addContent,
+  addUser,
   getContent,
   getUserContent,
   createUser,
@@ -72,15 +73,20 @@ emptyStore = Store HS.empty
 createUser :: String -> Either RefineException User
 createUser s = fmap (User . unrefine) (refine @AlphanumericSizeThree @Text (pack s))
 
+addUser :: User -> Store -> Store
+addUser user s@(Store hm)
+  | HS.member user hm == False = Store $ HS.insert user (WatchList []) hm
+  | otherwise = s
+
 createContent :: String -> Either RefineException ContentID
 createContent s = fmap (ContentID . pack . unrefine) (refine @(SizeEqualTo 4) @String s)
 
 deleteFromWatchList :: ContentID -> WatchList -> WatchList
 deleteFromWatchList c (WatchList l) = WatchList $ L.delete c l
 
-addContent :: User -> ContentID -> Store -> Store
+addContent :: User -> [ContentID] -> Store -> Store
 addContent user content (Store s) =
-   Store $ HS.insertWith (<>) user (WatchList [content]) s
+   Store $ HS.insertWith (<>) user (WatchList content) s
 
 deleteContent :: User -> ContentID -> Store -> Store
 deleteContent user content (Store s) =

@@ -31,7 +31,7 @@ spec = do
         in resultstore == Store (HS.insert user (WatchList []) HS.empty)
   describe "addContent" $ do
     it "adds new content for the user into the store " $ do
-      let store = addContent user content emptyStore
+      let store = addContent user [content] emptyStore
           expectedStore = Store (HS.insert user wl HS.empty)
         in store == expectedStore
   describe "getUserContent" $ do
