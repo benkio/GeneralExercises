@@ -54,3 +54,12 @@ spec = do
       isRight $ createContent "abcd"
     it "fails if the input length is not equal to 4" $
       isLeft $ createContent "iiiiiiiii"
+  describe "addUser" $ do
+    it "adds a new user to the input store" $
+      let (Store hs) = addUser user emptyStore
+      in HS.member user hs
+    it "ignore the input if the user is already present" $
+      let
+        initialStore = Store (HS.singleton user wl)
+        result = addUser user initialStore
+      in result == initialStore
