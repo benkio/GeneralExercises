@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a36a3ff0a98aa1d5a902e85fa14793926c77981d39bdc25e8700c1c99daa9231
+-- hash: 7e0e51be9153b178479a240f2b0bac9cec3ec0fe1d009d103fbf0800ab4b2fee
 
 name:           watchList
 version:        0.1.0.0
@@ -67,6 +67,7 @@ test-suite servant-test
   main-is: Spec.hs
   other-modules:
       Api.DomainSpec
+      IntegrationTestSpec
       Paths_watchList
   hs-source-dirs:
       test
