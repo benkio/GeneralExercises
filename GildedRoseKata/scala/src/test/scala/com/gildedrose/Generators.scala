@@ -5,15 +5,17 @@ import org.scalacheck.Gen
 object Generators {
 
   val daysGen: Gen[Int] = Gen.posNum[Int]
-  val sulfurasGen: Gen[Item] = for {
-    s <- Gen.posNum[Int]
-    q <- Gen.choose(0, 50)
-  } yield new Item("Sulfuras, Hand of Ragnaros", s, q)
 
-  val agedBrieGen: Gen[Item] = for {
+  def itemGen(name: String): Gen[Item] = for {
     s <- Gen.posNum[Int]
     q <- Gen.choose(0, 50)
-  } yield new Item("Aged Brie", s, q)
+  } yield new Item(name, s, q)
+
+  val sulfurasGen: Gen[Item] = itemGen("Sulfuras, Hand of Ragnaros")
+  val agedBrieGen: Gen[Item] = itemGen("Aged Brie")
+  val elixirGen: Gen[Item] = itemGen("Elixir of the Mongoose")
+  val conjuredGen: Gen[Item] = itemGen("Conjured Mana Cake")
+  val dexterityGen: Gen[Item] = itemGen("+5 Dexterity Vest")
 
   val backstagePassesFarGen: Gen[(Int, Item)] = for {
     s <- Gen.choose(10, 1000)
@@ -38,4 +40,14 @@ object Generators {
     s <- Gen.choose(0, 5)
     q <- Gen.choose(0, 50)
   } yield (d, new Item("Backstage passes to a TAFKAL80ETC concert", s, q))
+
+  val backstagePassesGen: Gen[Item] = Gen.oneOf(
+    backstagePassesFarGen.map(_._2),
+    backstagePassesCloseGen.map(_._2),
+    backstagePassesClosestGen.map(_._2),
+    backstagePassesWillExireGen.map(_._2)
+  )
+
+  val itemGen: Gen[Item] = Gen.oneOf(sulfurasGen, agedBrieGen, elixirGen, dexterityGen, backstagePassesGen)
+  val standardItemGen: Gen[Item] = Gen.oneOf(elixirGen, dexterityGen)
 }

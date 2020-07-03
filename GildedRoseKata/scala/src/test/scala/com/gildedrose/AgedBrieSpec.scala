@@ -14,7 +14,7 @@ class AgedBrieSpec extends Properties("AgedBrie"){
           app.updateQuality()
           (agedBrie.quality > beforeUpdateQuality ||
             (agedBrie.quality == 50 && beforeUpdateQuality == 50))
-        }).fold(true)(_ && _)
+        }).forall(_ == true)
     }
   }
 }

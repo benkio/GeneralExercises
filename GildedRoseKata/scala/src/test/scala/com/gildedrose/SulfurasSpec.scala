@@ -13,7 +13,7 @@ class SulfurasSpec extends Properties("Sulfuras"){
         (0 until days).map((_: Int) => {
           app.updateQuality()
           sulfuras.quality == startingQualtity
-        }).fold(true)(_ && _)
+        }).forall(_ == true)
     }
   }
 }
