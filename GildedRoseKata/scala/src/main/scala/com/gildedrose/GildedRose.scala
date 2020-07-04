@@ -9,10 +9,10 @@ class GildedRose(val items: Array[Item]) {
   ): ItemQuality =
     if (!ItemName.isAgedBrie(itemName)
       && !ItemName.isBackstagePasses(itemName)) {
-      itemQualityDecrease(itemQuality, itemName)
+      ItemQuality.decreaseQuality(itemQuality, itemName)
     } else {
 
-      val itemQualityIncreased: ItemQuality = itemQualityIncrease(itemQuality)
+      val itemQualityIncreased: ItemQuality = ItemQuality.increaseQuality(itemQuality)
 
       val itemQualityIncreasedSpecial: ItemQuality = concertSpecialQualityIncrease(itemQualityIncreased, itemName, itemSellIn)
 
@@ -24,47 +24,24 @@ class GildedRose(val items: Array[Item]) {
     itemName: ItemName,
     itemSellIn: Int
   ): ItemQuality =
-    if (itemQuality.value < 50 && ItemName.isBackstagePasses(itemName)) {
+    if (ItemName.isBackstagePasses(itemName)) {
       itemSellIn match {
-        case x if x < 6 => itemQualityIncrease(itemQualityIncrease(itemQuality))
-        case x if x < 11 => itemQualityIncrease(itemQuality)
+        case x if x < 6 => ItemQuality.increaseQuality(ItemQuality.increaseQuality(itemQuality))
+        case x if x < 11 => ItemQuality.increaseQuality(itemQuality)
         case _ => itemQuality
       }
     } else itemQuality
-
-  def sellInDecrease(itemName: ItemName, itemSellIn: Int): ItemSellIn =
-    if (!ItemName.isSulfuras(itemName)) {
-       ItemSellIn(itemSellIn - 1)
-    } else ItemSellIn(itemSellIn)
-
-  def itemQualityIncrease(itemQuality: ItemQuality): ItemQuality =
-    if (itemQuality.value < 50) ItemQuality(itemQuality.value + 1)  else itemQuality
-
-  def itemQualityDecrease(itemQuality: ItemQuality, itemName: ItemName) : ItemQuality =
-    if (itemQuality.value > 0 && !ItemName.isSulfuras(itemName)) {
-      ItemQuality(itemQuality.value - 1)
-    } else itemQuality
-
-  def negativeSellInItemQualityDecrease(itemQuality: ItemQuality, itemName: ItemName): ItemQuality =
-    if (!ItemName.isBackstagePasses(itemName)) {
-      itemQualityDecrease(itemQuality, itemName)
-    } else ItemQuality()
-
-  def negativeSellInItemQualityDecreaseOrIncrease(itemQuality: ItemQuality, itemName: ItemName): ItemQuality =
-    if (!ItemName.isAgedBrie(itemName)) {
-      negativeSellInItemQualityDecrease(itemQuality, itemName)
-    } else {
-      itemQualityIncrease(itemQuality)
-    }
 
   def negativeSellInItemQualityAdjustment(
     itemQuality: ItemQuality,
     itemName: ItemName,
     itemSellIn: ItemSellIn
-  ): ItemQuality =
-    if (itemSellIn.value < 0) {
-      negativeSellInItemQualityDecreaseOrIncrease(itemQuality, itemName)
-    } else itemQuality
+  ): ItemQuality = (ItemSellIn.isExpired(itemSellIn), !ItemName.isAgedBrie(itemName), !ItemName.isBackstagePasses(itemName)) match {
+    case (true, true, true) => ItemQuality.decreaseQuality(itemQuality, itemName)
+    case (true, true, false) => ItemQuality()
+    case (true, false, _) =>  ItemQuality.increaseQuality(itemQuality)
+    case (false, _, _) => itemQuality
+  }
 
   def updateQuality() {
     for (i <- 0 until items.length) {
@@ -74,7 +51,10 @@ class GildedRose(val items: Array[Item]) {
         items(i).sellIn
       )
 
-      val itemSellIn: ItemSellIn = sellInDecrease(items(i).name, items(i).sellIn)
+      val itemSellIn: ItemSellIn = ItemSellIn.decrease(
+        ItemSellIn(items(i).sellIn),
+        items(i).name
+      )
 
       val itemQuality: ItemQuality = negativeSellInItemQualityAdjustment(
         itemQualityInitial,
