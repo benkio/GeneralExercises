@@ -6,31 +6,15 @@ class GildedRose(val items: Array[Item]) {
     itemQuality: ItemQuality,
     itemName: ItemName,
     itemSellIn: Int
-  ): ItemQuality =
-    if (!ItemName.isAgedBrie(itemName)
-      && !ItemName.isBackstagePasses(itemName)) {
-      ItemQuality.decreaseQuality(itemQuality, itemName)
-    } else {
-
-      val itemQualityIncreased: ItemQuality = ItemQuality.increaseQuality(itemQuality)
-
-      val itemQualityIncreasedSpecial: ItemQuality = concertSpecialQualityIncrease(itemQualityIncreased, itemName, itemSellIn)
-
-      itemQualityIncreasedSpecial
-    }
-
-  def concertSpecialQualityIncrease(
-    itemQuality: ItemQuality,
-    itemName: ItemName,
-    itemSellIn: Int
-  ): ItemQuality =
-    if (ItemName.isBackstagePasses(itemName)) {
-      itemSellIn match {
-        case x if x < 6 => ItemQuality.increaseQuality(ItemQuality.increaseQuality(itemQuality))
-        case x if x < 11 => ItemQuality.increaseQuality(itemQuality)
-        case _ => itemQuality
-      }
-    } else itemQuality
+  ): ItemQuality = (
+    (!ItemName.isAgedBrie(itemName) && !ItemName.isBackstagePasses(itemName)),
+    ItemName.isBackstagePasses(itemName),
+    itemSellIn) match {
+    case (true, _, _) => ItemQuality.decreaseQuality(itemQuality, itemName)
+    case (false, true ,x) if x < 6 => ItemQuality.increaseQuality(ItemQuality.increaseQuality(ItemQuality.increaseQuality(itemQuality)))
+    case (false, true, x) if x < 11 => ItemQuality.increaseQuality(ItemQuality.increaseQuality(itemQuality))
+    case _ => ItemQuality.increaseQuality(itemQuality)
+  }
 
   def negativeSellInItemQualityAdjustment(
     itemQuality: ItemQuality,
@@ -44,26 +28,26 @@ class GildedRose(val items: Array[Item]) {
   }
 
   def updateQuality() {
-    for (i <- 0 until items.length) {
+    items.foreach((item: Item) => {
       val itemQualityInitial: ItemQuality = initialItemQualityIncreaseOrDecrease(
-        ItemQuality(items(i).quality),
-        items(i).name,
-        items(i).sellIn
+        ItemQuality(item.quality),
+        item.name,
+        item.sellIn
       )
 
       val itemSellIn: ItemSellIn = ItemSellIn.decrease(
-        ItemSellIn(items(i).sellIn),
-        items(i).name
+        ItemSellIn(item.sellIn),
+        item.name
       )
 
       val itemQuality: ItemQuality = negativeSellInItemQualityAdjustment(
         itemQualityInitial,
-        items(i).name,
+        item.name,
         itemSellIn
       )
 
-      items(i).quality = itemQuality.value
-      items(i).sellIn = itemSellIn.value
-    }
+      item.quality = itemQuality.value
+      item.sellIn = itemSellIn.value
+    })
   }
 }
