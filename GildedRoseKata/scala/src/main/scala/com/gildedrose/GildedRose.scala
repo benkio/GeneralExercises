@@ -17,14 +17,11 @@ class GildedRose(val items: Array[Item]) {
 
   def concertSpecialQualityIncrease(item: Item): Item =
     if (item.quality < 50 && item.name.equals("Backstage passes to a TAFKAL80ETC concert")) {
-      val itemLess11: Item = if (item.sellIn < 11) {
-        itemQualityIncrease(item)
-      } else item
-
-      val itemLess11and6: Item = if (itemLess11.sellIn < 6) {
-        itemQualityIncrease(itemLess11)
-      } else itemLess11
-      itemLess11and6
+      item.sellIn match {
+        case x if x < 6 => itemQualityIncrease(itemQualityIncrease(item))
+        case x if x < 11 => itemQualityIncrease(item)
+        case _ => item
+      }
     } else item
 
   def sellInDecrease(item: Item): Item =
