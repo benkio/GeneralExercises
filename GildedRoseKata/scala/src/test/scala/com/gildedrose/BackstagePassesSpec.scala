@@ -11,9 +11,9 @@ class BackstagePassesSpec extends Properties("BackstagePasses"){
       val app = new GildedRose(Array(backstagePassesFar))
         (0 until days).map((_: Int) => {
           val beforeUpdateQuality = backstagePassesFar.quality
-          app.updateQuality()
-          (backstagePassesFar.quality == (beforeUpdateQuality + 1) ||
-            (backstagePassesFar.quality == 50 && beforeUpdateQuality == 50))
+          val result = app.updateQuality()
+          (result.length == 1 && (result(0).quality == (beforeUpdateQuality + 1) ||
+            (result(0).quality == 50 && beforeUpdateQuality == 50)))
         }).forall(_ == true)
     }
   }
@@ -23,10 +23,10 @@ class BackstagePassesSpec extends Properties("BackstagePasses"){
       val app = new GildedRose(Array(backstagePassesClose))
         (0 until days).map((d: Int) => {
           val beforeUpdateQuality = backstagePassesClose.quality
-          app.updateQuality()
-          (backstagePassesClose.quality == (beforeUpdateQuality + 2) ||
-            (backstagePassesClose.quality == 50 && beforeUpdateQuality == 49) ||
-            (backstagePassesClose.quality == 50 && beforeUpdateQuality == 50))
+          val result = app.updateQuality()
+          (result.length == 1 && (result(0).quality == (beforeUpdateQuality + 2) ||
+            (result(0).quality == 50 && beforeUpdateQuality == 49) ||
+            (result(0).quality == 50 && beforeUpdateQuality == 50)))
         }).forall(_ == true)
     }
   }
@@ -36,11 +36,11 @@ class BackstagePassesSpec extends Properties("BackstagePasses"){
       val app = new GildedRose(Array(backstagePassesClosest))
         (0 until days).map((d: Int) => {
           val beforeUpdateQuality = backstagePassesClosest.quality
-          app.updateQuality()
-          (backstagePassesClosest.quality == (beforeUpdateQuality + 3) ||
-            (backstagePassesClosest.quality == 50 && beforeUpdateQuality == 48) ||
-            (backstagePassesClosest.quality == 50 && beforeUpdateQuality == 49) ||
-            (backstagePassesClosest.quality == 50 && beforeUpdateQuality == 50))
+          val result = app.updateQuality()
+          (result.length == 1 && (result(0).quality == (beforeUpdateQuality + 3) ||
+            (result(0).quality == 50 && beforeUpdateQuality == 48) ||
+            (result(0).quality == 50 && beforeUpdateQuality == 49) ||
+            (result(0).quality == 50 && beforeUpdateQuality == 50)))
         }).forall(_ == true)
     }
   }
@@ -49,8 +49,8 @@ class BackstagePassesSpec extends Properties("BackstagePasses"){
     case (days: Int, backstagePassesWillExpire: Item) => {
       val app = new GildedRose(Array(backstagePassesWillExpire))
         (0 until days).map((d: Int) => {
-          app.updateQuality()
-          backstagePassesWillExpire.quality == 0
+          val result = app.updateQuality()
+          (result.length == 1 && result(0).quality == 0)
         }).dropWhile(_ == false).forall(_ == true)
     }
   }

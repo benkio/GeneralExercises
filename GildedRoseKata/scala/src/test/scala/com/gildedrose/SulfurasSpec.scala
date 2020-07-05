@@ -11,8 +11,8 @@ class SulfurasSpec extends Properties("Sulfuras"){
       val app = new GildedRose(Array(sulfuras))
       val startingQualtity = sulfuras.quality
         (0 until days).map((_: Int) => {
-          app.updateQuality()
-          sulfuras.quality == startingQualtity
+          val result = app.updateQuality()
+          (result.length == 1 && result(0).quality == startingQualtity)
         }).forall(_ == true)
     }
   }

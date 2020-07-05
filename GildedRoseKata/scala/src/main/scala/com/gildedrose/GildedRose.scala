@@ -27,27 +27,10 @@ class GildedRose(val items: Array[Item]) {
     case (false, _, _) => itemQuality
   }
 
-  def updateQuality() {
-    items.foreach((item: Item) => {
-      val itemQualityInitial: ItemQuality = initialItemQualityIncreaseOrDecrease(
-        ItemQuality(item.quality),
-        item.name,
-        item.sellIn
-      )
-
-      val itemSellIn: ItemSellIn = ItemSellIn.decrease(
-        ItemSellIn(item.sellIn),
-        item.name
-      )
-
-      val itemQuality: ItemQuality = negativeSellInItemQualityAdjustment(
-        itemQualityInitial,
-        item.name,
-        itemSellIn
-      )
-
-      item.quality = itemQuality.value
-      item.sellIn = itemSellIn.value
-    })
-  }
+  def updateQuality(): Array[Item] = for {
+      item <- items
+      initialQuality = initialItemQualityIncreaseOrDecrease(ItemQuality(item.quality), item.name, item.sellIn)
+      itemSellIn = ItemSellIn.decrease(ItemSellIn(item.sellIn), item.name)
+      resultQuality = negativeSellInItemQualityAdjustment(initialQuality, item.name, itemSellIn)
+    } yield new Item(item.name, itemSellIn.value, resultQuality.value)
 }

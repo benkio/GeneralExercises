@@ -11,9 +11,9 @@ class AgedBrieSpec extends Properties("AgedBrie"){
       val app = new GildedRose(Array(agedBrie))
         (0 until days).map((_: Int) => {
           val beforeUpdateQuality = agedBrie.quality
-          app.updateQuality()
-          (agedBrie.quality > beforeUpdateQuality ||
-            (agedBrie.quality == 50 && beforeUpdateQuality == 50))
+          val result = app.updateQuality()
+          (result.length == 1 && (result(0).quality > beforeUpdateQuality ||
+            (result(0).quality == 50 && beforeUpdateQuality == 50)))
         }).forall(_ == true)
     }
   }

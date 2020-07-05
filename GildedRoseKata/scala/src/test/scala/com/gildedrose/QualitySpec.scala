@@ -12,8 +12,8 @@ class QualitySpec extends Properties("QualitySpec") {
       val items: Array[Item] = itemList.toArray
       val app = new GildedRose(items)
         (0 until days).map((_: Int) => {
-          app.updateQuality()
-          items.forall(_.quality <= 50)
+          val result = app.updateQuality()
+          result.forall(_.quality <= 50)
         }).forall(_ == true)
     }
   }
@@ -23,8 +23,8 @@ class QualitySpec extends Properties("QualitySpec") {
       val items: Array[Item] = itemList.toArray
       val app = new GildedRose(items)
         (0 until days).map((_: Int) => {
-          app.updateQuality()
-          items.forall(_.quality >= 0)
+          val result = app.updateQuality()
+          result.forall(_.quality >= 0)
         }).forall(_ == true)
     }
   }
@@ -45,18 +45,18 @@ class QualitySpec extends Properties("QualitySpec") {
               .filter(_._1.sellIn > 0)
               .map{ case (i, index) => (i.quality, index) }
 
-          app.updateQuality()
+          val result = app.updateQuality()
 
           expiredItemQualities.map {
             case (qualityBefore, index) =>
-              items(index).quality == (qualityBefore - 2) ||
-              (items(index).quality == 0 && qualityBefore == 1) ||
-              (items(index).quality == 0 && qualityBefore == 0)
+              result(index).quality == (qualityBefore - 2) ||
+              (result(index).quality == 0 && qualityBefore == 1) ||
+              (result(index).quality == 0 && qualityBefore == 0)
           }.forall(_ == true) &&
           notExpiredItemQualities.map {
             case (qualityBefore, index) =>
-              items(index).quality == (qualityBefore - 1) ||
-              (items(index).quality == 0 && qualityBefore == 0)
+              result(index).quality == (qualityBefore - 1) ||
+              (result(index).quality == 0 && qualityBefore == 0)
           }.forall(_ == true)
         }).forall(_ == true)
     }
