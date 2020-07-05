@@ -73,6 +73,16 @@ case class AgedBrie(abSellIn: Int, abQuality: Int) extends Item(AgedBrie.name, a
 object AgedBrie {
   val name: ItemName = "Aged Brie"
 }
+case class Conjured(var cSellIn: Int, var cQuality: Int) extends Item(Conjured.name, cSellIn, cQuality) {
+  override def preSellInQualityAdjustment(): Conjured = this.copy(cQuality = ItemQuality.decreaseQuality(ItemQuality.decreaseQuality(ItemQuality(cQuality))).value)
+  override def postSellInQualityAdjustment(): Conjured = if (ItemSellIn.isExpired((ItemSellIn(cSellIn))))
+    this.copy(cQuality = ItemQuality.increaseQuality(ItemQuality.increaseQuality(ItemQuality(cQuality))).value)
+  else this
+  override def sellInDecrease(): Conjured = this
+}
+object Conjured {
+  val name: ItemName = "Conjured Mana Cake"
+}
 
 object Item {
 
@@ -80,6 +90,7 @@ object Item {
     case Sulfuras.name         => new Sulfuras(item.sellIn, item.quality)
     case BackstagePasses.name  => new BackstagePasses(item.sellIn, item.quality)
     case AgedBrie.name         => new AgedBrie(item.sellIn, item.quality)
+    case Conjured.name         => new Conjured(item.sellIn, item.quality)
     case _ => item
   }
 }

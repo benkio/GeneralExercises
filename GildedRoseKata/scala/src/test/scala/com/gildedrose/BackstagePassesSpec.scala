@@ -46,7 +46,7 @@ class BackstagePassesSpec extends Properties("BackstagePasses"){
     }
   }
 
-  property("Backstage Passes drop quality to 0 if expiration happens") = forAll(backstagePassesWillExireGen) {
+  property("Backstage Passes drop quality to 0 if expiration happens") = forAll(backstagePassesWillExpireGen) {
     case (days: Int, backstagePassesWillExpire: Item) => {
       (0 until days).foldLeft((true, backstagePassesWillExpire)){
         case((acc: Boolean, item: Item),d: Int) => {
