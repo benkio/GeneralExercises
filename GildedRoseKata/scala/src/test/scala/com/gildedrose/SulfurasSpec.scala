@@ -8,10 +8,9 @@ class SulfurasSpec extends Properties("Sulfuras"){
 
   property("Sulfuras Quality never decrese") = forAll(daysGen, sulfurasGen) {
     (days: Int, sulfuras: Item) => {
-      val app = new GildedRose(Array(sulfuras))
       val startingQualtity = sulfuras.quality
         (0 until days).map((_: Int) => {
-          val result = app.updateQuality()
+          val result = GildedRose.updateQuality(Array(sulfuras))
           (result.length == 1 && result(0).quality == startingQualtity)
         }).forall(_ == true)
     }

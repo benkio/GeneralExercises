@@ -1,6 +1,6 @@
 package com.gildedrose
 
-class GildedRose(val items: Array[Item]) {
+object GildedRose {
 
   def initialItemQualityIncreaseOrDecrease(
     itemQuality: ItemQuality,
@@ -27,7 +27,7 @@ class GildedRose(val items: Array[Item]) {
     case (false, _, _) => itemQuality
   }
 
-  def updateQuality(): Array[Item] = for {
+  def updateQuality(items: Array[Item]): Array[Item] = for {
       item <- items
       initialQuality = initialItemQualityIncreaseOrDecrease(ItemQuality(item.quality), item.name, item.sellIn)
       itemSellIn = ItemSellIn.decrease(ItemSellIn(item.sellIn), item.name)
