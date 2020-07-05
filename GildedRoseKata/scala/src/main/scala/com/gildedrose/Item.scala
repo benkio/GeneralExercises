@@ -2,16 +2,16 @@ package com.gildedrose
 
 class Item(val name: String, var sellIn: Int, var quality: Int) {
 
-  def preSellInQualityAdjustment(): Item = copy(
+  def preSellInQualityAdjustment(): Item = copyItem(
     quality = ItemQuality.decreaseQuality(
       ItemQuality(quality)
     ).value)
-  def postSellInQualityAdjustment(): Item = if (ItemSellIn.isExpired(ItemSellIn(sellIn))) copy(quality = ItemQuality.decreaseQuality(ItemQuality(quality)).value)
+  def postSellInQualityAdjustment(): Item = if (ItemSellIn.isExpired(ItemSellIn(sellIn))) copyItem(quality = ItemQuality.decreaseQuality(ItemQuality(quality)).value)
   else this
-  def sellInDecrease(): Item = copy(sellIn = ItemSellIn(sellIn - 1).value)
+  def sellInDecrease(): Item = copyItem(sellIn = ItemSellIn(sellIn - 1).value)
 
   //Can't touch the Item definition so I manually add the copy method
-  def copy(sellIn: Int = sellIn, quality: Int = quality): Item = new Item(
+  def copyItem(sellIn: Int = sellIn, quality: Int = quality): Item = new Item(
     this.name,
     sellIn,
     quality
@@ -42,31 +42,33 @@ object ItemSellIn {
   def isExpired(itemSellIn: ItemSellIn): Boolean = itemSellIn.value < 0
 }
 
-class Sulfuras(sellIn: Int, quality: Int) extends Item(Sulfuras.name, sellIn, quality) {
-  override def preSellInQualityAdjustment(): Item = this
-  override def postSellInQualityAdjustment(): Item = this
-  override def sellInDecrease(): Item = this
+case class Sulfuras(var sSellIn: Int, var sQuality: Int) extends Item(Sulfuras.name, sSellIn, sQuality) {
+  override def preSellInQualityAdjustment(): Sulfuras = this
+  override def postSellInQualityAdjustment(): Sulfuras = this
+  override def sellInDecrease(): Sulfuras = this
 }
 object Sulfuras {
   val name: ItemName = "Sulfuras, Hand of Ragnaros"
 }
-class BackstagePasses(sellIn: Int, quality: Int) extends Item(BackstagePasses.name, sellIn, quality) {
-  override def preSellInQualityAdjustment(): Item  = {
-    val newQuality = sellIn match {
-      case x if x < 6 => ItemQuality.increaseQuality(ItemQuality.increaseQuality(ItemQuality.increaseQuality(ItemQuality(quality))))
-      case x if x < 11 => ItemQuality.increaseQuality(ItemQuality.increaseQuality(ItemQuality(quality)))
-      case _ => ItemQuality.increaseQuality(ItemQuality(quality))
+case class BackstagePasses(var bsSellIn: Int, var bsQuality: Int) extends Item(BackstagePasses.name, bsSellIn, bsQuality) {
+  override def preSellInQualityAdjustment(): BackstagePasses  = {
+    val newQuality = bsSellIn match {
+      case x if x < 6 => ItemQuality.increaseQuality(ItemQuality.increaseQuality(ItemQuality.increaseQuality(ItemQuality(bsQuality))))
+      case x if x < 11 => ItemQuality.increaseQuality(ItemQuality.increaseQuality(ItemQuality(bsQuality)))
+      case _ => ItemQuality.increaseQuality(ItemQuality(bsQuality))
     }
-    this.copy(quality = newQuality.value)
+    this.copy(bsQuality = newQuality.value)
   }
-  override def postSellInQualityAdjustment(): Item = this.copy(quality = ItemQuality().value)
+  override def postSellInQualityAdjustment(): BackstagePasses = if (ItemSellIn.isExpired(ItemSellIn(bsSellIn))) this.copy(bsQuality = ItemQuality().value) else this
+  override def sellInDecrease(): BackstagePasses = this.copy(bsSellIn = ItemSellIn(bsSellIn - 1).value)
 }
 object BackstagePasses {
   val name: ItemName = "Backstage passes to a TAFKAL80ETC concert"
 }
-class AgedBrie(sellIn: Int, quality: Int) extends Item(AgedBrie.name, sellIn, quality) {
-  override def preSellInQualityAdjustment(): Item  = this.copy(quality = ItemQuality.increaseQuality(ItemQuality(quality)).value)
-  override def postSellInQualityAdjustment(): Item = this.copy(quality = ItemQuality.increaseQuality(ItemQuality(quality)).value)
+case class AgedBrie(abSellIn: Int, abQuality: Int) extends Item(AgedBrie.name, abSellIn, abQuality) {
+  override def preSellInQualityAdjustment(): AgedBrie  = this.copy(abQuality = ItemQuality.increaseQuality(ItemQuality(abQuality)).value)
+  override def postSellInQualityAdjustment(): AgedBrie = this.copy(abQuality = ItemQuality.increaseQuality(ItemQuality(abQuality)).value)
+  override def sellInDecrease(): AgedBrie = this.copy(abSellIn = ItemSellIn(abSellIn - 1).value)
 }
 object AgedBrie {
   val name: ItemName = "Aged Brie"
