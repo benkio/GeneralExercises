@@ -2,7 +2,7 @@ package com.gildedrose
 
 object TexttestFixture {
   def main(args: Array[String]): Unit = {
-    val items = Array[Item](
+    var items = Array[Item](
       new Item("+5 Dexterity Vest", 10, 20),
       new Item("Aged Brie", 2, 0),
       new Item("Elixir of the Mongoose", 5, 7),
@@ -23,7 +23,7 @@ object TexttestFixture {
         System.out.println(item.name + ", " + item.sellIn + ", " + item.quality)
       }
       System.out.println()
-      app.updateQuality()
+      items = app.updateQuality()
     }
   }
 }
