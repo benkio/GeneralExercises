@@ -34,4 +34,8 @@ backstagePassesClosestGen :: Gen (Item, Positive Int)
 backstagePassesClosestGen = backstagePassesGen $ \days -> (days, days + 5)
 
 backstagePassesWillExpireGen :: Gen (Item, Positive Int)
-backstagePassesWillExpireGen = backstagePassesGen $ \days -> (0, days - 1)
+backstagePassesWillExpireGen = do
+  days <- choose $ (6, 1000)
+  sellIn <- choose $ (0, 5)
+  quality <- choose (0, 50)
+  return ((Item "Backstage passes to a TAFKAL80ETC concert" sellIn quality), Positive days)

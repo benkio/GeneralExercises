@@ -1,5 +1,6 @@
 module BackstagePassesSpec (spec) where
 
+import GildedRose
 import Generators
 import Test.Hspec
 import Test.QuickCheck
@@ -17,4 +18,9 @@ spec = describe "BackstagePassesSpec" $ do
       forAll (backstagePassesCloseGen) $ qualityCheck ascendingQualty3
   describe "should have quality == 0" $ do
     it "When it expires" $ do
-      pending
+      forAll (backstagePassesWillExpireGen)
+        (\(i, d)->
+          let days = (getPositive d)
+              successCondition = \r -> length r == 1 && 0 == getQuality (r !! 0)
+              result = foldl (\acc iteration -> acc || successCondition iteration) False $ take days (iterate updateQuality [i])
+          in result)
