@@ -30,6 +30,9 @@ test-suite spec
   other-modules:     SulfurasSpec
                      AgedBrieSpec
                      Generators
+                     SuccessConditions
+                     BackstagePassesSpec
+                     PropertyChecks
   build-depends:     base >=4.7
                    , gilded-rose
                    , hspec
