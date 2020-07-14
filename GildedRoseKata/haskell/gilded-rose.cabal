@@ -28,6 +28,7 @@ test-suite spec
   default-language:  Haskell2010
   main-is:           Spec.hs
   other-modules:     SulfurasSpec
+                     QualitySpec
                      AgedBrieSpec
                      Generators
                      SuccessConditions
