@@ -14,3 +14,9 @@ ascendingQualty2 = ascendingQualty 2
 
 ascendingQualty3 :: (Int, Int) -> Bool
 ascendingQualty3 = ascendingQualty 3
+
+qualityNeverNegative :: Int -> Bool
+qualityNeverNegative = (>= 0)
+
+qualityLessThen50 :: Int -> Bool
+qualityLessThen50 = (<= 50)

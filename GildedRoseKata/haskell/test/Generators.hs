@@ -3,6 +3,7 @@ module Generators  where
 import Test.QuickCheck.Gen
 import Test.QuickCheck
 import GildedRose
+import Test.QuickCheck.Instances.Tuple
 
 itemGen :: String -> Gen (Item, Positive Int)
 itemGen name = do
@@ -39,3 +40,27 @@ backstagePassesWillExpireGen = do
   sellIn <- choose $ (0, 5)
   quality <- choose (0, 50)
   return ((Item "Backstage passes to a TAFKAL80ETC concert" sellIn quality), Positive days)
+
+dexterityGen :: Gen (Item, Positive Int)
+dexterityGen = itemGen "+5 Dexterity Vest"
+
+elixirGen :: Gen (Item, Positive Int)
+elixirGen = itemGen "Elixir of the Mongoose"
+
+agedBrieGen :: Gen (Item, Positive Int)
+agedBrieGen = itemGen "Aged Brie"
+
+sulfurasGen :: Gen (Item, Positive Int)
+sulfurasGen = itemGen "Sulfuras, Hand of Ragnaros"
+
+allItemGen :: Gen Item
+allItemGen = oneof $ fmap (fmap fst) [
+  dexterityGen,
+    elixirGen,
+    agedBrieGen,
+    sulfurasGen,
+    (backstagePassesGen (\_ -> (0, 1000)))
+  ]
+
+allItemsGen :: Gen ([Item], Positive Int)
+allItemsGen = (listOf allItemGen) >*< (arbitrary :: Gen (Positive Int))

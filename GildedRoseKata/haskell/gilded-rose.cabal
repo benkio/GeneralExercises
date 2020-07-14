@@ -39,3 +39,4 @@ test-suite spec
                    , hspec
                    , hspec-expectations
                    , QuickCheck
+                   , checkers

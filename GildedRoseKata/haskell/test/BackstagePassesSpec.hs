@@ -11,11 +11,11 @@ spec :: Spec
 spec = describe "BackstagePassesSpec" $ do
   describe "should increase in quality" $ do
     it "by one if the expiration date is far away (> 10)" $ property $ do
-      forAll (backstagePassesFarGen) $ qualityCheck ascendingQualty1
+      forAll (backstagePassesFarGen) $ qualityCheckSingleton ascendingQualty1
     it "by two if the expiration date is close (5-10)" $ property $ do
-      forAll (backstagePassesCloseGen) $ qualityCheck ascendingQualty2
+      forAll (backstagePassesCloseGen) $ qualityCheckSingleton ascendingQualty2
     it "by three if the expiration date is closest (0-5)" $ property $ do
-      forAll (backstagePassesCloseGen) $ qualityCheck ascendingQualty3
+      forAll (backstagePassesCloseGen) $ qualityCheckSingleton ascendingQualty3
   describe "should have quality == 0" $ do
     it "When it expires" $ do
       forAll (backstagePassesWillExpireGen)

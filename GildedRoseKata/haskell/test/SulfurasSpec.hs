@@ -8,7 +8,7 @@ import Test.QuickCheck
 spec :: Spec
 spec = describe "SulfurasSpec" $ do
   it "should never change in quality" $ property $ do
-    forAll (itemGen "Sulfuras, Hand of Ragnaros")
+    forAll (sulfurasGen)
       (\(i, d)->
           let days = (getPositive d)
               expectedQuality = getQuality i
