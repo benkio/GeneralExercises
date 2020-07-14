@@ -15,6 +15,9 @@ ascendingQualty2 = ascendingQualty 2
 ascendingQualty3 :: (Int, Int) -> Bool
 ascendingQualty3 = ascendingQualty 3
 
+qualityDegradesExpired :: (Int, Int) -> Bool
+qualityDegradesExpired (oldQ, newQ) = newQ == (oldQ - 2) || (oldQ == 1 && newQ == 0) || (oldQ == 0 && newQ == 0)
+
 qualityNeverNegative :: Int -> Bool
 qualityNeverNegative = (>= 0)
 

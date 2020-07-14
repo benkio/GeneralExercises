@@ -13,11 +13,14 @@ qualityNeverNegative' (is, d) = qualityCheckAll qualityNeverNegative (getPositiv
 qualityLessThen50' :: ([Item], Positive Int) -> Bool
 qualityLessThen50' (is, d) = qualityCheckAll qualityLessThen50 (getPositive d) is
 
+qualityDegradesTwiceAsFast :: ([Item], Positive Int) -> Bool
+qualityDegradesTwiceAsFast (is, d) = qualityCheck qualityDegradesExpired False (getPositive d) is
+
 spec :: Spec
 spec = describe "QualitySpec" $ do
   it "Quality should never be negative" $ property $ do
-    forAll (allItemsGen) qualityNeverNegative'
+    forAll (allItemsGen allItemGen) qualityNeverNegative'
   it "Quality should never be > 50" $ property $ do
-    forAll (allItemsGen) qualityLessThen50'
+    forAll (allItemsGen allItemGen) qualityLessThen50'
   it "Once the sell by date has passed, Quality degrades twice as fast" $ do
-    pending
+    forAll (allItemsGen allItemGenExpired) qualityDegradesTwiceAsFast
