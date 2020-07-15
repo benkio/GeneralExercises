@@ -27,22 +27,26 @@ postSellInDecreaseNoBackstageCalculation name quality =
   then qualityDecrease name quality
   else 0
 
-postSellInDecreaseQualityCalculation :: String -> Int -> Int -> Item
+postSellInDecreaseNoAgedBrieCalculation :: String -> Int -> Int
+postSellInDecreaseNoAgedBrieCalculation name quality = 
+  if name /= "Aged Brie"
+  then postSellInDecreaseNoBackstageCalculation name quality
+  else qualityIncrease quality
+  
+postSellInDecreaseQualityCalculation :: String -> Int -> Int -> Int
 postSellInDecreaseQualityCalculation name sellIn' quality' =
   if sellIn' < 0
-    then
-      if name /= "Aged Brie"
-        then
-        Item name sellIn' $ postSellInDecreaseNoBackstageCalculation name quality'
-        else
-        Item name sellIn' $ qualityIncrease quality'
-    else Item name sellIn' quality'
+  then postSellInDecreaseNoAgedBrieCalculation name quality'
+  else quality'
 
 initialQualityCalculation :: String -> Int -> Int -> Int
 initialQualityCalculation name sellIn quality
   | name /= "Aged Brie"
       && name /= "Backstage passes to a TAFKAL80ETC concert" =
       qualityDecrease name quality
+  | quality < 50 && (name == "Backstage passes to a TAFKAL80ETC concert")
+        && ((sellIn < 11) && (quality < 49)) =
+    quality + 2 + if (sellIn < 6) && (quality < 48) then 1 else 0
   | quality < 50 =
     quality + 1
       + if (name == "Backstage passes to a TAFKAL80ETC concert")
@@ -63,4 +67,4 @@ updateQuality = map updateQualityItem
     updateQualityItem (Item name sellIn quality) =
       let quality' = initialQualityCalculation name sellIn quality
           sellIn' = sellInDecrease name sellIn
-       in postSellInDecreaseQualityCalculation name sellIn' quality'
+       in Item name sellIn' $ postSellInDecreaseQualityCalculation name sellIn' quality'
