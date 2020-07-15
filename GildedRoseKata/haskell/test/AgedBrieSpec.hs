@@ -7,6 +7,6 @@ import SuccessConditions
 import PropertyChecks
 
 spec :: Spec
-spec = describe "AgedBrieSpec" $ do
-  it "should always increase in quality" $ property $ do
-    forAll (agedBrieGen) $ qualityCheckSingleton ascendingQualty1
+spec = describe "AgedBrieSpec" $
+  it "should always increase in quality" $ property $
+    forAll agedBrieGen $ qualityCheckSingleton ascendingQualty1

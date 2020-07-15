@@ -19,13 +19,13 @@ main = do
     printUpdate (items, day) = do
       putStrLn ("-------- day " ++ show day ++ " --------")
       putStrLn "name, sellIn, quality"
-      mapM_ (putStrLn . show) items
+      mapM_ print items
       putStrLn ""
 
     daysFromArg :: IO Int
     daysFromArg = do
       args <- getArgs
-      return $ if length args > 0
+      return $ if not (null args)
                   then read (head args)
                   else 20
 

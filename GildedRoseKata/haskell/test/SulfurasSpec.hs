@@ -6,12 +6,12 @@ import Test.Hspec
 import Test.QuickCheck
 
 spec :: Spec
-spec = describe "SulfurasSpec" $ do
-  it "should never change in quality" $ property $ do
-    forAll (sulfurasGen)
+spec = describe "SulfurasSpec" $
+  it "should never change in quality" $ property $
+    forAll sulfurasGen
       (\(i, d)->
-          let days = (getPositive d)
+          let days = getPositive d
               expectedQuality = getQuality i
-              successCondition = \r -> length r == 1 && expectedQuality == getQuality (r !! 0)
+              successCondition r = length r == 1 && expectedQuality == getQuality (head r)
               result = foldl (\acc iteration -> acc && successCondition iteration) True $ take days (iterate updateQuality [i])
           in result)

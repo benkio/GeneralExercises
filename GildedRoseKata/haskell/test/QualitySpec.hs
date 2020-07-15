@@ -18,9 +18,9 @@ qualityDegradesTwiceAsFast (is, d) = qualityCheck qualityDegradesExpired False (
 
 spec :: Spec
 spec = describe "QualitySpec" $ do
-  it "Quality should never be negative" $ property $ do
+  it "Quality should never be negative" $ property $
     forAll (allItemsGen allItemGen) qualityNeverNegative'
-  it "Quality should never be > 50" $ property $ do
+  it "Quality should never be > 50" $ property $
     forAll (allItemsGen allItemGen) qualityLessThen50'
-  it "Once the sell by date has passed, Quality degrades twice as fast" $ do
+  it "Once the sell by date has passed, Quality degrades twice as fast" $
     forAll (allItemsGen allItemGenExpired) qualityDegradesTwiceAsFast
