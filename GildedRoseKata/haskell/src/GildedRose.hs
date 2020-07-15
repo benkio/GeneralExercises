@@ -9,32 +9,40 @@ instance Show Item where
   show (Item name sellIn quality) =
     name ++ ", " ++ show sellIn ++ ", " ++ show quality
 
-postSellInExpiredCalculation :: String -> Int -> Int -> Item
-postSellInExpiredCalculation name sellIn' quality' =
+qualityDecrease :: String -> Int -> Int
+qualityDecrease name quality =
+  if (quality > 0) && (name /= "Sulfuras, Hand of Ragnaros")
+  then quality - 1
+  else quality
+
+qualityIncrease :: Int -> Int
+qualityIncrease quality =
+  if quality < 50
+  then quality + 1
+  else quality
+
+postSellInDecreaseNoBackstageCalculation :: String -> Int -> Int
+postSellInDecreaseNoBackstageCalculation name quality =
+  if name /= "Backstage passes to a TAFKAL80ETC concert"
+  then qualityDecrease name quality
+  else 0
+
+postSellInDecreaseQualityCalculation :: String -> Int -> Int -> Item
+postSellInDecreaseQualityCalculation name sellIn' quality' =
   if sellIn' < 0
     then
       if name /= "Aged Brie"
         then
-          if name /= "Backstage passes to a TAFKAL80ETC concert"
-            then
-              ( if (quality' > 0) && (name /= "Sulfuras, Hand of Ragnaros")
-                  then Item name sellIn' (quality' - 1)
-                  else Item name sellIn' quality'
-              )
-            else Item name sellIn' (quality' - quality')
+        Item name sellIn' $ postSellInDecreaseNoBackstageCalculation name quality'
         else
-          if quality' < 50
-            then Item name sellIn' (quality' + 1)
-            else Item name sellIn' quality'
+        Item name sellIn' $ qualityIncrease quality'
     else Item name sellIn' quality'
 
 initialQualityCalculation :: String -> Int -> Int -> Int
 initialQualityCalculation name sellIn quality
   | name /= "Aged Brie"
       && name /= "Backstage passes to a TAFKAL80ETC concert" =
-    if (quality > 0) && (name /= "Sulfuras, Hand of Ragnaros")
-      then quality - 1
-      else quality
+      qualityDecrease name quality
   | quality < 50 =
     quality + 1
       + if (name == "Backstage passes to a TAFKAL80ETC concert")
@@ -43,16 +51,16 @@ initialQualityCalculation name sellIn quality
         else 0
   | otherwise = quality
 
-initialSellInCalculation :: String -> Int -> Int
-initialSellInCalculation name sellIn =
+sellInDecrease :: String -> Int -> Int
+sellInDecrease name sellIn =
   if name /= "Sulfuras, Hand of Ragnaros"
-    then sellIn - 1
-    else sellIn
+  then sellIn - 1
+  else sellIn
 
 updateQuality :: GildedRose -> GildedRose
 updateQuality = map updateQualityItem
   where
     updateQualityItem (Item name sellIn quality) =
       let quality' = initialQualityCalculation name sellIn quality
-          sellIn' = initialSellInCalculation name sellIn
-       in postSellInExpiredCalculation name sellIn' quality'
+          sellIn' = sellInDecrease name sellIn
+       in postSellInDecreaseQualityCalculation name sellIn' quality'
