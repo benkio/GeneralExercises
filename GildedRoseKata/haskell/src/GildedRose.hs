@@ -17,23 +17,26 @@ instance Show Item where
     name ++ ", " ++ show sellIn ++ ", " ++ show quality
 
 class HasQuality a where
-  increaseQ :: a -> a
-  decreaseQ :: a -> a
+  calcQ :: a -> a
 
 isValid :: Quality -> Bool
 isValid q = valueQ q `elem` [0..50]
 
 instance HasQuality Item where
-  increaseQ i@(Item n s q) =
-    if isValid q' then Item n s (valueQ q') else i
-    where q' = Quality (q + 1)
-  decreaseQ i@(Item n s q) =
+  calcQ i@(Item n s q) =
     if isValid q' then Item n s (valueQ q') else i
     where q' = Quality (q - 1)
 
--- instance HasQuality SpecialItem where
---   increaseQ
---   decreaseQ
+instance HasQuality SpecialItem where
+   calcQ i@(Sulfuras _ _) = i
+   calcQ (AgedBrie s q)
+     | s < 0 = AgedBrie s $ (qualityIncrease . qualityIncrease) q
+     | otherwise = AgedBrie s $ qualityIncrease q
+   calcQ (BackstagePasses s q)
+     | s < 0 = BackstagePasses s $ Quality 0
+     | (s < 6) && (valueQ q < 48) = BackstagePasses s $ iterate qualityIncrease q !! 2
+     | (s < 11) && (valueQ q < 49) = BackstagePasses s $ iterate qualityIncrease q !! 1
+     | otherwise = BackstagePasses s $ qualityIncrease q
 
 -- TODO remove and use the typeclass
 qualityDecrease :: String -> Quality -> Quality
@@ -60,9 +63,9 @@ initialQualityCalculation name sellIn quality
       && name /= "Backstage passes to a TAFKAL80ETC concert" =
       qualityDecrease name quality
   | isValid quality && (name == "Backstage passes to a TAFKAL80ETC concert")
-        && ((sellIn < 11) && (valueQ quality < 49)) && (sellIn < 6) && (valueQ quality < 48) = iterate qualityIncrease quality !! 2
+        && (sellIn < 6) && (valueQ quality < 48) = iterate qualityIncrease quality !! 2
   | isValid quality && (name == "Backstage passes to a TAFKAL80ETC concert")
-        && ((sellIn < 11) && (valueQ quality < 49)) = iterate qualityIncrease quality !! 1
+        && (sellIn < 11) && (valueQ quality < 49) = iterate qualityIncrease quality !! 1
   | isValid quality = qualityIncrease quality
   | otherwise = quality
 
