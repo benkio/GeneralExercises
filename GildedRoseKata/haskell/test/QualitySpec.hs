@@ -1,7 +1,7 @@
 module QualitySpec (spec) where
 
 import Generators
-import GildedRose
+import Item
 import Test.Hspec
 import Test.QuickCheck
 import PropertyChecks

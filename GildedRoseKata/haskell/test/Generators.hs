@@ -1,7 +1,7 @@
 module Generators  where
 
 import Test.QuickCheck
-import GildedRose
+import Item
 import Test.QuickCheck.Instances.Tuple
 
 itemGen :: String -> Bool -> Gen (Item, Positive Int)
@@ -12,12 +12,6 @@ itemGen name sellInExpired = do
   let sellIn = if sellInExpired then getNegative negativeSellIn else getPositive positiveSellIn
   quality <- choose (0, 50)
   return (Item name sellIn quality, days)
-
-getQuality :: Item -> Int
-getQuality (Item _ _ q) = q
-
-getSellIn :: Item -> Int
-getSellIn (Item _ s _) = s
 
 backstagePassesGen :: (Int -> (Int, Int)) -> Gen (Item, Positive Int)
 backstagePassesGen sellInBoundsFunc = do

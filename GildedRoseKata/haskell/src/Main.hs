@@ -2,7 +2,7 @@ module Main where
 
 import System.Environment
 import GildedRose
-
+import Item
 
 main :: IO ()
 main = do

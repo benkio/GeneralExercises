@@ -10,6 +10,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:   GildedRose
+                     Item
   build-depends:     base >=4.7
   hs-source-dirs:    src
   default-language:  Haskell2010
@@ -20,6 +21,7 @@ executable gilded-rose
   hs-source-dirs:    src
   default-language:  Haskell2010
   other-modules:     GildedRose
+                     Item
 
 test-suite spec
   type:              exitcode-stdio-1.0
