@@ -1,4 +1,8 @@
-module QualitySpec (spec) where
+module QualitySpec (spec
+                   , qualityNeverNegative
+                   , qualityLessThen50
+                   , qualityDegradesTwiceAsFast
+                   ) where
 
 import Generators
 import Item

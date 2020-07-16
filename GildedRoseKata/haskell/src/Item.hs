@@ -23,6 +23,7 @@ data SpecialItem =
     Sulfuras SellIn Quality
   | AgedBrie SellIn Quality
   | BackstagePasses SellIn Quality
+  | Conjured SellIn Quality
 
 newtype Quality = Quality { valueQ :: Int } deriving (Show)
 newtype SellIn = SellIn { valueS :: Int } deriving (Show)
@@ -53,6 +54,8 @@ instance Show SpecialItem where
     getName i ++ ", " ++ show sellIn ++ ", " ++ show quality
   show i@(BackstagePasses sellIn quality) =
     getName i ++ ", " ++ show sellIn ++ ", " ++ show quality
+  show i@(Conjured sellIn quality) =
+    getName i ++ ", " ++ show sellIn ++ ", " ++ show quality
 
 instance Show AllItems where
   show (StandardItem i) = "standard :" ++ show i
@@ -65,18 +68,17 @@ instance HasQuality AllItems where
   getQuality (SpecialItem i) = getQuality i
 
 instance HasQuality Item where
-  calcQ i@(Item n s q) =
-    if isValid q' then Item n s (valueQ q') else i
-    where
-      decreaseCoeff = if s < 0 then 2 else 1
-      q' = Quality (max (q - decreaseCoeff) 0)
+  calcQ (Item n s q) =
+    Item n s (valueQ (qualityDecrease (SellIn s) (Quality q) (\x -> if valueS x < 0 then 2 else 1)))
   getQuality (Item _ _ q) = Quality q
 
 instance HasQuality SpecialItem where
   getQuality (Sulfuras _ q) = q
   getQuality (AgedBrie _ q) = q
+  getQuality (Conjured _ q) = q
   getQuality (BackstagePasses _ q) = q
   calcQ i@(Sulfuras _ _) = i
+  calcQ (Conjured s q) = Conjured s (qualityDecrease s q (const 2))
   calcQ (AgedBrie s q)
     | isExpired s = AgedBrie s $ (qualityIncrease . qualityIncrease) q
     | otherwise = AgedBrie s $ qualityIncrease q
@@ -91,6 +93,7 @@ instance HasName Item where
 
 instance HasName SpecialItem where
   getName Sulfuras{} = "Sulfuras, Hand of Ragnaros"
+  getName Conjured{} = "Conjured Mana Cake"
   getName AgedBrie{} = "Aged Brie"
   getName BackstagePasses{} = "Backstage passes to a TAFKAL80ETC concert"
 
@@ -104,9 +107,11 @@ instance HasSellIn Item where
 
 instance HasSellIn SpecialItem where
   getSellIn (Sulfuras s _) = s
+  getSellIn (Conjured s _) = s
   getSellIn (AgedBrie s _) = s
   getSellIn (BackstagePasses s _) = s
   calcSellIn (Sulfuras s q) = Sulfuras s q
+  calcSellIn (Conjured s q) = Conjured (SellIn (valueS s - 1)) q
   calcSellIn (AgedBrie s q) = AgedBrie (SellIn (valueS s - 1)) q
   calcSellIn (BackstagePasses s q) = BackstagePasses (SellIn (valueS s - 1)) q
 
@@ -128,3 +133,9 @@ qualityIncrease :: Quality -> Quality
 qualityIncrease quality =
   if isValid q' then q' else quality
   where q' = Quality (valueQ quality + 1)
+
+qualityDecrease :: SellIn -> Quality -> (SellIn -> Int) -> Quality
+qualityDecrease s q decreaseCoeff =
+  if isValid q' then q' else q
+  where
+    q' = Quality $ max (valueQ q - decreaseCoeff s) 0

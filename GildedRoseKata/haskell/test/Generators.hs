@@ -48,6 +48,9 @@ agedBrieGen = itemGen "Aged Brie" False
 sulfurasGen :: Gen (Item, Positive Int)
 sulfurasGen = itemGen "Sulfuras, Hand of Ragnaros" False
 
+conjuredGen :: Gen (Item, Positive Int)
+conjuredGen = itemGen "Conjured Mana Cake" False
+
 allItemGen :: Gen Item
 allItemGen = oneof $ fmap (fmap fst) [
   dexterityGen False,
