@@ -5,54 +5,65 @@ type GildedRose = [Item]
 data Item = Item String Int Int
   deriving (Eq)
 
+data SpecialItem =
+    Sulfuras Int Quality
+  | AgedBrie Int Quality
+  | BackstagePasses Int Quality
+
+newtype Quality = Quality { valueQ :: Int }
+
 instance Show Item where
   show (Item name sellIn quality) =
     name ++ ", " ++ show sellIn ++ ", " ++ show quality
 
-qualityDecrease :: String -> Int -> Int
+class HasQuality a where
+  increaseQ :: a -> a
+  decreaseQ :: a -> a
+
+isValid :: Quality -> Bool
+isValid q = valueQ q `elem` [0..50]
+
+instance HasQuality Item where
+  increaseQ i@(Item n s q) =
+    if isValid q' then Item n s (valueQ q') else i
+    where q' = Quality (q + 1)
+  decreaseQ i@(Item n s q) =
+    if isValid q' then Item n s (valueQ q') else i
+    where q' = Quality (q - 1)
+
+-- instance HasQuality SpecialItem where
+--   increaseQ
+--   decreaseQ
+
+-- TODO remove and use the typeclass
+qualityDecrease :: String -> Quality -> Quality
 qualityDecrease name quality =
-  if (quality > 0) && (name /= "Sulfuras, Hand of Ragnaros")
-  then quality - 1
-  else quality
+  if isValid q' && (name /= "Sulfuras, Hand of Ragnaros") then q' else quality
+  where q' = Quality (valueQ quality - 1)
 
-qualityIncrease :: Int -> Int
+-- TODO remove and use the typeclass
+qualityIncrease :: Quality -> Quality
 qualityIncrease quality =
-  if quality < 50
-  then quality + 1
-  else quality
+  if isValid q' then q' else quality
+  where q' = Quality (valueQ quality + 1)
 
-postSellInDecreaseNoBackstageCalculation :: String -> Int -> Int
-postSellInDecreaseNoBackstageCalculation name quality =
-  if name /= "Backstage passes to a TAFKAL80ETC concert"
-  then qualityDecrease name quality
-  else 0
+postSellInDecreaseQualityCalculation :: String -> Int -> Quality -> Quality
+postSellInDecreaseQualityCalculation name sellIn' quality
+  | sellIn' < 0 && name /= "Aged Brie" && name /= "Backstage passes to a TAFKAL80ETC concert" = qualityDecrease name quality
+  | sellIn' < 0 && name == "Backstage passes to a TAFKAL80ETC concert" = Quality 0
+  | sellIn' < 0 && name == "Aged Brie" = qualityIncrease quality
+  | otherwise = quality
 
-postSellInDecreaseNoAgedBrieCalculation :: String -> Int -> Int
-postSellInDecreaseNoAgedBrieCalculation name quality = 
-  if name /= "Aged Brie"
-  then postSellInDecreaseNoBackstageCalculation name quality
-  else qualityIncrease quality
-  
-postSellInDecreaseQualityCalculation :: String -> Int -> Int -> Int
-postSellInDecreaseQualityCalculation name sellIn' quality' =
-  if sellIn' < 0
-  then postSellInDecreaseNoAgedBrieCalculation name quality'
-  else quality'
-
-initialQualityCalculation :: String -> Int -> Int -> Int
+initialQualityCalculation :: String -> Int -> Quality -> Quality
 initialQualityCalculation name sellIn quality
   | name /= "Aged Brie"
       && name /= "Backstage passes to a TAFKAL80ETC concert" =
       qualityDecrease name quality
-  | quality < 50 && (name == "Backstage passes to a TAFKAL80ETC concert")
-        && ((sellIn < 11) && (quality < 49)) =
-    quality + 2 + if (sellIn < 6) && (quality < 48) then 1 else 0
-  | quality < 50 =
-    quality + 1
-      + if (name == "Backstage passes to a TAFKAL80ETC concert")
-        && ((sellIn < 11) && (quality < 49))
-        then 1 + if (sellIn < 6) && (quality < 48) then 1 else 0
-        else 0
+  | isValid quality && (name == "Backstage passes to a TAFKAL80ETC concert")
+        && ((sellIn < 11) && (valueQ quality < 49)) && (sellIn < 6) && (valueQ quality < 48) = iterate qualityIncrease quality !! 2
+  | isValid quality && (name == "Backstage passes to a TAFKAL80ETC concert")
+        && ((sellIn < 11) && (valueQ quality < 49)) = iterate qualityIncrease quality !! 1
+  | isValid quality = qualityIncrease quality
   | otherwise = quality
 
 sellInDecrease :: String -> Int -> Int
@@ -65,6 +76,6 @@ updateQuality :: GildedRose -> GildedRose
 updateQuality = map updateQualityItem
   where
     updateQualityItem (Item name sellIn quality) =
-      let quality' = initialQualityCalculation name sellIn quality
+      let quality' = initialQualityCalculation name sellIn $ Quality quality
           sellIn' = sellInDecrease name sellIn
-       in Item name sellIn' $ postSellInDecreaseQualityCalculation name sellIn' quality'
+       in Item name sellIn' $ valueQ $ postSellInDecreaseQualityCalculation name sellIn' quality'
