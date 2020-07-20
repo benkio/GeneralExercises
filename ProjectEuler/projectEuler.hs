@@ -4,7 +4,6 @@ import Data.List (find)
 import Data.Maybe (fromJust)
 
 -- Es 1
-
 ex1_3_5_mult_sum :: Int
 ex1_3_5_mult_sum = sum [x | x <- [1..1000], x `mod` 5 == 0 || x `mod` 3 == 0]
 
@@ -15,7 +14,6 @@ fibonacciEvenSum = sum $ takeWhile (< 4000000) $ filter even fibonacci
     fibonacci = [1, 2] ++ zipWith (+) fibonacci (tail fibonacci)
 
 -- Es 3
-
 isPrime :: Int -> Bool
 isPrime 2 = True
 isPrime n = all (\p' -> n `mod` p' /= 0) [p | p <- [2..((round . sqrt . fromIntegral) n)], isPrime p]
