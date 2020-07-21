@@ -1,6 +1,6 @@
 module ProjectEuler where
 
-import Data.List (find)
+import Data.List (find, sort)
 import Data.Maybe (fromJust)
 
 -- Es 1
@@ -28,3 +28,10 @@ primeFactors n
 largestPrimeFactor :: Int
 largestPrimeFactor = let target = 600851475143
                      in last $ primeFactors target
+
+-- Es 4
+isPalindrome :: Int -> Bool
+isPalindrome n = show n == (reverse . show) n
+
+largest3DigitPalindrome :: Int
+largest3DigitPalindrome =  (maximum . filter isPalindrome) [x * y | x <- [100..999], y <- [100..999]]
