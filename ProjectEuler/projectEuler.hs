@@ -40,3 +40,9 @@ largest3DigitPalindrome =  (maximum . filter isPalindrome) [x * y | x <- [100..9
 smallestMultiple :: Int
 smallestMultiple = head [x | x <- [20, 40..], all (\p -> x `mod` p == 0 ) [1..20]]
 
+-- Es 6
+sumSquareDifference :: Int
+sumSquareDifference =
+  let squared100N = foldl (+) 0 [x ^ 2 | x <- [1..100]]
+      sumSquared100N = (^2) $ foldl (+) 0 [1..100]
+  in sumSquared100N - squared100N
