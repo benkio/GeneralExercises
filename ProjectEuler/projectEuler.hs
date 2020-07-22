@@ -35,3 +35,8 @@ isPalindrome n = show n == (reverse . show) n
 
 largest3DigitPalindrome :: Int
 largest3DigitPalindrome =  (maximum . filter isPalindrome) [x * y | x <- [100..999], y <- [100..999]]
+
+-- Es 5
+smallestMultiple :: Int
+smallestMultiple = head [x | x <- [20, 40..], all (\p -> x `mod` p == 0 ) [1..20]]
+
