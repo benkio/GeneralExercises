@@ -46,3 +46,16 @@ sumSquareDifference =
   let squared100N = foldl (+) 0 [x ^ 2 | x <- [1..100]]
       sumSquared100N = (^2) $ foldl (+) 0 [1..100]
   in sumSquared100N - squared100N
+
+-- Es 7
+primes :: [Int]
+primes =  1 : primes' 2 [3..]
+  where
+    primes' :: Int -> [Int] -> [Int]
+    primes' n ps
+      | isPrime n = n : primes' (head ps') (tail ps')
+      | otherwise = primes' (head ps) (tail ps)
+      where ps' = filter (\x -> x `mod` n /= 0) ps
+
+oneThousendOnePrime :: Int
+oneThousendOnePrime = primes !! 10001
