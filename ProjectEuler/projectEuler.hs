@@ -53,10 +53,10 @@ primes :: [Int]
 primes =  1 : primes' 2 [3..]
   where
     primes' :: Int -> [Int] -> [Int]
-    primes' n ps
-      | isPrime n = n : primes' (head ps') (tail ps')
-      | otherwise = primes' (head ps) (tail ps)
+    primes' n ps = (n : ps'') ++  primes' (head ps''') (tail ps''')
       where ps' = filter (\x -> x `mod` n /= 0) ps
+            ps'' = takeWhile (< n*n) ps'
+            ps''' = [x | x <- filter (>= n*n) ps', all (\y -> x `mod` y /= 0) ps'']
 
 oneThousandOnePrime :: Int
 oneThousandOnePrime = primes !! 10001
@@ -76,7 +76,6 @@ largestProductInSeries =
   in chunksOfMax 0 13 (show inputNum)
 
 -- Es 9
-
 findMN :: (Int, Int)
 findMN = findCoeff [1..]
   where
@@ -97,6 +96,10 @@ pythagorianTriplet1000Product =
   in a * b * c
 
 -- Es 10
-
 sumTwoMilionPrimes :: Int
-sumTwoMilionPrimes = sum (primes `using` parListChunk (10^3) rpar)
+sumTwoMilionPrimes = sumInChunk primes 200000
+  where sumInChunk :: [Int] -> Int -> Int
+        sumInChunk ps limit
+          | limit < 1000 = sum $ take limit ps
+          | otherwise = let (chunk, rest) =  splitAt 1000 ps
+                        in sum chunk + sumInChunk rest (limit - 1000)
