@@ -75,7 +75,7 @@ maxDiagonalBackSlash = maxGrid diagonalBackSlash
 maxGrid' :: Int
 maxGrid' = maximum [maxVertical, maxHorizontal, maxDiagonalSlash, maxDiagonalBackSlash]
 
--- Es 2 ------------------------------------------------------------
+-- Es 12 ------------------------------------------------------------
 
 triangleNumbers :: [Int]
 triangleNumbers = tail $ scanl (+) 0 [1..]
@@ -92,7 +92,7 @@ triangleNumberWith500Divisors = find' 500 triangleNumbers -- find from Data.List
           | (length . findDivisors) (head xs) < v = find' v (tail xs)
           | otherwise = head xs
 
--- Es 3 -----------------------------------------------
+-- Es 13 -----------------------------------------------
 
 inputGrid' :: String
 inputGrid' =
