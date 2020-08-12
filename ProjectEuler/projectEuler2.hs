@@ -2,6 +2,11 @@ module ProjectEuler2 where
 
 import Data.List (transpose)
 
+
+
+
+
+
 -- Es 11 ----------------------------------------------------------------------
 inputGrid :: String
 inputGrid =
@@ -69,3 +74,20 @@ maxDiagonalBackSlash = maxGrid diagonalBackSlash
 
 maxGrid' :: Int
 maxGrid' = maximum [maxVertical, maxHorizontal, maxDiagonalSlash, maxDiagonalBackSlash]
+
+-- Es 2 ------------------------------------------------------------
+
+triangleNumbers :: [Int]
+triangleNumbers = tail $ scanl (+) 0 [1..]
+
+findDivisors :: Int -> [Int]
+findDivisors n =
+  let divisors = filter ((==0) . mod n) [1..((round . sqrt . fromIntegral) n)]
+      divisors' = fmap (div n) divisors
+  in  divisors ++ divisors'
+
+triangleNumberWith500Divisors :: Int
+triangleNumberWith500Divisors = find' 500 triangleNumbers -- find from Data.List is not very efficient!!!
+  where find' v xs
+          | (length . findDivisors) (head xs) < v = find' v (tail xs)
+          | otherwise = head xs
