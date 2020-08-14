@@ -211,7 +211,7 @@ collatzSequence :: Int -> [Int]
 collatzSequence n = unfoldr (\x -> if x == 1 then Nothing else Just (x, generator x)) n ++ [1]
 
 largestCollatzSequence :: Int
-largestCollatzSequence = largestCollatzSequenceRecursive (reverse [1..5000]) 0
+largestCollatzSequence = largestCollatzSequenceRecursive (reverse [1..1000000]) 0
   where largestCollatzSequenceRecursive :: [Int] -> Int -> Int
         largestCollatzSequenceRecursive [] acc = acc
         largestCollatzSequenceRecursive ns acc =
