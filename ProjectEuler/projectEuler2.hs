@@ -1,7 +1,7 @@
 module ProjectEuler2 where
 
-import Data.List (transpose)
-
+import Data.List (transpose, unfoldr, (\\))
+import Data.Maybe (Maybe(..))
 
 
 
@@ -199,3 +199,25 @@ inputGrid' =
 
 first10DigitSum :: String
 first10DigitSum = (take 10 . show . sum . fmap (\x -> read x :: Integer) . lines) inputGrid'
+
+-- Es 14 ----------------------------------------------------
+
+generator :: Int -> Int
+generator n
+  | n `mod` 2 == 0 = n `div` 2
+  | otherwise = 3 * n + 1
+
+collatzSequence :: Int -> [Int]
+collatzSequence n = unfoldr (\x -> if x == 1 then Nothing else Just (x, generator x)) n ++ [1]
+
+largestCollatzSequence :: Int
+largestCollatzSequence = largestCollatzSequenceRecursive (reverse [1..5000]) 0
+  where largestCollatzSequenceRecursive :: [Int] -> Int -> Int
+        largestCollatzSequenceRecursive [] acc = acc
+        largestCollatzSequenceRecursive ns acc =
+          let currentCollatz = collatzSequence (head ns)
+              currentCollatzLength = length currentCollatz
+              nextSequence = tail ns \\ tail currentCollatz
+          in if currentCollatzLength > acc
+             then largestCollatzSequenceRecursive nextSequence currentCollatzLength
+             else largestCollatzSequenceRecursive nextSequence acc
