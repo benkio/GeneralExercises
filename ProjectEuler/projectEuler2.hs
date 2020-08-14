@@ -1,6 +1,6 @@
 module ProjectEuler2 where
 
-import Data.List (transpose, unfoldr, (\\))
+import Data.List (transpose, foldr, foldl')
 import Data.Maybe (Maybe(..))
 
 
@@ -207,17 +207,15 @@ generator n
   | n `mod` 2 == 0 = n `div` 2
   | otherwise = 3 * n + 1
 
-collatzSequence :: Int -> [Int]
-collatzSequence n = unfoldr (\x -> if x == 1 then Nothing else Just (x, generator x)) n ++ [1]
+collatzSequence :: Int -> Int
+collatzSequence n = countSequence n 0
+  where
+    countSequence :: Int -> Int -> Int
+    countSequence 1 acc = acc + 1
+    countSequence x acc = countSequence (generator x) (acc + 1)
 
 largestCollatzSequence :: Int
-largestCollatzSequence = largestCollatzSequenceRecursive (reverse [1..1000000]) 0
-  where largestCollatzSequenceRecursive :: [Int] -> Int -> Int
-        largestCollatzSequenceRecursive [] acc = acc
-        largestCollatzSequenceRecursive ns acc =
-          let currentCollatz = collatzSequence (head ns)
-              currentCollatzLength = length currentCollatz
-              nextSequence = tail ns \\ tail currentCollatz
-          in if currentCollatzLength > acc
-             then largestCollatzSequenceRecursive nextSequence currentCollatzLength
-             else largestCollatzSequenceRecursive nextSequence acc
+largestCollatzSequence = fst $ foldr (\x acc -> let currentCollatz = collatzSequence x in
+                                    if currentCollatz > snd acc
+                                    then (x, currentCollatz) else acc
+                               ) (1, 1) [1..1000000]
