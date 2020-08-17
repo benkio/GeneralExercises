@@ -2,7 +2,7 @@ module ProjectEuler2 where
 
 import Data.List (transpose, foldr, foldl')
 import Data.Maybe (Maybe(..))
-
+import Data.Char (digitToInt)
 
 
 
@@ -219,3 +219,18 @@ largestCollatzSequence = fst $ foldr (\x acc -> let currentCollatz = collatzSequ
                                     if currentCollatz > snd acc
                                     then (x, currentCollatz) else acc
                                ) (1, 1) [1..1000000]
+
+-- Es 15 ---------------------------------------------
+
+-- https://mathworld.wolfram.com/LatticePath.html
+-- Solution is the binomial coefficient (40 20) -> (40!/ 20!*20!)
+latticePaths :: Integer
+latticePaths =
+  let numerator = foldl' (*) 1 [1..40]
+      twentyFact = foldl' (*) 1 [1..20]
+  in numerator `div` (twentyFact ^ (2 :: Integer))
+
+-- Es 16 -----------------------------------------------------------------
+
+powerDigitSum :: Int
+powerDigitSum = (sum . fmap digitToInt. show)(2 ^ (1000 :: Integer))
