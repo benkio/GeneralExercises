@@ -1,7 +1,7 @@
 module ProjectEuler2 where
 
-import Data.List (transpose, foldr, foldl')
-import Data.Maybe (Maybe(..))
+import Data.List (transpose, foldr, foldl', find)
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Char (digitToInt)
 
 
@@ -234,3 +234,84 @@ latticePaths =
 
 powerDigitSum :: Int
 powerDigitSum = (sum . fmap digitToInt. show)(2 ^ (1000 :: Integer))
+
+-- Es 17 ------------------------------------------------------
+
+oneDigitNumMap :: [(Int, String)]
+oneDigitNumMap = [
+  (0, ""), -- not used: eg ten, twenty...
+  (1, "one"),
+  (2, "two"),
+  (3, "three"),
+  (4, "four"),
+  (5, "five"),
+  (6, "six"),
+  (7, "seven"),
+  (8, "eight"),
+  (9, "nine")]
+
+twoDigitNumSpecial :: [(Int, String)]
+twoDigitNumSpecial = [
+  (10, "ten"),
+  (11, "eleven"),
+  (12, "twelve"),
+  (13, "thirteen"),
+  (14, "fourteen"),
+  (15, "fifteen"),
+  (16, "sixteen"),
+  (17, "severteen"),
+  (18, "eighteen"),
+  (19, "nineteen"),
+  (20, "twenty"),
+  (30, "thirty"),
+  (40, "forty"),
+  (50, "fifty"),
+  (80, "eighty")
+  ]
+
+numMapSimpleFind :: Int -> [(Int, String)] -> Maybe (Int, String)
+numMapSimpleFind n = find (\x -> fst x == n)
+
+twoDigitStringCount :: Int -> String
+twoDigitStringCount n
+  | n `elem` fmap fst oneDigitNumMap = (snd . fromJust . numMapSimpleFind n)  oneDigitNumMap
+  | n `elem` fmap fst twoDigitNumSpecial = (snd . fromJust . numMapSimpleFind n) twoDigitNumSpecial
+  | otherwise =
+    let (dozens, singleDigit) = n `divMod` 10
+        singleDigitCount = (snd . fromJust . numMapSimpleFind singleDigit) oneDigitNumMap
+        standardDozen = (snd . fromJust . numMapSimpleFind dozens) oneDigitNumMap ++ "ty" ++ (if singleDigit == 0 then "" else "-")
+        dozensStringCount = foldr (\x _ -> snd x ++ "-") standardDozen $ numMapSimpleFind (dozens * 10) twoDigitNumSpecial
+    in dozensStringCount ++ singleDigitCount
+
+threeDigitStringCount :: Int -> String
+threeDigitStringCount n =
+  let
+  (hundreds, twoDigit) = n `divMod` 100
+  hundredsStringCount = oneHundredCheck (hundreds, twoDigit)
+  twoDigitCount = twoDigitStringCount twoDigit
+  in hundredsStringCount ++ twoDigitCount
+  where oneHundredCheck :: (Int, Int) -> String
+        oneHundredCheck (h, h')
+          | h /= 0 && h' == 0 = (snd . fromJust . numMapSimpleFind h) oneDigitNumMap ++ " hundred"
+          | h /= 0 && h' /= 0 = (snd . fromJust . numMapSimpleFind h) oneDigitNumMap ++ " hundred and "
+          | otherwise = ""
+
+fourDigitStringCount :: Int -> String
+fourDigitStringCount n =
+  let
+    (thousand, threeDigit) = n `divMod` 1000
+    thousendStringCount = oneThousandCheck (thousand, threeDigit)
+    twoDigitCount = threeDigitStringCount threeDigit
+  in thousendStringCount ++ twoDigitCount
+  where oneThousandCheck :: (Int, Int) -> String
+        oneThousandCheck (t, t')
+          | t /= 0 && (t' == 0) = (snd . fromJust . numMapSimpleFind t) oneDigitNumMap ++ " thousand"
+          | t /= 0 && (t' >= 100) = (snd . fromJust . numMapSimpleFind t) oneDigitNumMap ++ " thousand "
+          | t /= 0 && t' < 100 = (snd . fromJust . numMapSimpleFind t) oneDigitNumMap ++ " thousand and "
+          | otherwise = ""
+
+oneThousandNumbersToChar :: IO ()--[String]
+oneThousandNumbersToChar = mapM_ (putStrLn . fourDigitStringCount) [1..1000]
+
+oneThousandNumbersToCharCount :: Int
+oneThousandNumbersToCharCount = sum $ fmap (length . filter (not . (`elem` " -")) . fourDigitStringCount) [1..1000]
