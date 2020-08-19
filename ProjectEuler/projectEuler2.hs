@@ -385,3 +385,8 @@ calendar =
 
 firstOfMonthSundays :: Int
 firstOfMonthSundays =  (length . filter (\x -> isPrefixOf "Sunday 1/" x && (not . isSuffixOf "1900") x)) calendar
+
+-- Es 20 -----------------------------------------------
+
+factorialDigitSum :: Int
+factorialDigitSum = (foldl' (\acc c -> acc + digitToInt c) 0 . show . foldl' (*) 1) [1..100]
