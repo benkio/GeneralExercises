@@ -1,10 +1,11 @@
+{-# LANGUAGE TupleSections #-}
 module ProjectEuler2 where
 
-import Data.List (transpose, foldr, foldl', find)
+import Data.List (transpose, foldr, foldl', find, cycle, isPrefixOf, isSuffixOf)
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Char (digitToInt)
-
-
+import Control.Monad ((>>=))
+import Control.Applicative ((<$>))
 
 
 -- Es 11 ----------------------------------------------------------------------
@@ -348,3 +349,39 @@ maxPath = sum $ foldr collapseTriangle (replicate 16 0) triangle
     collapseTriangle ts acc =
       let maxacc = (fmap (uncurry max). zip (tail acc)) acc
       in fmap (uncurry (+)) $ maxacc `zip` ts
+
+-- Es 19 -------------------------------------------------------------
+
+weekDays :: [String]
+weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+months :: [Int]
+months = [1..12]
+
+isLeap :: Int -> Bool
+isLeap y
+  | y `mod` 400 == 0                   = True
+  | y `mod` 4 == 0 && y `mod` 100 /= 0 = True
+  | otherwise                          = False
+
+daysOfMonth :: Int -> Int -> [Int]
+daysOfMonth y m
+  | isLeap y && m == 2     = [1..29]
+  | m == 2                 = [1..28]
+  | m `elem` [9, 4, 6, 11] = [1..30]
+  | otherwise              = [1..31]
+
+years :: [Int]
+years = [1900..2000]
+
+calendar :: [String]
+calendar =
+  let mmyyyy = [(x, y) | y <- years, x <- months]
+      ddmmyyyy = mmyyyy >>= \(x, y) -> (, x, y) <$> daysOfMonth y x
+      d = take (length ddmmyyyy) $ cycle weekDays
+      d_ddmmyyyy = fmap (\(x, (a, b, c)) ->
+                           x ++ " " ++ show a ++ "/" ++ show b ++ "/" ++ show c) $ d `zip` ddmmyyyy
+  in  d_ddmmyyyy
+
+firstOfMonthSundays :: Int
+firstOfMonthSundays =  (length . filter (\x -> isPrefixOf "Sunday 1/" x && (not . isSuffixOf "1900") x)) calendar
