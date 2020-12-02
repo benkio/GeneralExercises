@@ -1,7 +1,7 @@
 module FirstDecember (firstDecemberSolution1, firstDecemberSolution2, finder) where
 
-import Data.List (delete)
-import Data.Maybe (listToMaybe, fromMaybe)
+import           Data.List  (delete, find)
+import           Data.Maybe (fromMaybe, listToMaybe)
 
 input :: IO [Int]
 input = do
@@ -10,13 +10,16 @@ input = do
 
 
 solution1 :: [Int] -> Int
-solution1 xs = finder xs 2020
+solution1 xs = finder xs 2020 2
 
-finder :: [Int] -> Int -> Int
-finder is target = (fromMaybe 0 . listToMaybe) [ x * y | x <- is, y <- is, x + y == target]
+finder :: [Int] -> Int -> Int -> Int
+finder [] _ _      = 0
+finder is target 1 = (fromMaybe 0 . find (target ==)) is
+finder is target n = (fromMaybe 0 . find (0 /=) . fmap (\x -> x * finder (delete x is) (target-x) (n-1))) is
+  --(fromMaybe 0 . listToMaybe) [ x * y | x <- is, y <- is, x + y == target]
 
 solution2 :: [Int] -> Int
-solution2 xs = maximum $ fmap (\x -> x * finder (delete x xs) (2020-x)) xs
+solution2 xs = finder xs 2020 3
 
 firstDecemberSolution1 :: IO Int
 firstDecemberSolution1 = do solution1 <$> input
