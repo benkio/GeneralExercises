@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9dca6e9b106c39864f902b8ca5a531045236a8888db5ab695c64d1f7e7e38849
+-- hash: 098ee7d11cd3cf6a4c0a67b0f9413e996dd88a7961be33d8d0d4461b806721a5
 
 name:           AdventOfCode2020
 version:        0.1.0.0
@@ -28,7 +28,7 @@ source-repository head
 library
   exposed-modules:
       FirstDecember
-      FirstDecember_131422010276000_flymake
+      SecondDecember
   other-modules:
       Paths_AdventOfCode2020
   hs-source-dirs:

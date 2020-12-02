@@ -1,6 +1,7 @@
 module Main where
 
-import FirstDecember
+import qualified FirstDecember as First
+import qualified SecondDecember as Second
 
 main :: IO ()
-main = firstDecemberSolution2 >>= print
+main = Second.solution2 >>= print
