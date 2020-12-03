@@ -2,6 +2,7 @@ module Main where
 
 import qualified FirstDecember as First
 import qualified SecondDecember as Second
+import qualified ThirdDecember as Third
 
 main :: IO ()
-main = Second.solution2 >>= print
+main = Third.thirdDecemberSolution2 >>= print
