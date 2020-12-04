@@ -5,7 +5,7 @@ import           Data.Maybe (fromMaybe)
 
 input :: IO [Int]
 input = do
-  content <- readFile "input/FirstDecember.txt"
+  content <- readFile "input/1December.txt"
   (return . fmap (\n -> read n :: Int ) . lines) content
 
 solution :: Int -> [Int] -> Int

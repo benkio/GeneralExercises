@@ -7,7 +7,7 @@ data Password = Password Policy String deriving Show
 
 input :: IO [Password]
 input = do
-  content <- readFile "input/SecondDecember.txt"
+  content <- readFile "input/2December.txt"
   (return . fmap fromJust . filter isJust . fmap lineToPassword . lines) content
 
 lineToPassword :: String -> Maybe Password

@@ -2,7 +2,7 @@ module ThirdDecember where
 
 input :: IO [(Int, String)]
 input = do
-  content <- readFile "input/ThirdDecember.txt"
+  content <- readFile "input/3December.txt"
   return $ [0..] `zip` (cycle <$> lines content)
 
 -- Right 3, down 1.
