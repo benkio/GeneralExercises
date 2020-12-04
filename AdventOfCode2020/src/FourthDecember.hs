@@ -9,7 +9,7 @@ import           Text.Printf (printf)
 import           Text.Read   (readMaybe)
 
 newtype HexColor = HexColor String deriving Show
-data UnitOfMeasure = Centimeters Int | Inches Int | UnspecifiedMeasure Int deriving Show
+data UnitOfMeasure = Centimeters Int | Inches Int deriving Show
 
 data Passport = Passport {
   passportByr   :: BirthYear
