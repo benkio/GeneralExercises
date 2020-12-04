@@ -1,6 +1,4 @@
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE GADTs                     #-}
-{-# LANGUAGE TypeApplications          #-}
+{-# LANGUAGE TypeApplications #-}
 module ForthDecember where
 
 import           Data.Char   (intToDigit)
