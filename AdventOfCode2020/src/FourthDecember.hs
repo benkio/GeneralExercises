@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
-module ForthDecember where
+module FourthDecember where
 
 import           Data.Char   (intToDigit)
 import           Data.Either (rights)
@@ -190,8 +190,8 @@ validatePasswordField xs = do
     , passportCid = passportCidField
     }
 
-forthDecemberSolution1 :: IO Int
-forthDecemberSolution1 = do
+fourthDecemberSolution1 :: IO Int
+fourthDecemberSolution1 = do
   inputData <- input
   let validatedPassports = fmap (validate @Passport) inputData
   (return . length . rights) validatedPassports

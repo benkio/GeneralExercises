@@ -1,9 +1,9 @@
 module Main where
 
-import qualified FirstDecember as First
+import qualified FirstDecember  as First
+import qualified FourthDecember as Fourth
 import qualified SecondDecember as Second
-import qualified ThirdDecember as Third
-import qualified ForthDecember as Forth
+import qualified ThirdDecember  as Third
 
 main :: IO ()
-main = Forth.forthDecemberSolution1 >>= print
+main = Fourth.fourthDecemberSolution1 >>= print

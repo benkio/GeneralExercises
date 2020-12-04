@@ -28,7 +28,7 @@ source-repository head
 library
   exposed-modules:
       FirstDecember
-      ForthDecember
+      FourthDecember
       SecondDecember
       ThirdDecember
   other-modules:
