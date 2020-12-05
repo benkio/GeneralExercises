@@ -1,10 +1,17 @@
 module FifthDecember where
 
-import           Data.List  (find, sort)
-import           Data.Maybe (fromJust)
+import Data.List (find, sort)
+import Data.Maybe (fromJust)
 
-data RowSelector = F | B deriving Show
-data ColumnSelector = L | R deriving Show
+data RowSelector
+  = F
+  | B
+  deriving (Show)
+
+data ColumnSelector
+  = L
+  | R
+  deriving (Show)
 
 class Selector a where
   isLowerHalf :: a -> Bool
@@ -22,11 +29,13 @@ instance Selector ColumnSelector where
   isRowSelector L = False
   isRowSelector R = False
 
-data Seat = Seat {
-  row      :: Int
-  , column :: Int
-  , seatId :: Int
-  } deriving (Show)
+data Seat =
+  Seat
+    { row :: Int
+    , column :: Int
+    , seatId :: Int
+    }
+  deriving (Show)
 
 rowsRange :: (Int, Int)
 rowsRange = (0, 127)
@@ -35,39 +44,58 @@ columnsRange :: (Int, Int)
 columnsRange = (0, 7)
 
 findRow :: (Selector s) => (Int, Int) -> s -> (Int, Int)
-findRow (lr, hr) s = if isLowerHalf s
-                     then (lr, ((+lr).fromIntegral . floor . (/2) . realToFrac) (hr-lr))
-                     else (((+lr) . fromIntegral . round . (/2) . realToFrac) (hr-lr), hr)
+findRow (lr, hr) s =
+  if isLowerHalf s
+    then (lr, ((+ lr) . fromIntegral . floor . (/ 2) . realToFrac) (hr - lr))
+    else (((+ lr) . fromIntegral . round . (/ 2) . realToFrac) (hr - lr), hr)
 
 createRowSelector :: Char -> Maybe RowSelector
 createRowSelector 'F' = Just F
 createRowSelector 'B' = Just B
-createRowSelector _   = Nothing
+createRowSelector _ = Nothing
 
 createColumnSelector :: Char -> Maybe ColumnSelector
 createColumnSelector 'L' = Just L
 createColumnSelector 'R' = Just R
-createColumnSelector _   = Nothing
+createColumnSelector _ = Nothing
 
 getSelectors :: String -> ([RowSelector], [ColumnSelector])
-getSelectors xs = foldl (\(r, c) x ->
-                           maybe (maybe (r, c) (\y -> (r, c ++ [y])) (createColumnSelector x)) (\y -> (r ++ [y], c)) (createRowSelector x)
-                        )  ([], []) xs
+getSelectors =
+  foldl
+    (\(r, c) x ->
+       maybe
+         (maybe (r, c) (\y -> (r, c ++ [y])) (createColumnSelector x))
+         (\y -> (r ++ [y], c))
+         (createRowSelector x))
+    ([], [])
 
 calculateSeatId :: Int -> Int -> Int
 calculateSeatId r c = r * 8 + c
 
 calculateRow :: [RowSelector] -> Int
-calculateRow xs = ((\x -> if isLowerHalf (last xs) then fst x else snd x) . foldl findRow rowsRange . init) xs
+calculateRow xs =
+  ((\x ->
+      if isLowerHalf (last xs)
+        then fst x
+        else snd x) .
+   foldl findRow rowsRange . init)
+    xs
 
 calculateColumn :: [ColumnSelector] -> Int
-calculateColumn  xs = ((\x -> if isLowerHalf (last xs) then fst x else snd x) . foldl findRow columnsRange . init) xs
+calculateColumn xs =
+  ((\x ->
+      if isLowerHalf (last xs)
+        then fst x
+        else snd x) .
+   foldl findRow columnsRange . init)
+    xs
 
 selectSeat' :: ([RowSelector], [ColumnSelector]) -> Seat
-selectSeat' (rs, cs) = let r = calculateRow rs
-                           c = calculateColumn cs
-                           sId = calculateSeatId r c
-                       in Seat { row = r, column = c, seatId = sId }
+selectSeat' (rs, cs) =
+  let r = calculateRow rs
+      c = calculateColumn cs
+      sId = calculateSeatId r c
+   in Seat {row = r, column = c, seatId = sId}
 
 selectSeat :: [String] -> [Seat]
 selectSeat xs = selectSeat' <$> fmap getSelectors xs
@@ -79,7 +107,7 @@ emptySeatId :: [Seat] -> Maybe Int
 emptySeatId xs =
   let seatIdsOrdered = (sort . fmap seatId) xs
       minSeatId = head seatIdsOrdered
-  in (fmap fst . find (uncurry (/=))) ([minSeatId..] `zip` seatIdsOrdered)
+   in (fmap fst . find (uncurry (/=))) ([minSeatId ..] `zip` seatIdsOrdered)
 
 input :: IO [String]
 input = lines <$> readFile "input/5December.txt"
