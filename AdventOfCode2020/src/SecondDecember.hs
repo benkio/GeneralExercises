@@ -1,9 +1,12 @@
+-------------------------------------------------------------------------------
+--                           Advent Of Code - day 2                          --
+-------------------------------------------------------------------------------
 module SecondDecember
   ( solution1
   , solution2
   ) where
 
-import Data.Maybe (fromJust, isJust)
+import           Data.Maybe (fromJust, isJust)
 
 data Policy =
   Policy Int Int Char

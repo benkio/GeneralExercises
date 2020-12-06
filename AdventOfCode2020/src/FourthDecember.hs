@@ -1,13 +1,15 @@
 {-# LANGUAGE TypeApplications #-}
-
+-------------------------------------------------------------------------------
+--                           Advent Of Code - day 4                          --
+-------------------------------------------------------------------------------
 module FourthDecember where
 
-import Data.Char (intToDigit)
-import Data.Either (rights)
-import Data.List (find, isPrefixOf)
-import Data.Maybe (fromJust, isJust)
-import Text.Printf (printf)
-import Text.Read (readMaybe)
+import           Data.Char   (intToDigit)
+import           Data.Either (rights)
+import           Data.List   (find, isPrefixOf)
+import           Data.Maybe  (fromJust, isJust)
+import           Text.Printf (printf)
+import           Text.Read   (readMaybe)
 
 newtype HexColor =
   HexColor String
@@ -192,7 +194,7 @@ yearOrIdValidation s prefix typeName typeConstructor =
     (\x ->
        let yearOrId = readMaybe x :: Maybe Int
         in case yearOrId of
-             Just v -> Right (typeConstructor v)
+             Just v  -> Right (typeConstructor v)
              Nothing -> Left ("Unexpected " ++ typeName ++ " value: " ++ x))
 
 unitOfMeasureValidation :: String -> Either String UnitOfMeasure

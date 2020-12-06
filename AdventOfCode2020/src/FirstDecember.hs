@@ -1,11 +1,14 @@
+-------------------------------------------------------------------------------
+--                           Advent Of Code - day 1                          --
+-------------------------------------------------------------------------------
 module FirstDecember
   ( firstDecemberSolution1
   , firstDecemberSolution2
   , finder
   ) where
 
-import Data.List (find)
-import Data.Maybe (fromMaybe)
+import           Data.List  (find)
+import           Data.Maybe (fromMaybe)
 
 input :: IO [Int]
 input = do

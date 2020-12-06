@@ -1,7 +1,10 @@
+-------------------------------------------------------------------------------
+--                           Advent Of Code - day 5                          --
+-------------------------------------------------------------------------------
 module FifthDecember where
 
-import Data.List (find, sort)
-import Data.Maybe (fromJust)
+import           Data.List  (find, sort)
+import           Data.Maybe (fromJust)
 
 data RowSelector
   = F
@@ -31,7 +34,7 @@ instance Selector ColumnSelector where
 
 data Seat =
   Seat
-    { row :: Int
+    { row    :: Int
     , column :: Int
     , seatId :: Int
     }
@@ -52,12 +55,12 @@ findRow (lr, hr) s =
 createRowSelector :: Char -> Maybe RowSelector
 createRowSelector 'F' = Just F
 createRowSelector 'B' = Just B
-createRowSelector _ = Nothing
+createRowSelector _   = Nothing
 
 createColumnSelector :: Char -> Maybe ColumnSelector
 createColumnSelector 'L' = Just L
 createColumnSelector 'R' = Just R
-createColumnSelector _ = Nothing
+createColumnSelector _   = Nothing
 
 getSelectors :: String -> ([RowSelector], [ColumnSelector])
 getSelectors =
