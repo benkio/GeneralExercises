@@ -3,10 +3,7 @@
 -------------------------------------------------------------------------------
 module SixthDecember where
 
-import Data.List (groupBy, intersect, nub)
-
-questionIds :: [Char]
-questionIds = ['a' .. 'z']
+import           Data.List (groupBy, intersect, nub)
 
 splitByGroup :: [String] -> [[String]]
 splitByGroup = fmap (filter ("" /=)) . groupBy (\_ x -> x /= "")
