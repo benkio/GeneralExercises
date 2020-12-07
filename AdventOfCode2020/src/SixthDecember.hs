@@ -3,7 +3,7 @@
 -------------------------------------------------------------------------------
 module SixthDecember where
 
-import           Data.List (groupBy, intersect, nub)
+import Data.List (groupBy, intersect, nub)
 
 splitByGroup :: [String] -> [[String]]
 splitByGroup = fmap (filter ("" /=)) . groupBy (\_ x -> x /= "")

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a4f98be0718d35cfc8853ea96b63756898f06507436ea59bc6aebe22e0e60aec
+-- hash: cfc3b94dea139e4f73f2742ae0becdc5b4c6cbeaf78232384dab0931a1c73071
 
 name:           AdventOfCode2020
 version:        0.1.0.0
@@ -58,6 +58,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , regex-tdfa
   default-language: Haskell2010
 
 executable AdventOfCode2020-exe
@@ -70,6 +71,7 @@ executable AdventOfCode2020-exe
   build-depends:
       AdventOfCode2020
     , base >=4.7 && <5
+    , regex-tdfa
   default-language: Haskell2010
 
 test-suite AdventOfCode2020-test
@@ -83,4 +85,5 @@ test-suite AdventOfCode2020-test
   build-depends:
       AdventOfCode2020
     , base >=4.7 && <5
+    , regex-tdfa
   default-language: Haskell2010

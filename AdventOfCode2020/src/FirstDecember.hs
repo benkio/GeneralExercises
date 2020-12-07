@@ -7,8 +7,8 @@ module FirstDecember
   , finder
   ) where
 
-import           Data.List  (find)
-import           Data.Maybe (fromMaybe)
+import Data.List (find)
+import Data.Maybe (fromMaybe)
 
 input :: IO [Int]
 input = do
