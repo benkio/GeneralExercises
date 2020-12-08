@@ -1,5 +1,6 @@
 module Main where
 
+import qualified EighthDecember  as Eighth
 import qualified FifthDecember   as Fifth
 import qualified FirstDecember   as First
 import qualified FourthDecember  as Fourth
@@ -9,4 +10,4 @@ import qualified SixthDecember   as Sixth
 import qualified ThirdDecember   as Third
 
 main :: IO ()
-main = Seventh.seventhDecemberSolution2 >>= print
+main = Eighth.eighthDecemberSolution2 >>= print
