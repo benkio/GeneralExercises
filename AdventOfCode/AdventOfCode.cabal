@@ -1,0 +1,89 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 2738fef59d94105e884ae072ce80acecf3ad1af17abf2de6869b6da335f4d219
+
+name:           AdventOfCode
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/benkio/GeneralExercises/AdventOfCode#readme>
+homepage:       https://github.com/https://github.com/benkio/GeneralExercises/AdventOfCode#readme
+bug-reports:    https://github.com/https://github.com/benkio/GeneralExercises/AdventOfCode/issues
+author:         Enrico Benini
+maintainer:     benkio89@gmail.com
+copyright:      2020 Enrico Benini
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/https://github.com/benkio/GeneralExercises/AdventOfCode
+
+library
+  exposed-modules:
+      TwentyTwenty.EighteenthDecember
+      TwentyTwenty.EighthDecember
+      TwentyTwenty.EleventhDecember
+      TwentyTwenty.FifteenthDecember
+      TwentyTwenty.FifthDecember
+      TwentyTwenty.FirstDecember
+      TwentyTwenty.FourteenthDecember
+      TwentyTwenty.FourthDecember
+      TwentyTwenty.NineteenthDecember
+      TwentyTwenty.NinthDecember
+      TwentyTwenty.SecondDecember
+      TwentyTwenty.SeventeenthDecember
+      TwentyTwenty.SeventhDecember
+      TwentyTwenty.SixteenthDecember
+      TwentyTwenty.SixthDecember
+      TwentyTwenty.TenthDecember
+      TwentyTwenty.ThirdDecember
+      TwentyTwenty.ThirteenthDecember
+      TwentyTwenty.TwelfthDecember
+      TwentyTwenty.TwentiethDecember
+      TwentyTwenty.TwentyFifthDecember
+      TwentyTwenty.TwentyFirstDecember
+      TwentyTwenty.TwentyFourthDecember
+      TwentyTwenty.TwentySecondDecember
+      TwentyTwenty.TwentyThirdDecember
+  other-modules:
+      Paths_AdventOfCode
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , regex-tdfa
+  default-language: Haskell2010
+
+executable AdventOfCode-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_AdventOfCode
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      AdventOfCode
+    , base >=4.7 && <5
+    , regex-tdfa
+  default-language: Haskell2010
+
+test-suite AdventOfCode-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_AdventOfCode
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      AdventOfCode
+    , base >=4.7 && <5
+    , regex-tdfa
+  default-language: Haskell2010
