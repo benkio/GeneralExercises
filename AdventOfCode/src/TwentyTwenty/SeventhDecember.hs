@@ -19,7 +19,8 @@ bagContent (Bag _ bs) = bs
 
 input :: IO [Bag]
 input =
-  parseBags [] . fmap bagRegexMatch . lines <$> readFile "input/2020/7December.txt"
+  parseBags [] . fmap bagRegexMatch . lines <$>
+  readFile "input/2020/7December.txt"
 
 bagRegexMatch :: String -> (String, [String])
 bagRegexMatch i =

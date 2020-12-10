@@ -6,7 +6,8 @@ module TwentyTwenty.NinthDecember where
 import Data.List (nub)
 
 input :: IO [Int]
-input = fmap (\x -> read x :: Int) . lines <$> readFile "input/2020/9December.txt"
+input =
+  fmap (\x -> read x :: Int) . lines <$> readFile "input/2020/9December.txt"
 
 addPairs :: [Int] -> [(Int, Int)]
 addPairs xs = [(a, b) | a <- xs, b <- tail xs, a /= b]

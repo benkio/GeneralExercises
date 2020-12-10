@@ -3,5 +3,66 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.TenthDecember where
 
-input :: IO String
-input = readFile "input/2020/10December.txt"
+import Data.List
+  ( groupBy
+  , intersect
+  , nub
+  , sort
+  , sortBy
+  , subsequences
+  , tails
+  , transpose
+  )
+
+input :: IO [Int]
+input =
+  fmap (\x -> read x :: Int) . lines <$> readFile "input/2020/10December.txt"
+
+deviceTargetJolt :: [Int] -> Int
+deviceTargetJolt [] = 0
+deviceTargetJolt xs = last xs + 3
+
+joltDifferences :: [Int] -> [Int]
+joltDifferences js =
+  let joltSorted = sort (0 : js)
+   in fmap (\(x, y) -> y - x) $ joltSorted `zip` tail joltSorted
+
+countJoltDifferences :: Int -> [Int] -> Int
+countJoltDifferences differenceToCount = length . filter (differenceToCount ==)
+
+arrangementsBySequentValues :: [Int]
+arrangementsBySequentValues =
+  1 :
+  1 :
+  2 :
+  fmap
+    sum
+    (transpose
+       [ arrangementsBySequentValues
+       , tail arrangementsBySequentValues
+       , (tail . tail) arrangementsBySequentValues
+       ])
+
+groupByDifferences :: [Int] -> [[Int]]
+groupByDifferences xs = foldl go [[]] joltDifferencesZip
+  where
+    joltDifferencesZip = sort xs `zip` joltDifferences xs
+    go :: [[Int]] -> (Int, Int) -> [[Int]]
+    go ls (x, diff)
+      | diff == 3 = ls ++ [[x]]
+      | otherwise = init ls ++ [last ls ++ [x]]
+
+tenthDecemberSolution1 :: IO Int
+tenthDecemberSolution1 = do
+  jolts <- input
+  let jDiff = joltDifferences jolts
+      jDiff1 = countJoltDifferences 1 jDiff
+      jDiff3 = countJoltDifferences 3 jDiff
+  return $ jDiff1 * (jDiff3 + 1)
+
+tenthDecemberSolution2 :: IO Int
+tenthDecemberSolution2 =
+  product .
+  fmap (fst . last . (arrangementsBySequentValues `zip`)) .
+  groupByDifferences . (0 :) <$>
+  input

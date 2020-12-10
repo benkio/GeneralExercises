@@ -5,7 +5,7 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.EighthDecember where
 
-import           Data.List (nub, stripPrefix)
+import Data.List (nub, stripPrefix)
 
 data Instruction
   = Nop Int Int
@@ -14,27 +14,27 @@ data Instruction
   deriving (Show, Eq)
 
 instructionPosition :: Instruction -> Int
-instructionPosition (Nop _ ip)  = ip
+instructionPosition (Nop _ ip) = ip
 instructionPosition (Jump _ ip) = ip
-instructionPosition (Acc _ ip)  = ip
+instructionPosition (Acc _ ip) = ip
 
 instructionValue :: Instruction -> Int
-instructionValue (Nop v _)  = v
+instructionValue (Nop v _) = v
 instructionValue (Jump v _) = v
-instructionValue (Acc v _)  = v
+instructionValue (Acc v _) = v
 
 stripPlus :: String -> String
 stripPlus ('+':s) = s
-stripPlus s       = s
+stripPlus s = s
 
 switchNopNJump :: Instruction -> Instruction
-switchNopNJump (Nop v p)  = Jump v p
+switchNopNJump (Nop v p) = Jump v p
 switchNopNJump (Jump v p) = Nop v p
-switchNopNJump x          = x
+switchNopNJump x = x
 
 interpreter :: Int -> Instruction -> (Int, Int)
-interpreter acc (Nop _ p)  = (acc, p + 1)
-interpreter acc (Acc v p)  = (acc + v, p + 1)
+interpreter acc (Nop _ p) = (acc, p + 1)
+interpreter acc (Acc v p) = (acc + v, p + 1)
 interpreter acc (Jump j p) = (acc, p + j)
 
 replaceInstruction :: [Instruction] -> Instruction -> [Instruction]
