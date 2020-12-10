@@ -3,15 +3,11 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.TenthDecember where
 
-import Data.List (sort, transpose)
+import           Data.List (sort, transpose)
 
 input :: IO [Int]
 input =
   fmap (\x -> read x :: Int) . lines <$> readFile "input/2020/10December.txt"
-
-deviceTargetJolt :: [Int] -> Int
-deviceTargetJolt [] = 0
-deviceTargetJolt xs = last xs + 3
 
 joltDifferences :: [Int] -> [Int]
 joltDifferences js =
