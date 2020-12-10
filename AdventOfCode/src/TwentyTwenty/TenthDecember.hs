@@ -3,16 +3,7 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.TenthDecember where
 
-import Data.List
-  ( groupBy
-  , intersect
-  , nub
-  , sort
-  , sortBy
-  , subsequences
-  , tails
-  , transpose
-  )
+import Data.List (sort, transpose)
 
 input :: IO [Int]
 input =
