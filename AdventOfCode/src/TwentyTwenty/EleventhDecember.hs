@@ -3,6 +3,8 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.EleventhDecember where
 
+import Data.Maybe (catMaybes)
+
 data SeatStatus
   = Floor
   | Empty
@@ -75,8 +77,31 @@ getNeighborsCoordinate (x, y) =
   ]
 
 getNeighbors :: Grid -> Coordinate -> Grid
-getNeighbors grid coord =
-  (\c -> getSeat grid c) <$> getNeighborsCoordinate coord
+getNeighbors grid coord = getSeat grid <$> getNeighborsCoordinate coord
+
+expandCoordinateView :: Coordinate -> Coordinate -> Maybe Coordinate
+expandCoordinateView (bx, by) (x, y) =
+  validateCoord (x + oneOrZero (bx - x), y + oneOrZero (by - y))
+  where
+    validateCoord :: Coordinate -> Maybe Coordinate
+    validateCoord (a, b) =
+      if (a < 0 || a > gridX) || (b < 0 || b > gridY)
+        then Nothing
+        else Just (a, b)
+    oneOrZero :: Int -> Int
+    oneOrZero c
+      | c < 0 = 1
+      | c > 0 = -1
+      | otherwise = 0
+
+expandView :: Grid -> Coordinate -> Seat -> Maybe Seat
+expandView grid c (c', Floor) =
+  (getSeat grid <$> expandCoordinateView c c') >>= expandView grid c
+expandView _ _ s = Just s
+
+getNeighbors2 :: Grid -> Coordinate -> Grid
+getNeighbors2 grid coord =
+  catMaybes $ expandView grid coord <$> getNeighbors grid coord
 
 computeSeatStatus :: Seat -> Grid -> Seat
 computeSeatStatus seat@(c, st) neighbors
@@ -84,24 +109,37 @@ computeSeatStatus seat@(c, st) neighbors
   | st == Occupied && length (filter isOccupied neighbors) >= 4 = (c, Empty)
   | otherwise = seat
 
+computeSeatStatus2 :: Seat -> Grid -> Seat
+computeSeatStatus2 seat@(c, st) neighbors
+  | st == Empty && not (any isOccupied neighbors) = (c, Occupied)
+  | st == Occupied && length (filter isOccupied neighbors) >= 5 = (c, Empty)
+  | otherwise = seat
+
 computeNextStep :: Grid -> Grid
 computeNextStep grid =
   fmap (\(c, s) -> computeSeatStatus (c, s) (getNeighbors grid c)) grid
 
+computeNextStep2 :: Grid -> Grid
+computeNextStep2 grid =
+  fmap (\(c, s) -> computeSeatStatus2 (c, s) (getNeighbors2 grid c)) grid
+
 computeMultipleSteps :: Int -> Grid -> Grid
 computeMultipleSteps n grid = iterate computeNextStep grid !! n
 
-computeUntilNoMoreChanges :: Grid -> Grid
-computeUntilNoMoreChanges grid =
-  let nextGrid = computeNextStep grid
+computeUntilNoMoreChanges :: (Grid -> Grid) -> Grid -> Grid
+computeUntilNoMoreChanges nextStep grid =
+  let nextGrid = nextStep grid
    in if showGrid nextGrid == showGrid grid
         then nextGrid
-        else computeUntilNoMoreChanges nextGrid
+        else computeUntilNoMoreChanges nextStep nextGrid
 
 input :: IO Grid
 input = buildGrid <$> readFile "input/2020/11December.txt"
 
 eleventhDecemberSolution1 :: IO Int
 eleventhDecemberSolution1 =
-  howManyOccupied . (\x -> computeUntilNoMoreChanges x) <$> input
--- (\g -> ((\(x, y) -> showGrid x ++ "\n\n" ++ showGrid y) . head . snd . span (\(g, g') -> showGrid g /= showGrid g') . (\x -> x `zip` tail x) . iterate (computeNextStep (gridRows g, gridColumns g))) g) <$> E.input
+  howManyOccupied . computeUntilNoMoreChanges computeNextStep <$> input
+
+eleventhDecemberSolution2 :: IO Int
+eleventhDecemberSolution2 =
+  howManyOccupied . computeUntilNoMoreChanges computeNextStep2 <$> input
