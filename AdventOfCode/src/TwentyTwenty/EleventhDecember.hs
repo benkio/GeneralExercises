@@ -7,6 +7,7 @@ data SeatStatus
   = Floor
   | Empty
   | Occupied
+  deriving (Eq)
 
 type Coordinate = (Int, Int)
 
@@ -15,18 +16,18 @@ type Seat = (Coordinate, SeatStatus)
 type Grid = [Seat]
 
 instance Show SeatStatus where
-  show Empty    = "L"
-  show Floor    = "."
+  show Empty = "L"
+  show Floor = "."
   show Occupied = "#"
 
-gridRows :: Grid -> Int
-gridRows = snd . fst . last
+gridY :: Int
+gridY = 92
 
-gridColumns :: Grid -> Int
-gridColumns = fst . fst . last
+gridX :: Int
+gridX = 94
 
-getSeat :: Grid -> Coordinate -> Int -> Seat --take advantage of the ordering
-getSeat grid (x, y) rows = grid !! (y * (rows + 1) + x)
+getSeat :: Grid -> Coordinate -> Seat --take advantage of the ordering
+getSeat grid (x, y) = grid !! (y * (gridX + 1) + x)
 
 showGrid :: Grid -> String
 showGrid grid =
@@ -43,11 +44,11 @@ createSeat :: Char -> SeatStatus
 createSeat 'L' = Empty
 createSeat '#' = Occupied
 createSeat '.' = Floor
-createSeat _   = Floor
+createSeat _ = Floor
 
 isOccupied :: Seat -> Bool
 isOccupied (_, Occupied) = True
-isOccupied _             = False
+isOccupied _ = False
 
 howManyOccupied :: Grid -> Int
 howManyOccupied =
@@ -65,51 +66,42 @@ buildGrid = (\l -> (>>=) l (uncurry buildRow)) . zip [0 ..] . lines
     buildRow y r =
       (\(x, c) -> ((fromIntegral x, y), createSeat c)) <$> zip [0 ..] r
 
-getNeighborsCoordinate :: Coordinate -> (Int, Int) -> [Coordinate]
-getNeighborsCoordinate (x, y) (rows, columns) =
+getNeighborsCoordinate :: Coordinate -> [Coordinate]
+getNeighborsCoordinate (x, y) =
   [ (x', y')
-  | x' <- [(max (x - 1) 0) .. (min (x + 1) rows)]
-  , y' <- [(max (y - 1) 0) .. (min (y + 1) columns)]
+  | x' <- [(max (x - 1) 0) .. (min (x + 1) gridX)]
+  , y' <- [(max (y - 1) 0) .. (min (y + 1) gridY)]
   , x' /= x || y' /= y
   ]
 
-getNeighbors :: Grid -> Coordinate -> (Int, Int) -> Grid
-getNeighbors grid coord gridSize =
-  (\c -> getSeat grid c (fst gridSize)) <$>
-  getNeighborsCoordinate coord gridSize
+getNeighbors :: Grid -> Coordinate -> Grid
+getNeighbors grid coord =
+  (\c -> getSeat grid c) <$> getNeighborsCoordinate coord
 
 computeSeatStatus :: Seat -> Grid -> Seat
-computeSeatStatus (c, Empty) neighbors =
-  if (all (not . isOccupied) neighbors)
-    then (c, Occupied)
-    else (c, Empty)
-computeSeatStatus (c, Occupied) neighbors =
-  if length (filter isOccupied neighbors) >= 4
-    then (c, Empty)
-    else (c, Occupied)
-computeSeatStatus (c, Floor) _ = (c, Floor)
+computeSeatStatus seat@(c, st) neighbors
+  | st == Empty && not (any isOccupied neighbors) = (c, Occupied)
+  | st == Occupied && length (filter isOccupied neighbors) >= 4 = (c, Empty)
+  | otherwise = seat
 
-computeNextStep :: (Int, Int) -> Grid -> Grid
-computeNextStep gridSize grid =
-  fmap (\(c, s) -> computeSeatStatus (c, s) (getNeighbors grid c gridSize)) grid
+computeNextStep :: Grid -> Grid
+computeNextStep grid =
+  fmap (\(c, s) -> computeSeatStatus (c, s) (getNeighbors grid c)) grid
 
-computeMultipleSteps :: Int -> Grid -> (Int, Int) -> Grid
-computeMultipleSteps n grid gridSize =
-  iterate (computeNextStep gridSize) grid !! n
+computeMultipleSteps :: Int -> Grid -> Grid
+computeMultipleSteps n grid = iterate computeNextStep grid !! n
 
-computeUntilNoMoreOccupied :: (Int, Int) -> Grid -> (Int, Grid)
-computeUntilNoMoreOccupied gridSize grid =
-  let computeList =
-        ((\x -> x `zip` tail x) .
-         fmap (\x -> (howManyOccupied x, x)) .
-         iterate (computeNextStep gridSize))
-          grid
-   in (fst . head . snd) $ span (\((o, _), (o', _)) -> o /= o') computeList
+computeUntilNoMoreChanges :: Grid -> Grid
+computeUntilNoMoreChanges grid =
+  let nextGrid = computeNextStep grid
+   in if showGrid nextGrid == showGrid grid
+        then nextGrid
+        else computeUntilNoMoreChanges nextGrid
 
 input :: IO Grid
 input = buildGrid <$> readFile "input/2020/11December.txt"
 
 eleventhDecemberSolution1 :: IO Int
 eleventhDecemberSolution1 =
-  fst . (\x -> computeUntilNoMoreOccupied (gridRows x, gridColumns x) x) <$>
-  input
+  howManyOccupied . (\x -> computeUntilNoMoreChanges x) <$> input
+-- (\g -> ((\(x, y) -> showGrid x ++ "\n\n" ++ showGrid y) . head . snd . span (\(g, g') -> showGrid g /= showGrid g') . (\x -> x `zip` tail x) . iterate (computeNextStep (gridRows g, gridColumns g))) g) <$> E.input
