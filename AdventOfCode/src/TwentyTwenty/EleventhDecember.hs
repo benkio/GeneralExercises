@@ -3,9 +3,6 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.EleventhDecember where
 
-import           Data.List  (find)
-import           Data.Maybe (catMaybes)
-
 data SeatStatus
   = Floor
   | Empty
@@ -22,11 +19,14 @@ instance Show SeatStatus where
   show Floor    = "."
   show Occupied = "#"
 
-checkCoordinate :: Coordinate -> Coordinate -> Bool
-checkCoordinate (x, y) (x', y') = x == x' && y == y'
+gridRows :: Grid -> Int
+gridRows = snd . fst . last
 
-getSeat :: Grid -> Coordinate -> Maybe Seat
-getSeat grid coord' = find (checkCoordinate coord' . fst) grid
+gridColumns :: Grid -> Int
+gridColumns = fst . fst . last
+
+getSeat :: Grid -> Coordinate -> Int -> Seat --take advantage of the ordering
+getSeat grid (x, y) rows = grid !! (y * (rows + 1) + x)
 
 showGrid :: Grid -> String
 showGrid grid =
@@ -50,7 +50,13 @@ isOccupied (_, Occupied) = True
 isOccupied _             = False
 
 howManyOccupied :: Grid -> Int
-howManyOccupied = foldl (\acc s-> if isOccupied s then acc + 1 else acc) 0
+howManyOccupied =
+  foldl
+    (\acc s ->
+       if isOccupied s
+         then acc + 1
+         else acc)
+    0
 
 buildGrid :: String -> Grid
 buildGrid = (\l -> (>>=) l (uncurry buildRow)) . zip [0 ..] . lines
@@ -59,17 +65,18 @@ buildGrid = (\l -> (>>=) l (uncurry buildRow)) . zip [0 ..] . lines
     buildRow y r =
       (\(x, c) -> ((fromIntegral x, y), createSeat c)) <$> zip [0 ..] r
 
-getNeighborsCoordinate :: Coordinate -> [Coordinate]
-getNeighborsCoordinate (x, y) =
+getNeighborsCoordinate :: Coordinate -> (Int, Int) -> [Coordinate]
+getNeighborsCoordinate (x, y) (rows, columns) =
   [ (x', y')
-  | x' <- [(max (x - 1) 0) .. x + 1]
-  , y' <- [(max (y - 1) 0) .. y + 1]
+  | x' <- [(max (x - 1) 0) .. (min (x + 1) rows)]
+  , y' <- [(max (y - 1) 0) .. (min (y + 1) columns)]
   , x' /= x || y' /= y
   ]
 
-getNeighbors :: Grid -> Coordinate -> Grid
-getNeighbors grid coord =
-  catMaybes $ getSeat grid <$> getNeighborsCoordinate coord
+getNeighbors :: Grid -> Coordinate -> (Int, Int) -> Grid
+getNeighbors grid coord gridSize =
+  (\c -> getSeat grid c (fst gridSize)) <$>
+  getNeighborsCoordinate coord gridSize
 
 computeSeatStatus :: Seat -> Grid -> Seat
 computeSeatStatus (c, Empty) neighbors =
@@ -82,20 +89,27 @@ computeSeatStatus (c, Occupied) neighbors =
     else (c, Occupied)
 computeSeatStatus (c, Floor) _ = (c, Floor)
 
-computeNextStep :: Grid -> Grid
-computeNextStep grid =
-  fmap (\(c, s) -> computeSeatStatus (c, s) (getNeighbors grid c)) grid
+computeNextStep :: (Int, Int) -> Grid -> Grid
+computeNextStep gridSize grid =
+  fmap (\(c, s) -> computeSeatStatus (c, s) (getNeighbors grid c gridSize)) grid
 
-computeMultipleSteps :: Int -> Grid -> Grid
-computeMultipleSteps n grid = iterate computeNextStep grid !! n
+computeMultipleSteps :: Int -> Grid -> (Int, Int) -> Grid
+computeMultipleSteps n grid gridSize =
+  iterate (computeNextStep gridSize) grid !! n
 
-computeUntilNoMoreOccupied :: Grid -> (Int, Grid)
-computeUntilNoMoreOccupied grid =
-  let computeList = ((\x -> x `zip` tail x) . fmap (\x -> (howManyOccupied x, x)) . iterate computeNextStep) grid
-  in (fst . head . snd) $ span (\((o, _), (o', _)) -> o /= o') computeList
+computeUntilNoMoreOccupied :: (Int, Int) -> Grid -> (Int, Grid)
+computeUntilNoMoreOccupied gridSize grid =
+  let computeList =
+        ((\x -> x `zip` tail x) .
+         fmap (\x -> (howManyOccupied x, x)) .
+         iterate (computeNextStep gridSize))
+          grid
+   in (fst . head . snd) $ span (\((o, _), (o', _)) -> o /= o') computeList
 
 input :: IO Grid
 input = buildGrid <$> readFile "input/2020/11December.txt"
 
 eleventhDecemberSolution1 :: IO Int
-eleventhDecemberSolution1 = fst . computeUntilNoMoreOccupied <$> input
+eleventhDecemberSolution1 =
+  fst . (\x -> computeUntilNoMoreOccupied (gridRows x, gridColumns x) x) <$>
+  input
