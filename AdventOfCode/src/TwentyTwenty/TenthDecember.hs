@@ -3,7 +3,7 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.TenthDecember where
 
-import           Data.List (sort, transpose)
+import Data.List (sort, transpose)
 
 input :: IO [Int]
 input =
