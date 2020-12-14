@@ -16,4 +16,4 @@ import qualified TwentyTwenty.ThirteenthDecember as Thirteen
 import qualified TwentyTwenty.TwelfthDecember    as Twelfth
 
 main :: IO ()
-main = Fourteen.fourteenthDecemberSolution1 >>= print
+main = Fourteen.fourteenthDecemberSolution2 >>= print
