@@ -17,9 +17,6 @@ data Instruction
       }
   deriving (Show)
 
-writeValueInMemory :: Int -> Int -> Memory -> Memory
-writeValueInMemory v a m = insert a v m
-
 input :: IO [String]
 input = lines <$> readFile "input/2020/14December.txt"
 
@@ -44,9 +41,9 @@ initialState = (empty, Mask "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
 executeInstructions ::
      (Memory, Instruction) -> [Instruction] -> (Memory, Instruction)
-executeInstructions (mem, mask) ((Mem {maddr = a, value = v}):is) =
+executeInstructions (mem, mask) (Mem {maddr = a, value = v}:is) =
   let v' = applyMask mask v
-   in executeInstructions (writeValueInMemory v' a mem, mask) is
+   in executeInstructions (insert a v' mem, mask) is
 executeInstructions (mem, _) ((Mask mask'):is) =
   executeInstructions (mem, Mask mask') is
 executeInstructions r [] = r
@@ -87,7 +84,7 @@ executeInstructionsV2 (mem, mask) (Mem {maddr = a, value = v}:is) =
   let addresses = applyMaskFloating mask a
       newState =
         foldl
-          (\(m, msk') addr -> (writeValueInMemory v addr m, msk'))
+          (\(m, msk') addr -> (insert addr v m, msk'))
           (mem, mask)
           addresses
    in executeInstructionsV2 newState is
