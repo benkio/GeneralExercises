@@ -1,5 +1,6 @@
 module Main where
 
+import qualified TwentyTwenty.EighteenthDecember  as Eighteen
 import qualified TwentyTwenty.EighthDecember      as Eight
 import qualified TwentyTwenty.EleventhDecember    as Eleven
 import qualified TwentyTwenty.FifteenthDecember   as Fifteen
@@ -19,4 +20,4 @@ import qualified TwentyTwenty.ThirteenthDecember  as Thirteen
 import qualified TwentyTwenty.TwelfthDecember     as Twelve
 
 main :: IO ()
-main = Seventeen.seventeenthDecemberSolution2 >>= print
+main = Eighteen.eighteenthDecemberSolution2 >>= print

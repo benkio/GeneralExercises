@@ -5,10 +5,20 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.SeventeenthDecember where
 
-import           Data.List (groupBy, sortBy, transpose)
-import qualified Data.Map  as M (Map, difference, filter, filterWithKey,
-                                 fromList, keys, lookup, mapWithKey, size,
-                                 toList, union)
+import Data.List (groupBy, sortBy, transpose)
+import qualified Data.Map as M
+  ( Map
+  , difference
+  , filter
+  , filterWithKey
+  , fromList
+  , keys
+  , lookup
+  , mapWithKey
+  , size
+  , toList
+  , union
+  )
 
 type Coordinate = (Int, Int, Int)
 
