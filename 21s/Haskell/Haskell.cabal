@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.1.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: dc335ac57f2dcf594c54a60b052e2bcb90bdd29cded3d62546ea89325f33c767
+-- hash: 2f7e9d52bf23bae4853d6615f5d001502bd2e944c8c131b691c783b033906de2
 
 name:           Haskell
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 library
   exposed-modules:
       IO.Algebras
+      IO.Algebras_flymake
       IO.TwentyOne
       Pure.ControlFlow
       Pure.Domain

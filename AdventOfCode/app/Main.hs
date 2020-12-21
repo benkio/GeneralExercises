@@ -8,6 +8,7 @@ import qualified TwentyTwenty.FifthDecember       as Five
 import qualified TwentyTwenty.FirstDecember       as One
 import qualified TwentyTwenty.FourteenthDecember  as Fourteen
 import qualified TwentyTwenty.FourthDecember      as Four
+import qualified TwentyTwenty.NineteenthDecember  as Nineteen
 import qualified TwentyTwenty.NinthDecember       as Nine
 import qualified TwentyTwenty.SecondDecember      as Two
 import qualified TwentyTwenty.SeventeenthDecember as Seventeen
@@ -18,6 +19,7 @@ import qualified TwentyTwenty.TenthDecember       as Ten
 import qualified TwentyTwenty.ThirdDecember       as Three
 import qualified TwentyTwenty.ThirteenthDecember  as Thirteen
 import qualified TwentyTwenty.TwelfthDecember     as Twelve
+import qualified TwentyTwenty.TwentiethDecember   as Twenty
 
 main :: IO ()
-main = Eighteen.eighteenthDecemberSolution2 >>= print
+main = Twenty.twentiethDecemberSolution1 >>= print
