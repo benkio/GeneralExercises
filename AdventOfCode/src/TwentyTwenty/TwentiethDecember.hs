@@ -6,7 +6,8 @@ module TwentyTwenty.TwentiethDecember where
 import           Data.Bifunctor (second)
 import           Data.List      (delete, find, group, groupBy, partition, sort,
                                  transpose)
-import           Data.Map       (Map, empty, insert, mapKeys, toList, union)
+import           Data.Map       (Map, difference, empty, fromList, insert,
+                                 mapKeys, toList, union)
 import           Data.Maybe     (fromJust, isJust)
 
 type Coordinate = (Int, Int)
@@ -138,11 +139,20 @@ twentiethDecemberSolution1 = solution1 <$> input
 
 solution2 s =
   let tiles = parseTiles s
+      selectedCorner = (head . cornerTiles) s
+      startingCorner =
+        (fromJust .
+         (\(tId, corner) ->
+            (fmap ((`adjustNewOrigin` corner) . tileContent) .
+             find ((tId ==) . tileId))
+              tiles))
+          selectedCorner
       bigMosaic =
         linkTiles
           ((fmap tileContent . tail) tiles)
-          ((tileContent . head) tiles)
-          ((tileEdges . tileContent . head) tiles)
+          startingCorner
+          ((filter (\e -> snd selectedCorner `notElem` fmap fst e) . tileEdges)
+             startingCorner)
    in showTile $ Tile 0 bigMosaic
 
 linkTiles ::
@@ -150,7 +160,9 @@ linkTiles ::
   -> Map Coordinate Bool
   -> [[(Coordinate, Bool)]]
   -> Map Coordinate Bool
-linkTiles [] result _ = result
+linkTiles [] result resultEdges =
+  let externalEdges = (fromList . concat) resultEdges
+   in difference result externalEdges
 linkTiles (t:ts) result resultEdges =
   let maybeMatchResultNEdges = searchMatch resultEdges t
    in foldr
@@ -189,12 +201,19 @@ matchEdge edge resultEdges t
     Just (adjustNewOrigin t (maximum (fmap fst edge)), edge)
   | otherwise = Nothing
 
+-- merge only left and down since I use a corner in left top position as starting point
 mergeTile ::
      Map Coordinate Bool
   -> Map Coordinate Bool
   -> [(Coordinate, Bool)]
   -> Map Coordinate Bool
 mergeTile result tileToAdd commonEdge = undefined
+  -- let edges = fromList commonEdge
+  --     resultEdge = (toList . intersection result) edges
+
+
+edgeIsVertical :: [(Coordinate, Bool)] -> Bool
+edgeIsVertical = (\e -> all (head e ==) (tail e)) . fmap fst
 
 testInput :: String
 testInput =
