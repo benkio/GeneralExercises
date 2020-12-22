@@ -3,10 +3,10 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.EighteenthDecember where
 
-import Data.Bifunctor (bimap, first, second)
-import Data.List (drop, stripPrefix)
-import Data.Maybe (fromJust, isJust)
-import Text.Read (readMaybe)
+import           Data.Bifunctor (bimap, first, second)
+import           Data.List      (drop, stripPrefix)
+import           Data.Maybe     (fromJust, isJust)
+import           Text.Read      (readMaybe)
 
 data Exp
   = Plus Exp Exp
@@ -21,19 +21,19 @@ input = readFile "input/2020/18December.txt"
 interpreter :: Exp -> Int
 interpreter (Plus e1 e2) = interpreter e1 + interpreter e2
 interpreter (Prod e1 e2) = interpreter e1 * interpreter e2
-interpreter (Paren e) = interpreter e
-interpreter (Value x) = x
+interpreter (Paren e)    = interpreter e
+interpreter (Value x)    = x
 
 stripParen :: (String, String) -> Int -> (String, String)
-stripParen x 0 = x
+stripParen x 0               = x
 stripParen (v, '(':xs) count = stripParen (v ++ "(", xs) (count + 1)
 stripParen (v, ')':xs) count = stripParen (v ++ ")", xs) (count - 1)
-stripParen (v, x:xs) count = stripParen (v ++ [x], xs) count
+stripParen (v, x:xs) count   = stripParen (v ++ [x], xs) count
 
 invertParent :: Char -> Char
 invertParent '(' = ')'
 invertParent ')' = '('
-invertParent x = x
+invertParent x   = x
 
 reverseWithParent :: String -> String
 reverseWithParent = fmap invertParent . reverse
@@ -99,7 +99,7 @@ computeExp groupPlus =
 
 tests :: [Bool]
 tests =
-  (uncurry (==) . second (computeExp False)) <$>
+  uncurry (==) . second (computeExp False) <$>
   [ (71, "1 + 2 * 3 + 4 * 5 + 6")
   , (51, "1 + (2 * 3) + (4 * (5 + 6))")
   , (26, "2 * 3 + (4 * 5)")
@@ -113,7 +113,7 @@ eighteenthDecemberSolution1 = sum . fmap (computeExp False) . lines <$> input
 
 tests2 :: [Bool]
 tests2 =
-  (uncurry (==) . second (computeExp True)) <$>
+  uncurry (==) . second (computeExp True) <$>
   [ (231, "1 + 2 * 3 + 4 * 5 + 6")
   , (51, "1 + (2 * 3) + (4 * (5 + 6))")
   , (46, "2 * 3 + (4 * 5)")

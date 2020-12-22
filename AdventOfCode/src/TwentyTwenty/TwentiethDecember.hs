@@ -1,39 +1,18 @@
+{-# LANGUAGE TupleSections #-}
 -------------------------------------------------------------------------------
 --                           Advent Of Code - day 20                          --
 -------------------------------------------------------------------------------
 module TwentyTwenty.TwentiethDecember where
 
-import Data.Bifunctor (bimap, first, second)
-import Data.List
-  ( (\\)
-  , delete
-  , find
-  , group
-  , groupBy
-  , maximumBy
-  , partition
-  , sort
-  , transpose
-  )
-import qualified Data.Map as M
-  ( Map
-  , delete
-  , difference
-  , empty
-  , filter
-  , foldrWithKey
-  , fromList
-  , insert
-  , intersection
-  , keys
-  , keysSet
-  , lookup
-  , mapKeys
-  , toList
-  , union
-  , withoutKeys
-  )
-import Data.Maybe (catMaybes, fromJust, isJust)
+import           Data.Bifunctor (second)
+import           Data.List      (find, group, groupBy, maximumBy, sort,
+                                 transpose, (\\))
+import qualified Data.Map       as M (Map, empty, filter, filterWithKey,
+                                      findMax, findMin, foldrWithKey, insert,
+                                      isSubmapOf, keys, lookup, mapKeys,
+                                      mapWithKey, member, partitionWithKey,
+                                      singleton, size, toList, union)
+import           Data.Maybe     (catMaybes, fromJust, isJust)
 
 type Coordinate = (Int, Int)
 
@@ -63,27 +42,29 @@ tileContent (Tile _ c) = c
 
 rotateUp :: Tile -> Tile
 rotateUp (Tile tId content) =
-  Tile tId $ M.mapKeys (\(x, y) -> (abs (y - 9), x)) content
+  let maxY = (snd . fst) (M.findMax content)
+   in Tile tId $ M.mapKeys (\(x, y) -> (abs (y - maxY), x)) content
 
 flipTile :: Tile -> Tile
 flipTile (Tile tId content) =
-  Tile tId $ M.mapKeys (\(x, y) -> (abs (x - 9), y)) content
+  let maxY = (snd . fst) (M.findMax content)
+   in Tile tId $ M.mapKeys (\(x, y) -> (abs (x - maxY), y)) content
 
 directionToInt :: Direction -> Int
-directionToInt W = 0
-directionToInt S = 1
-directionToInt E = 2
-directionToInt N = 3
+directionToInt W    = 0
+directionToInt S    = 1
+directionToInt E    = 2
+directionToInt N    = 3
 directionToInt Self = -1
 
 directions :: [Direction]
 directions = [W, S, E, N]
 
 getOppositeDirection :: Direction -> Direction
-getOppositeDirection W = E
-getOppositeDirection S = N
-getOppositeDirection E = W
-getOppositeDirection N = S
+getOppositeDirection W    = E
+getOppositeDirection S    = N
+getOppositeDirection E    = W
+getOppositeDirection N    = S
 getOppositeDirection Self = Self
 
 getEdges :: Tile -> [Direction] -> [(Direction, Row)]
@@ -107,17 +88,18 @@ parseTiles s = do
   (fmap (foldl1 (\(Tile x m1) (Tile _ m2) -> Tile x (m1 `M.union` m2))) .
    groupBy (\t1 t2 -> tileId t1 == tileId t2) .
    fmap
-     (\(y, s') ->
-        Tile
-          tId
-          (foldl
-             (\m (x, c) ->
-                if c == '#'
-                  then M.insert (x, y) True m
-                  else M.insert (x, y) False m)
-             M.empty
-             s')) .
-   fmap (second (zip [0 ..])) . zip [0 ..] . tail)
+     ((\(y, s') ->
+         Tile
+           tId
+           (foldl
+              (\m (x, c) ->
+                 if c == '#'
+                   then M.insert (x, y) True m
+                   else M.insert (x, y) False m)
+              M.empty
+              s')) .
+      second (zip [0 ..])) .
+   zip [0 ..] . tail)
     rawTile
 
 tileEdges :: M.Map Coordinate Bool -> [[(Coordinate, Bool)]]
@@ -168,7 +150,7 @@ isNeighbor (edgeDirection, edge) t tDb =
       tileConfigurations =
         if isJust maybeTile
           then [fromJust maybeTile]
-          else take 4 (iterate rotateUp t) >>= \t' -> t' : [flipTile t']
+          else allTileConfigurations t
       matchTile =
         find
           (\t' ->
@@ -176,7 +158,11 @@ isNeighbor (edgeDirection, edge) t tDb =
              (fmap snd . snd . head)
                (getEdges t' [getOppositeDirection edgeDirection]))
           tileConfigurations
-   in (\t' -> (t', edgeDirection)) <$> matchTile
+   in (, edgeDirection) <$> matchTile
+
+allTileConfigurations :: Tile -> [Tile]
+allTileConfigurations t =
+  take 4 (iterate rotateUp t) >>= \t' -> t' : [flipTile t']
 
 getCorners :: TileDb -> [Tile]
 getCorners tDb =
@@ -189,17 +175,83 @@ getCorners tDb =
    in (\tId -> fromJust (M.lookup ((tId, tId), Self) tDb)) <$> cornersId
 
 buildImage :: TileDb -> Tile
-buildImage tdb = undefined
+buildImage tDb =
+  let (_, connections) =
+        M.partitionWithKey (\(_, direction) _ -> direction == Self) tDb
+      imageGrid = M.singleton (0, 0) $ getTopLeftCorner tDb
+      imageGrid' = buildImageGrid imageGrid (M.toList connections)
+   in imageGridToTile imageGrid' False
 
-updateTileDb :: TileId -> TileDb -> [(Tile, Direction)] -> TileDb
+getTopLeftCorner :: TileDb -> Tile
+getTopLeftCorner tDb =
+  let keys = fst <$> (M.keys . M.filterWithKey (\(_, d) _ -> d /= Self)) tDb
+      topLeftCornerId =
+        head $
+        foldl
+          (\allKeys (_, tId') -> filter (tId' /=) allKeys)
+          (fmap fst keys)
+          keys
+      topLeftCornerTile =
+        M.lookup ((topLeftCornerId, topLeftCornerId), Self) tDb
+   in fromJust topLeftCornerTile
+
+buildImageGrid ::
+     M.Map Coordinate Tile
+  -> [(((TileId, TileId), Direction), Tile)]
+  -> M.Map Coordinate Tile
+buildImageGrid imageGrid [] = imageGrid
+buildImageGrid imageGrid (c@(((tIdSource, _), direction), tile):connections) =
+  let imageGridCell = M.filter (\t -> tileId t == tIdSource) imageGrid
+   in M.foldrWithKey
+        (\(x, y) _ _ ->
+           case direction of
+             S ->
+               buildImageGrid (M.insert (x, y + 1) tile imageGrid) connections
+             E ->
+               buildImageGrid (M.insert (x + 1, y) tile imageGrid) connections
+             _ -> error "direction not supported")
+        (buildImageGrid imageGrid (connections ++ [c]))
+        imageGridCell
+
+imageGridToTile :: M.Map Coordinate Tile -> Bool -> Tile
+imageGridToTile image withEdges =
+  M.foldrWithKey
+    (\(x, y) t (Tile tId tc) ->
+       let (offsetX, offsetY) =
+             ( if withEdges
+                 then 10
+                 else 8
+             , if withEdges
+                 then 10
+                 else 8)
+           (x', y') = (offsetX * x, offsetY * y)
+           tileContentToAdd =
+             if withEdges
+               then t
+               else tileRemoveEdges t
+           tileContentToAdd' =
+             M.mapKeys
+               (\(tx, ty) -> (tx + x', ty + y'))
+               (tileContent tileContentToAdd)
+        in Tile tId (M.union tc tileContentToAdd'))
+    (Tile 0 M.empty)
+    image
+
+updateTileDb :: Tile -> TileDb -> [(Tile, Direction)] -> TileDb
 updateTileDb _ tDb [] = tDb
-updateTileDb tId tDb ((n, nd):ns) =
-  let tDb' = M.insert ((tId, tileId n), nd) n tDb
+updateTileDb t tDb ((n, nd):ns) =
+  let tDb' = insertOnlyEstSouth t (n, nd) tDb
       tDb'' =
         if isJust (M.lookup ((tileId n, tileId n), Self) tDb')
           then tDb'
           else M.insert ((tileId n, tileId n), Self) n tDb'
-   in updateTileDb tId tDb'' ns
+   in updateTileDb t tDb'' ns
+  where
+    insertOnlyEstSouth :: Tile -> (Tile, Direction) -> TileDb -> TileDb
+    insertOnlyEstSouth tile (neigh, neighDir) m
+      | neighDir == N = M.insert ((tileId neigh, tileId tile), S) tile m
+      | neighDir == W = M.insert ((tileId neigh, tileId tile), E) tile m
+      | otherwise = M.insert ((tileId tile, tileId neigh), neighDir) n m
 
 buildTileDatabase :: [Tile] -> [Tile] -> TileDb -> TileDb
 buildTileDatabase [] [] tDb = tDb
@@ -216,7 +268,7 @@ buildTileDatabase (t:ts) freeTiles tDb =
           (\acc edge -> acc ++ [findNeighbor freeTiles' edge tDb])
           []
           openEdges
-      newTDb = updateTileDb (tileId t) tDb neighboors
+      newTDb = updateTileDb t tDb neighboors
       newTDb' =
         if isJust maybeTileSelf
           then newTDb
@@ -227,17 +279,66 @@ buildTileDatabase (t:ts) freeTiles tDb =
       fixedTilesToLoop = ts ++ fmap fst neighboors
    in buildTileDatabase fixedTilesToLoop freeTiles' newTDb'
 
+tileRemoveEdges :: Tile -> Tile
+tileRemoveEdges (Tile tId tc) =
+  let ((minTcX, minTcY), (maxTcX, maxTcY)) =
+        ((fst . M.findMin) tc, (fst . M.findMax) tc)
+   in Tile tId $
+      M.filterWithKey
+        (\(x, y) _ ->
+           (x /= minTcX && x /= maxTcX) && (y /= minTcY && y /= maxTcY))
+        tc
+
 seaMonster :: Tile
-seaMonster = undefined
+seaMonster =
+  let rawSeaMonster =
+        head $
+        parseTiles
+          "Tile 666:\n\
+\..................#.\n\
+\#....##....##....###\n\
+\.#..#..#..#..#..#..."
+   in Tile (tileId rawSeaMonster) $ M.filter id (tileContent rawSeaMonster)
 
-searchSeaMonster :: Tile -> [(Tile, Int)]
-searchSeaMonster image = undefined
+searchSeaMonster :: Tile -> [(Tile, [M.Map Coordinate Bool])]
+searchSeaMonster image = do
+  t <- allTileConfigurations image
+  let tc = tileContent t
+      monsterContent = tileContent seaMonster
+      ((minTcX, minTcY), (maxTcX, maxTcY)) =
+        ((fst . M.findMin) tc, (fst . M.findMax) tc)
+      (maxMonsterX, maxMonsterY) = (20, 3)
+      monsters =
+        (\(offsetX, offsetY) ->
+           M.mapKeys (\(x, y) -> (x + offsetX, y + offsetY)) monsterContent) <$>
+        [ (a, b)
+        | a <- [minTcX .. (maxTcX - maxMonsterX)]
+        , b <- [minTcY .. (maxTcY - maxMonsterY)]
+        ]
+      monstersFound =
+        foldl
+          (\acc m ->
+             if M.isSubmapOf m tc
+               then acc ++ [m]
+               else acc)
+          []
+          monsters
+  return (t, monstersFound)
 
-killSeaMonsters :: Tile -> Tile
-killSeaMonsters image = undefined
+killSeaMonsters :: (Tile, [M.Map Coordinate Bool]) -> Tile
+killSeaMonsters (image, []) = image
+killSeaMonsters (Tile tId tc, m:ms) =
+  killSeaMonsters
+    ( Tile
+         tId
+         (M.mapWithKey
+            (\k b ->
+               not (k `M.member` m) && b)
+            tc)
+    , ms)
 
 countRoughWater :: Tile -> Int
-countRoughWater t = undefined
+countRoughWater (Tile _ tc) = M.size $ M.filter id tc
 
 solution2 :: String -> Int
 solution2 s =
@@ -245,7 +346,7 @@ solution2 s =
       tileDatabase = buildTileDatabase [head ts] (tail ts) M.empty
       image = buildImage tileDatabase
       mostSeaMonsterConfiguration =
-        fst . maximumBy (\(_, m) (_, m') -> m `compare` m') $
+        maximumBy (\(_, m) (_, m') -> length m `compare` length m') $
         searchSeaMonster image
       waters = killSeaMonsters mostSeaMonsterConfiguration
    in countRoughWater waters
@@ -259,6 +360,9 @@ twentiethDecemberSolution2 = solution2 <$> input
 -- test data ------------------------------------------------------------
 testSolution1 :: Int
 testSolution1 = solution1 testInput
+
+testSolution2 :: Int
+testSolution2 = solution2 testInput
 
 testInput :: String
 testInput =
