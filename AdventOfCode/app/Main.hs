@@ -22,6 +22,17 @@ import qualified TwentyTwenty.TwelfthDecember      as Twelve
 import qualified TwentyTwenty.TwentiethDecember    as Twenty
 import qualified TwentyTwenty.TwentyFirstDecember  as TwentyFirst
 import qualified TwentyTwenty.TwentySecondDecember as TwentySecond
+import qualified TwentyTwenty.TwentyThirdDecember  as TwentyThird
 
 main :: IO ()
-main = TwentySecond.twentySecondDecemberSolution2 >>= print
+main = TwentyThird.twentyThirdDecemberSolution2 >>= print
+
+
+
+
+
+
+
+
+
+

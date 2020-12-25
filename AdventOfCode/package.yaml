@@ -24,6 +24,7 @@ dependencies:
 - regex-tdfa
 - containers
 - mtl
+- vector
 
 library:
   source-dirs: src
