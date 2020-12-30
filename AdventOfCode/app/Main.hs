@@ -20,10 +20,11 @@ import qualified TwentyTwenty.ThirdDecember        as Three
 import qualified TwentyTwenty.ThirteenthDecember   as Thirteen
 import qualified TwentyTwenty.TwelfthDecember      as Twelve
 import qualified TwentyTwenty.TwentiethDecember    as Twenty
+import qualified TwentyTwenty.TwentyFifthDecember  as TwentyFifth
 import qualified TwentyTwenty.TwentyFirstDecember  as TwentyFirst
 import qualified TwentyTwenty.TwentyFourthDecember as TwentyFourth
 import qualified TwentyTwenty.TwentySecondDecember as TwentySecond
 import qualified TwentyTwenty.TwentyThirdDecember  as TwentyThird
 
 main :: IO ()
-main = TwentyFourth.twentyFourthDecemberSolution2 >>= print
+main = TwentyFifth.twentyFifthDecemberSolution1 >>= print
