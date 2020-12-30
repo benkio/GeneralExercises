@@ -1,4 +1,4 @@
-module ThirdDecember where
+module TwentyFifteen.ThirdDecember where
 
 input :: IO String
 input = readFile "input/2015/3December.txt"
