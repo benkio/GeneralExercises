@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8bb49ef9d14b7cfa27b19db736ed04213be3255fd5b22f874385bf04c35c7e5a
+-- hash: 1275e0820462c6eba1ffeffb23ef7950fd5d535ce76d7e3ba4b17c23ad0550f9
 
 name:           AdventOfCode
 version:        0.1.0.0
@@ -27,6 +27,31 @@ source-repository head
 
 library
   exposed-modules:
+      TwentyFifteen.EighteenthDecember
+      TwentyFifteen.EighthDecember
+      TwentyFifteen.EleventhDecember
+      TwentyFifteen.FifteenthDecember
+      TwentyFifteen.FifthDecember
+      TwentyFifteen.FirstDecember
+      TwentyFifteen.FourteenthDecember
+      TwentyFifteen.FourthDecember
+      TwentyFifteen.NineteenthDecember
+      TwentyFifteen.NinthDecember
+      TwentyFifteen.SecondDecember
+      TwentyFifteen.SeventeenthDecember
+      TwentyFifteen.SeventhDecember
+      TwentyFifteen.SixteenthDecember
+      TwentyFifteen.SixthDecember
+      TwentyFifteen.TenthDecember
+      TwentyFifteen.ThirdDecember
+      TwentyFifteen.ThirteenthDecember
+      TwentyFifteen.TwelfthDecember
+      TwentyFifteen.TwentiethDecember
+      TwentyFifteen.TwentyfifthDecember
+      TwentyFifteen.TwentyfirstDecember
+      TwentyFifteen.TwentyfourthDecember
+      TwentyFifteen.TwentysecondDecember
+      TwentyFifteen.TwentythirdDecember
       TwentyTwenty.EighteenthDecember
       TwentyTwenty.EighthDecember
       TwentyTwenty.EleventhDecember
