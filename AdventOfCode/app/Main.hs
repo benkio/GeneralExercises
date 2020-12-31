@@ -26,7 +26,8 @@ module Main where
 -- import qualified TwentyTwenty.TwentySecondDecember as TwentySecond
 -- import qualified TwentyTwenty.TwentyThirdDecember  as TwentyThird
 
-import qualified TwentyFifteen.FirstDecember as First
+-- import qualified TwentyFifteen.FirstDecember as First
+import qualified TwentyFifteen.SecondDecember as Second
 
 main :: IO ()
-main = First.firstDecemberSolution2 >>= print
+main = Second.secondDecemberSolution2 >>= print
