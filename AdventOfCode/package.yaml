@@ -25,6 +25,8 @@ dependencies:
 - containers
 - mtl
 - vector
+- bytestring
+- pureMD5
 
 library:
   source-dirs: src
