@@ -1,8 +1,8 @@
 module TwentyFifteen.ThirdDecember where
 
-import Data.Bifunctor (bimap)
-import Data.List (partition)
-import Data.Set as S (Set, fromList, size, union)
+import           Data.Bifunctor (bimap)
+import           Data.List      (partition)
+import           Data.Set       as S (Set, fromList, size, union)
 
 data Direction
   = N
@@ -17,12 +17,12 @@ initialCoordinate :: Coordinate
 initialCoordinate = (0, 0)
 
 parseDirection :: String -> [Direction]
-parseDirection [] = []
+parseDirection []       = []
 parseDirection ('^':xs) = N : parseDirection xs
 parseDirection ('<':xs) = E : parseDirection xs
 parseDirection ('>':xs) = W : parseDirection xs
 parseDirection ('v':xs) = S : parseDirection xs
-parseDirection (_:xs) = parseDirection xs
+parseDirection (_:xs)   = parseDirection xs
 
 moveSanta :: Coordinate -> Direction -> Coordinate
 moveSanta (x, y) N = (x, y + 1)
@@ -51,7 +51,7 @@ solution1Test =
 
 splitDirections :: [Direction] -> ([Direction], [Direction])
 splitDirections ds =
-  (bimap (fmap snd) (fmap snd) . partition (\(x, _) -> x `mod` 2 == 0)) $
+  (bimap (fmap snd) (fmap snd) . partition (\(x, _) -> even x)) $
   [0 ..] `zip` ds
 
 solution2Test :: Bool
