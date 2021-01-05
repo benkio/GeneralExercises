@@ -30,7 +30,8 @@ module Main where
 -- import qualified TwentyFifteen.ThirdDecember as Third
 --import qualified TwentyFifteen.FourthDecember as Four
 --import qualified TwentyFifteen.FifthDecember as Five
-import qualified TwentyFifteen.SixthDecember as Six
+--import qualified TwentyFifteen.SixthDecember as Six
+import qualified TwentyFifteen.SeventhDecember as Seven
 
 main :: IO ()
-main = Six.sixthDecemberSolution2 >>= print
+main = Seven.seventhDecemberSolution2 >>= print
