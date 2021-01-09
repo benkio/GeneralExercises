@@ -1,14 +1,29 @@
 module TwentyFifteen.TenthDecember where
 
-input :: IO String
-input = readFile "input/2015/10December.txt"
+import Data.List (group)
 
-inputTest :: String
-inputTest = undefined
+input :: IO Int
+input = read <$> readFile "input/2015/10December.txt"
 
-solution1 = undefined
+inputTest :: Integer
+inputTest = 1
 
-solution2 = undefined
+generateLookAndSay :: Integer -> [Integer]
+generateLookAndSay x = iterate generateNextLookAndSay x
 
-tenthDecemberSolution1 = undefined
-tenthDecemberSolution2 = undefined
+generateNextLookAndSay :: Integer -> Integer
+generateNextLookAndSay =
+  read . concatMap (\l -> show (length l) ++ [head l]) . group . show
+
+solution1Test :: Bool
+solution1Test = (== 312211) $ solution 5 1
+
+solution :: Int -> Int -> Integer
+solution iterations initialValue =
+  ((!! iterations) . generateLookAndSay . toInteger) initialValue
+
+tenthDecemberSolution1 :: IO Int
+tenthDecemberSolution1 = length . show . solution 40 <$> input
+
+tenthDecemberSolution2 :: IO Int
+tenthDecemberSolution2 = length . show . solution 50 <$> input
