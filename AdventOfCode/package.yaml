@@ -27,6 +27,9 @@ dependencies:
 - vector
 - bytestring
 - pureMD5
+- aeson
+- scientific
+- text
 
 library:
   source-dirs: src
