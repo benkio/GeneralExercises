@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 733b47f4357ea976b7b4aed2b7035b690d6670450ca7d3f71b20d67ce5de9721
+-- hash: 167da6c8bd3ffa0ea3b1eb5b67160ab185a9b7164cd722c2f16b292f119635b0
 
 name:           AdventOfCode
 version:        0.1.0.0
@@ -88,6 +88,7 @@ library
     , containers
     , mtl
     , pureMD5
+    , random
     , regex-tdfa
     , scientific
     , text
@@ -109,6 +110,7 @@ executable AdventOfCode-exe
     , containers
     , mtl
     , pureMD5
+    , random
     , regex-tdfa
     , scientific
     , text
@@ -131,6 +133,7 @@ test-suite AdventOfCode-test
     , containers
     , mtl
     , pureMD5
+    , random
     , regex-tdfa
     , scientific
     , text

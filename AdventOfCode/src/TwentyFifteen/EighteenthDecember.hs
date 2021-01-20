@@ -32,16 +32,14 @@ showGrid :: Grid -> String
 showGrid m =
   (unlines .
    fmap
-     (\l ->
-        foldl
-          (\acc' (_, c) ->
-             acc' ++
-             [ if c
-                 then '#'
-                 else '.'
-             ])
-          ""
-          l) .
+     (foldl
+        (\acc' (_, c) ->
+           acc' ++
+           [ if c
+               then '#'
+               else '.'
+           ])
+        "") .
    groupBy (\((_, y), _) ((_, y'), _) -> y == y') .
    sortOn (\((x, y), _) -> x + y * ((+ 1) . snd . fst . Map.findMax) m) .
    Map.toList)

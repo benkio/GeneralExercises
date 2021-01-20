@@ -30,6 +30,7 @@ dependencies:
 - aeson
 - scientific
 - text
+- random
 
 library:
   source-dirs: src
