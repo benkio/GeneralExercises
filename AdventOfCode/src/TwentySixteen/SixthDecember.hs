@@ -1,16 +1,41 @@
 module TwentySixteen.SixthDecember where
 
+import Data.List
+
 input :: IO String
 input = readFile "input/2016/6December.txt"
 
-solution1 :: String -> Int
-solution1 = undefined
+inputTest :: String
+inputTest =
+  "eedadn\n\
+\drvtee\n\
+\eandsr\n\
+\raavrd\n\
+\atevrs\n\
+\tsrnev\n\
+\sdttsa\n\
+\rasrtv\n\
+\nssdts\n\
+\ntnada\n\
+\svetve\n\
+\tesnvt\n\
+\vntsnd\n\
+\vrdear\n\
+\dvrsen\n\
+\enarar"
 
-sixthDecemberSolution1 :: IO Int
-sixthDecemberSolution1 = undefined
+solution ::
+     String -> ((String -> String -> Ordering) -> [String] -> String) -> String
+solution z f =
+  (fmap (head . f (\x y -> length x `compare` length y) . group . sort) .
+   transpose . lines)
+    z
 
-solution2 :: String -> Int
-solution2 = undefined
+solutionTest :: Bool
+solutionTest = solution inputTest maximumBy == "easter"
 
-sixthDecemberSolution2 :: IO Int
-sixthDecemberSolution2 = undefined
+sixthDecemberSolution1 :: IO String
+sixthDecemberSolution1 = (`solution` maximumBy) <$> input
+
+sixthDecemberSolution2 :: IO String
+sixthDecemberSolution2 = (`solution` minimumBy) <$> input
