@@ -60,14 +60,4 @@ module Main where
 import qualified TwentySixteen.NinthDecember as Nine
 
 main :: IO ()
-main = Nine.ninthDecemberSolution1 >>= print
-
-
-
-
-
-
-
-
-
-
+main = Nine.ninthDecemberSolution2 >>= print
