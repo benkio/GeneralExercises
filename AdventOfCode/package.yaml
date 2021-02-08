@@ -1,6 +1,6 @@
 name:                AdventOfCode
 version:             0.1.0.0
-github:              "https://github.com/benkio/GeneralExercises/AdventOfCode"
+#github:              "https://github.com/benkio/GeneralExercises/AdventOfCode"
 license:             BSD3
 author:              "Enrico Benini"
 maintainer:          "benkio89@gmail.com"

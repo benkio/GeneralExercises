@@ -1,16 +1,14 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5168843d561b0280b4b9b7e2dcbc70e7ab8593c3fed79aa593636bd3247db965
+-- hash: 6331b4d5d10d4075c85c055fce0806649c5cb3e678ab1c96a8eae6f2f4f77067
 
 name:           AdventOfCode
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/benkio/GeneralExercises/AdventOfCode#readme>
-homepage:       https://github.com/https://github.com/benkio/GeneralExercises/AdventOfCode#readme
-bug-reports:    https://github.com/https://github.com/benkio/GeneralExercises/AdventOfCode/issues
 author:         Enrico Benini
 maintainer:     benkio89@gmail.com
 copyright:      2020 Enrico Benini
@@ -20,10 +18,6 @@ build-type:     Simple
 extra-source-files:
     README.md
     ChangeLog.md
-
-source-repository head
-  type: git
-  location: https://github.com/https://github.com/benkio/GeneralExercises/AdventOfCode
 
 library
   exposed-modules:
