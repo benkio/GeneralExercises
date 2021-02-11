@@ -14,7 +14,9 @@ solution decompressVersion1 decompressVersion2 s@(x:xs)
 decompressString :: Bool -> String -> (Int, String)
 decompressString decompressVersionOne s =
   let (count, repetitions, s') = parseCompressPattern s
-   in (repetitions * solution decompressVersionOne decompressVersionOne (take count s'), drop count s')
+   in ( repetitions *
+        solution decompressVersionOne decompressVersionOne (take count s')
+      , drop count s')
 
 parseCompressPattern :: String -> (Int, Int, String)
 parseCompressPattern s =
