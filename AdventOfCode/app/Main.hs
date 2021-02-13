@@ -57,8 +57,10 @@ module Main where
 --import qualified TwentySixteen.FifthDecember as Five
 --import qualified TwentySixteen.SixthDecember as Six
 --import qualified TwentySixteen.SeventhDecember as Seven
+--import qualified TwentySixteen.EighthDecember as Eight
 --import qualified TwentySixteen.NinthDecember as Nine
 import qualified TwentySixteen.TenthDecember as Ten
 
 main :: IO ()
 main = Ten.tenthDecemberSolution2 >>= print
+
