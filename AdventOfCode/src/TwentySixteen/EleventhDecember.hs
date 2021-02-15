@@ -114,30 +114,18 @@ nextSteps State {elevatorFloor = f, floors = flrs} step his =
       nextValidLoads =
         (sortOn (Data.Ord.Down . length) . validLoads) currentFloor
       buildNextSteps =
-        \floorValue el ->
+        \floorValue  el ->
           let newflv = adjust (\\ el) f flrs
               newflv' = adjust (el ++) floorValue newflv
-           in if (not . (\x -> any (floorsEquality (x, step)) his)) newflv'
+           in if validateFloor floorValue el flrs &&  floorValue /= f && (not . (\x -> any (floorsEquality (x, step)) his)) newflv'
                 then Just State {elevatorFloor = floorValue, floors = newflv'}
                 else Nothing
-      nextLoadUp =
-        (mapMaybe (buildNextSteps nextFloor) .
-         filter (\el -> nextFloor /= f && validateFloor nextFloor el flrs))
-          nextValidLoads
+      nextLoadUp = mapMaybe (buildNextSteps nextFloor) nextValidLoads
       nextLoadDown =
-        (mapMaybe (buildNextSteps previousFloor) .
-         filter
-           (\el ->
-              previousFloor /= f &&
-              (not .
-               null . concat . elems . takeWhileAntitone (previousFloor >=))
-                flrs &&
-              validateFloor previousFloor el flrs) .
-         reverse)
-          nextValidLoads
-   in nextLoadUp ++ nextLoadDown-- if null nextLoadUp
-      --   then nextLoadDown
-      --   else nextLoadUp
+        if (not . null . concat . elems . takeWhileAntitone (previousFloor >=)) flrs
+        then (mapMaybe (buildNextSteps previousFloor) . reverse) nextValidLoads
+          else []
+   in nextLoadUp ++ nextLoadDown
 
 stepZero :: Floors -> State
 stepZero fls = State {elevatorFloor = 1, floors = fls}
@@ -147,7 +135,6 @@ solution1 st step resultMV historyMV = do
   history <- takeMVar historyMV
   _ <- putMVar historyMV (Set.insert (floors st, step) history)
   resultNotFound <- isEmptyMVar resultMV
-  --putStrLn $ show st ++ " - resultNotFound " ++ show resultNotFound
   case (not resultNotFound, endCondition st) of
     (_, True) -> do
       previousResult <- tryTakeMVar resultMV
@@ -156,7 +143,6 @@ solution1 st step resultMV historyMV = do
     (True, _) -> do
       result <- takeMVar resultMV
       let isStepHigher = step >= result
-      --putStr $ show step ++ " "
       _ <- putMVar resultMV result
       if isStepHigher then return () else solution1Step st (step + 1) resultMV historyMV
     _    -> solution1Step st (step + 1) resultMV historyMV
