@@ -57,8 +57,9 @@ inputTest =
 \The fourth floor contains nothing relevant."
 
 -- ----- ------------------------------------------------------
-floorsEquality :: Floors -> Floors -> Bool
-floorsEquality fs1 fs2 = all (null . uncurry (\\)) $ elems fs1 `zip` elems fs2
+floorsEquality :: (Floors, Int) -> (Floors, Int) -> Bool
+floorsEquality (fs1, step1) (fs2, step2) =
+  step1 >= step2 && all (null . uncurry (\\)) (elems fs1 `zip` elems fs2)
 
 isMicrochip :: RTG -> Bool
 isMicrochip (Microchip _) = True
@@ -106,8 +107,8 @@ endCondition State {elevatorFloor = ef, floors = fs} =
   ((\l -> (null . concat . init) l && (not . null . last) l) . fmap snd . toList)
     fs
 
-nextSteps :: State -> Set Floors -> [State]
-nextSteps State {elevatorFloor = f, floors = flrs} his =
+nextSteps :: State -> Int -> Set (Floors, Int) -> [State]
+nextSteps State {elevatorFloor = f, floors = flrs} step his =
   let (previousFloor, currentFloor, nextFloor) =
         (max (f - 1) 1, fromJust (Map.lookup f flrs), min (f + 1) 4)
       nextValidLoads =
@@ -116,7 +117,7 @@ nextSteps State {elevatorFloor = f, floors = flrs} his =
         \floorValue el ->
           let newflv = adjust (\\ el) f flrs
               newflv' = adjust (el ++) floorValue newflv
-           in if (not . (\x -> any (`floorsEquality` x) his)) newflv'
+           in if (not . (\x -> any (floorsEquality (x, step)) his)) newflv'
                 then Just State {elevatorFloor = floorValue, floors = newflv'}
                 else Nothing
       nextLoadUp =
@@ -134,17 +135,17 @@ nextSteps State {elevatorFloor = f, floors = flrs} his =
               validateFloor previousFloor el flrs) .
          reverse)
           nextValidLoads
-   in if null nextLoadUp
-        then nextLoadDown
-        else nextLoadUp
+   in nextLoadUp ++ nextLoadDown-- if null nextLoadUp
+      --   then nextLoadDown
+      --   else nextLoadUp
 
 stepZero :: Floors -> State
 stepZero fls = State {elevatorFloor = 1, floors = fls}
 
-solution1 :: State -> Int -> MVar Int -> MVar (Set Floors) -> IO ()
+solution1 :: State -> Int -> MVar Int -> MVar (Set (Floors, Int)) -> IO ()
 solution1 st step resultMV historyMV = do
   history <- takeMVar historyMV
-  _ <- putMVar historyMV (Set.insert (floors st) history)
+  _ <- putMVar historyMV (Set.insert (floors st, step) history)
   resultNotFound <- isEmptyMVar resultMV
   --putStrLn $ show st ++ " - resultNotFound " ++ show resultNotFound
   case (not resultNotFound, endCondition st) of
@@ -160,10 +161,10 @@ solution1 st step resultMV historyMV = do
       if isStepHigher then return () else solution1Step st (step + 1) resultMV historyMV
     _    -> solution1Step st (step + 1) resultMV historyMV
 
-solution1Step :: State -> Int -> MVar Int -> MVar (Set Floors) -> IO ()
+solution1Step :: State -> Int -> MVar Int -> MVar (Set (Floors, Int)) -> IO ()
 solution1Step st step resultMV historyMV = do
   history <- takeMVar historyMV
-  let nextStates = nextSteps st history
+  let nextStates = nextSteps st step history
   _ <- putMVar historyMV history
   mapM_ (\st' -> solution1 st' step resultMV historyMV) nextStates
 
