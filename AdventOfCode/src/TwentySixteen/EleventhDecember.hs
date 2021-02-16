@@ -6,12 +6,12 @@ import           Control.Concurrent
 import           Control.Monad
 import           Data.List
 import           Data.Map           (Map, adjust, elems, fromList,
-                                     takeWhileAntitone, toList)
+                                     takeWhileAntitone, toList, traverseWithKey)
 import qualified Data.Map           as Map (lookup)
 import           Data.Maybe
 import           Data.Ord
 import           Data.Set           (Set, empty)
-import qualified Data.Set           as Set (insert)
+import qualified Data.Set           as Set (fromList, insert, union)
 import           System.IO
 
 data RTG
@@ -67,11 +67,36 @@ isMicrochip :: RTG -> Bool
 isMicrochip (Microchip _) = True
 isMicrochip _             = False
 
+rtgElement :: RTG -> String
+rtgElement (Microchip s) = s
+rtgElement (Generator s) = s
+
+changeRtgElement :: String -> RTG -> RTG
+changeRtgElement s (Microchip _) = Microchip s
+changeRtgElement s (Generator _) = Generator s
+
 validateRTG :: RTG -> RTG -> Bool
 validateRTG (Microchip _) (Microchip _)  = True
 validateRTG (Generator _) (Generator _)  = True
 validateRTG (Microchip s) (Generator s') = s == s'
 validateRTG (Generator s) (Microchip s') = s == s'
+
+elements :: Floors -> [String]
+elements = nub . concatMap (fmap rtgElement) . elems
+
+floorCombinations :: Floors -> [String] -> Int -> Set (Floors, Int)
+floorCombinations flrs elements' step =
+  (Set.fromList
+   . fmap (\x -> (x,step))
+   . (flrs:)
+   . filter (\x ->
+      null (elements flrs \\ (concatMap (fmap rtgElement . filter isMicrochip) . elems) x)
+      && null (elements flrs \\ (concatMap (fmap rtgElement . filter (not .isMicrochip)) . elems) x)
+      )
+   . traverseWithKey (\_ fl ->
+                        equivalentFloors fl)) flrs
+  where equivalentFloors :: Floor -> [Floor]
+        equivalentFloors = traverse (\x -> fmap (`changeRtgElement` x) (delete (rtgElement x) elements'))
 
 validateFloor :: Int -> Floor -> Floors -> Bool
 validateFloor f l flrs = validateFloor' $ l ++ (fromJust . Map.lookup f) flrs
@@ -136,10 +161,10 @@ nextSteps s@State {elevatorFloor = f, floors = flrs} step his =
 stepZero :: Floors -> State
 stepZero fls = State {elevatorFloor = 1, floors = fls}
 
-solution1 :: State -> Int -> MVar Int -> MVar (Set (Floors, Int)) -> IO ()
-solution1 st step resultMV historyMV = do
+solution1 :: State -> Int -> MVar Int -> MVar (Set (Floors, Int)) -> [String] -> IO ()
+solution1 st step resultMV historyMV elements = do
   history <- takeMVar historyMV
-  _ <- putMVar historyMV (Set.insert (floors st, step) history)
+  _ <- putMVar historyMV (Set.union (floorCombinations (floors st) elements step) history)
   resultNotFound <- isEmptyMVar resultMV
   case (not resultNotFound, endCondition st) of
     (_, True) -> do
@@ -151,32 +176,27 @@ solution1 st step resultMV historyMV = do
       -- let isStepHigher = step >= result
       -- _ <- putMVar resultMV result
       -- if isStepHigher then return () else solution1Step st (step + 1) resultMV historyMV
-    _    -> solution1Step st (step + 1) resultMV historyMV
+    _    -> solution1Step st (step + 1) resultMV historyMV elements
 
-solution1Step :: State -> Int -> MVar Int -> MVar (Set (Floors, Int)) -> IO ()
-solution1Step st step resultMV historyMV = do
+solution1Step :: State -> Int -> MVar Int -> MVar (Set (Floors, Int)) -> [String] -> IO ()
+solution1Step st step resultMV historyMV elements = do
   history <- takeMVar historyMV
   --putStrLn $ show st ++ " " ++ show step-- ++ " " ++ show history
-  when (step `mod` 50 == 0) $ putStr "*" >> hFlush stdout
+--  when (step `mod` 50 == 0) $ putStr "*" >> hFlush stdout
   let nextStates = nextSteps st step history
   _ <- putMVar historyMV history
-  mapM_ (\st' -> solution1 st' step resultMV historyMV) nextStates
+  mapM_ (\st' -> solution1 st' step resultMV historyMV elements) nextStates
 
 solution1Test :: IO Bool
-solution1Test = do
-  let firstState = stepZero inputTest
-  resultMV <- newEmptyMVar
-  historyMV <- newMVar empty
-  _ <- solution1 firstState 0 resultMV historyMV
-  value <- takeMVar resultMV
-  return $ value == 11
+solution1Test = (== 11) <$> solution inputTest
 
 solution :: Floors -> IO Int
 solution i = do
   let firstState = stepZero i
+      elemCombinations = elements inputTest
   resultMV <- newEmptyMVar
   historyMV <- newMVar empty
-  _ <- solution1 firstState 0 resultMV historyMV
+  _ <- solution1 firstState 0 resultMV historyMV elemCombinations
   takeMVar resultMV
 
 eleventhDecemberSolution1 :: IO Int
