@@ -77,5 +77,14 @@ import qualified TwentySixteen.EleventhDecember as Eleven
 --import qualified TwentySixteen.TwentyfifthDecember as TwentyFifth
 
 main :: IO ()
-main = Eleven.eleventhDecemberSolution1 >>= print
+main = Eleven.eleventhDecemberSolution2 >>= print
+
+
+
+
+
+
+
+
+
 

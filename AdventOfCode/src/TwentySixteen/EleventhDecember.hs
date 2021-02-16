@@ -3,6 +3,7 @@
 module TwentySixteen.EleventhDecember where
 
 import           Control.Concurrent
+import           Control.Monad
 import           Data.List
 import           Data.Map           (Map, adjust, elems, fromList,
                                      takeWhileAntitone, toList)
@@ -11,6 +12,7 @@ import           Data.Maybe
 import           Data.Ord
 import           Data.Set           (Set, empty)
 import qualified Data.Set           as Set (insert)
+import           System.IO
 
 data RTG
   = Microchip String
@@ -90,9 +92,11 @@ buildElevator r r'
   | validateRTG r r' = Just [r, r']
   | otherwise = Nothing
 
-validLoads :: Floor -> [Floor]
+validLoads :: Floor -> ([Floor], [Floor])
 validLoads fls =
-  (mapMaybe
+  ( partition ((== 2)
+    . length)
+    . mapMaybe
      (\l ->
         if length l == 1
           then Just [head l]
@@ -107,25 +111,27 @@ endCondition State {elevatorFloor = ef, floors = fs} =
   ((\l -> (null . concat . init) l && (not . null . last) l) . fmap snd . toList)
     fs
 
+buildNextSteps :: State -> Int -> Set (Floors, Int) -> Int -> Floor -> Maybe State
+buildNextSteps State {elevatorFloor = f, floors = flrs} step his floorValue el =
+  let newflv = adjust (\\ el) f flrs
+      newflv' = adjust (el ++) floorValue newflv
+  in if validateFloor floorValue el flrs &&  floorValue /= f && (not . (\x -> any (floorsEquality (x, step)) his)) newflv'
+     then Just State {elevatorFloor = floorValue, floors = newflv'}
+     else Nothing
+
 nextSteps :: State -> Int -> Set (Floors, Int) -> [State]
-nextSteps State {elevatorFloor = f, floors = flrs} step his =
+nextSteps s@State {elevatorFloor = f, floors = flrs} step his =
   let (previousFloor, currentFloor, nextFloor) =
         (max (f - 1) 1, fromJust (Map.lookup f flrs), min (f + 1) 4)
-      nextValidLoads =
-        (sortOn (Data.Ord.Down . length) . validLoads) currentFloor
-      buildNextSteps =
-        \floorValue  el ->
-          let newflv = adjust (\\ el) f flrs
-              newflv' = adjust (el ++) floorValue newflv
-           in if validateFloor floorValue el flrs &&  floorValue /= f && (not . (\x -> any (floorsEquality (x, step)) his)) newflv'
-                then Just State {elevatorFloor = floorValue, floors = newflv'}
-                else Nothing
-      nextLoadUp = mapMaybe (buildNextSteps nextFloor) nextValidLoads
-      nextLoadDown =
-        if (not . null . concat . elems . takeWhileAntitone (previousFloor >=)) flrs
-        then (mapMaybe (buildNextSteps previousFloor) . reverse) nextValidLoads
-          else []
-   in nextLoadUp ++ nextLoadDown
+      (nextValidLoadsPair, nextValidLoadsSingle) = validLoads currentFloor
+      nextLoad = mapMaybe (buildNextSteps s step his nextFloor) nextValidLoadsPair
+      nextLoad' = if null nextLoad
+        then mapMaybe (buildNextSteps s step his nextFloor) nextValidLoadsSingle
+        else nextLoad
+      nextLoad'' = if (not . null . concat . elems . takeWhileAntitone (previousFloor >=)) flrs
+        then mapMaybe (buildNextSteps s step his previousFloor) nextValidLoadsSingle
+        else []
+   in nextLoad' ++ nextLoad''
 
 stepZero :: Floors -> State
 stepZero fls = State {elevatorFloor = 1, floors = fls}
@@ -140,16 +146,18 @@ solution1 st step resultMV historyMV = do
       previousResult <- tryTakeMVar resultMV
       putStrLn $ "found a Result: " ++ show step
       if isJust previousResult then putMVar resultMV (min step (fromJust previousResult)) else putMVar resultMV step
-    (True, _) -> do
-      result <- takeMVar resultMV
-      let isStepHigher = step >= result
-      _ <- putMVar resultMV result
-      if isStepHigher then return () else solution1Step st (step + 1) resultMV historyMV
+    (True, _) -> return ()-- do
+      -- result <- takeMVar resultMV
+      -- let isStepHigher = step >= result
+      -- _ <- putMVar resultMV result
+      -- if isStepHigher then return () else solution1Step st (step + 1) resultMV historyMV
     _    -> solution1Step st (step + 1) resultMV historyMV
 
 solution1Step :: State -> Int -> MVar Int -> MVar (Set (Floors, Int)) -> IO ()
 solution1Step st step resultMV historyMV = do
   history <- takeMVar historyMV
+  --putStrLn $ show st ++ " " ++ show step-- ++ " " ++ show history
+  when (step `mod` 50 == 0) $ putStr "*" >> hFlush stdout
   let nextStates = nextSteps st step history
   _ <- putMVar historyMV history
   mapM_ (\st' -> solution1 st' step resultMV historyMV) nextStates
@@ -163,17 +171,20 @@ solution1Test = do
   value <- takeMVar resultMV
   return $ value == 11
 
-eleventhDecemberSolution1 :: IO Int
-eleventhDecemberSolution1 = do
-  i <- input
+solution :: Floors -> IO Int
+solution i = do
   let firstState = stepZero i
   resultMV <- newEmptyMVar
   historyMV <- newMVar empty
   _ <- solution1 firstState 0 resultMV historyMV
   takeMVar resultMV
 
-solution2 :: String -> Int
-solution2 = undefined
+eleventhDecemberSolution1 :: IO Int
+eleventhDecemberSolution1 = input >>= solution
 
 eleventhDecemberSolution2 :: IO Int
-eleventhDecemberSolution2 = undefined
+eleventhDecemberSolution2 = do
+  i <- input
+  let newInput = [Microchip "elerium", Microchip "dilithium", Generator "dilithium", Microchip "dilithium"]
+      totalInput = adjust (newInput ++) 1 i
+  solution totalInput
