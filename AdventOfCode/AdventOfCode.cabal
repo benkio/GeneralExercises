@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6331b4d5d10d4075c85c055fce0806649c5cb3e678ab1c96a8eae6f2f4f77067
+-- hash: cbe26716963074a432b5d067e8fd7b601dcee6a885d17b2642cc93c965ee04be
 
 name:           AdventOfCode
 version:        0.1.0.0
@@ -49,6 +49,7 @@ library
       TwentySixteen.EighteenthDecember
       TwentySixteen.EighthDecember
       TwentySixteen.EleventhDecember
+      TwentySixteen.EleventhDecemberBis
       TwentySixteen.FifteenthDecember
       TwentySixteen.FifthDecember
       TwentySixteen.FirstDecember

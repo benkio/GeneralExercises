@@ -3,15 +3,15 @@
 module TwentySixteen.EleventhDecember where
 
 import           Control.Concurrent
-import           Control.Monad
 import           Data.List
 import           Data.Map           (Map, adjust, elems, fromList,
                                      takeWhileAntitone, toList, traverseWithKey)
 import qualified Data.Map           as Map (lookup)
 import           Data.Maybe
 import           Data.Ord
-import           Data.Set           (Set, empty)
-import qualified Data.Set           as Set (fromList, insert, union)
+import           Data.Set           (Set, difference, empty, singleton, size)
+import qualified Data.Set           as Set (elemAt, elems, filter, fromList,
+                                            insert, map, null, toList, union)
 import           System.IO
 
 data RTG
@@ -19,9 +19,9 @@ data RTG
   | Generator String
   deriving (Show, Eq, Ord)
 
-type Floors = Map Int [RTG]
+type Floors = Map Int Floor
 
-type Floor = [RTG]
+type Floor = Set RTG
 
 data State =
   State
@@ -43,12 +43,12 @@ parseInput =
      filter (`notElem` ["and", "a", "nothing", "relevant."]) . drop 4 . words) .
   lines
 
-parseRTG :: [String] -> [RTG]
-parseRTG [] = []
+parseRTG :: [String] -> Floor
+parseRTG [] = empty
 parseRTG (x:y:xs) =
   if "microchip" `isPrefixOf` y
-    then Microchip (takeWhile ('-' /=) x) : parseRTG xs
-    else Generator x : parseRTG xs
+    then Set.insert (Microchip (takeWhile ('-' /=) x)) $ parseRTG xs
+    else Set.insert (Generator x) $ parseRTG xs
 
 inputTest :: Floors
 inputTest =
@@ -61,7 +61,7 @@ inputTest =
 -- ----- ------------------------------------------------------
 floorsEquality :: (Floors, Int) -> (Floors, Int) -> Bool
 floorsEquality (fs1, step1) (fs2, step2) =
-  step1 >= step2 && all (null . uncurry (\\)) (elems fs1 `zip` elems fs2)
+  step1 >= step2 && all (null . uncurry difference) (elems fs1 `zip` elems fs2)
 
 isMicrochip :: RTG -> Bool
 isMicrochip (Microchip _) = True
@@ -82,64 +82,72 @@ validateRTG (Microchip s) (Generator s') = s == s'
 validateRTG (Generator s) (Microchip s') = s == s'
 
 elements :: Floors -> [String]
-elements = nub . concatMap (fmap rtgElement) . elems
+elements = Set.toList . foldl (\x y -> Set.union x (Set.map rtgElement y)) empty . elems
 
 floorCombinations :: Floors -> [String] -> Int -> Set (Floors, Int)
 floorCombinations flrs elements' step =
-  (Set.fromList
-   . fmap (\x -> (x,step))
-   . (flrs:)
-   . filter (\x ->
-      null (elements flrs \\ (concatMap (fmap rtgElement . filter isMicrochip) . elems) x)
-      && null (elements flrs \\ (concatMap (fmap rtgElement . filter (not .isMicrochip)) . elems) x)
+  ( Set.fromList
+    . fmap (\x -> (x,step))
+    . (flrs:)
+    . filter (\x ->
+      null (difference ((Set.fromList . elements) flrs)
+            ((foldl (\a b -> Set.union a ((Set.map rtgElement . Set.filter isMicrochip) b)) empty . elems) x))
+      && null (difference ((Set.fromList . elements) flrs)
+            ((foldl (\a b -> Set.union a ((Set.map rtgElement . Set.filter (not . isMicrochip)) b)) empty . elems) x))
       )
    . traverseWithKey (\_ fl ->
-                        equivalentFloors fl)) flrs
-  where equivalentFloors :: Floor -> [Floor]
-        equivalentFloors = traverse (\x -> fmap (`changeRtgElement` x) (delete (rtgElement x) elements'))
+                        equivalentFloors elements' fl)) flrs
+
+equivalentFloors :: [String] -> Floor -> [Floor]
+equivalentFloors elements' = fmap Set.fromList . traverse (\x -> fmap (`changeRtgElement` x) (delete (rtgElement x) elements')) . Set.toList
 
 validateFloor :: Int -> Floor -> Floors -> Bool
-validateFloor f l flrs = validateFloor' $ l ++ (fromJust . Map.lookup f) flrs
+validateFloor f l flrs = validateFloor' $ Set.union l $ (fromJust . Map.lookup f) flrs
 
-validateFloor' :: [RTG] -> Bool
-validateFloor' fls = (all (`validate` fls) . filter isMicrochip) fls
+validateFloor' :: Floor -> Bool
+validateFloor' fls = (all (`validate` fls) . Set.filter isMicrochip) fls
   where
-    validate :: RTG -> [RTG] -> Bool
+    validate :: RTG -> Floor -> Bool
     validate r@(Microchip _) rs =
-      let generators = filter (not . isMicrochip) rs
+      let generators = Set.filter (not . isMicrochip) rs
        in null generators || any (validateRTG r) generators
     validate r@(Generator _) rs =
-      let chips = filter isMicrochip rs
+      let chips = Set.filter isMicrochip rs
        in null chips || any (validateRTG r) chips
 
 buildElevator :: RTG -> RTG -> Maybe Floor
 buildElevator r r'
-  | validateRTG r r' = Just [r, r']
+  | validateRTG r r' = (Just . Set.fromList) [r, r']
   | otherwise = Nothing
 
 validLoads :: Floor -> ([Floor], [Floor])
 validLoads fls =
   ( partition ((== 2)
-    . length)
+    . size)
     . mapMaybe
      (\l ->
-        if length l == 1
-          then Just [head l]
-          else buildElevator (head l) (last l)) .
-   filter (\l -> ((`elem` [1, 2]) . length) l && validateFloor' (fls \\ l)) .
-   subsequences)
+        if size l == 1
+          then (Just . singleton) (Set.elemAt 0 l)
+          else buildElevator (Set.elemAt 0 l) (Set.elemAt 1 l))
+   . filter (\l -> ((\x -> x <= 2 && x > 0) . size) l && validateFloor' (difference fls  l))
+   . fmap Set.fromList
+   . subsequences
+   . Set.toList
+  )
     fls
 
 endCondition :: State -> Bool
 endCondition State {elevatorFloor = ef, floors = fs} =
   ef == 4 &&
-  ((\l -> (null . concat . init) l && (not . null . last) l) . fmap snd . toList)
-    fs
+  ((\l -> (and . fmap ((==0) . length . Set.elems . snd)  . filter ((<4) .  fst) ) l &&
+    (not . Set.null . snd . fromJust . find ((4==) . fst)) l
+  ) . toList)
+  fs
 
 buildNextSteps :: State -> Int -> Set (Floors, Int) -> Int -> Floor -> Maybe State
 buildNextSteps State {elevatorFloor = f, floors = flrs} step his floorValue el =
-  let newflv = adjust (\\ el) f flrs
-      newflv' = adjust (el ++) floorValue newflv
+  let newflv = adjust (`difference` el) f flrs
+      newflv' = adjust (Set.union el) floorValue newflv
   in if validateFloor floorValue el flrs &&  floorValue /= f && (not . (\x -> any (floorsEquality (x, step)) his)) newflv'
      then Just State {elevatorFloor = floorValue, floors = newflv'}
      else Nothing
@@ -153,7 +161,7 @@ nextSteps s@State {elevatorFloor = f, floors = flrs} step his =
       nextLoad' = if null nextLoad
         then mapMaybe (buildNextSteps s step his nextFloor) nextValidLoadsSingle
         else nextLoad
-      nextLoad'' = if (not . null . concat . elems . takeWhileAntitone (previousFloor >=)) flrs
+      nextLoad'' = if (or . fmap ((>0) . size) . elems . takeWhileAntitone (previousFloor >=)) flrs
         then mapMaybe (buildNextSteps s step his previousFloor) nextValidLoadsSingle
         else []
    in nextLoad' ++ nextLoad''
@@ -162,9 +170,9 @@ stepZero :: Floors -> State
 stepZero fls = State {elevatorFloor = 1, floors = fls}
 
 solution1 :: State -> Int -> MVar Int -> MVar (Set (Floors, Int)) -> [String] -> IO ()
-solution1 st step resultMV historyMV elements = do
+solution1 st step resultMV historyMV elements' = do
   history <- takeMVar historyMV
-  _ <- putMVar historyMV (Set.union (floorCombinations (floors st) elements step) history)
+  _ <- putMVar historyMV (Set.union (floorCombinations (floors st) elements' step) history)
   resultNotFound <- isEmptyMVar resultMV
   case (not resultNotFound, endCondition st) of
     (_, True) -> do
@@ -176,16 +184,16 @@ solution1 st step resultMV historyMV elements = do
       -- let isStepHigher = step >= result
       -- _ <- putMVar resultMV result
       -- if isStepHigher then return () else solution1Step st (step + 1) resultMV historyMV
-    _    -> solution1Step st (step + 1) resultMV historyMV elements
+    _    -> solution1Step st (step + 1) resultMV historyMV elements'
 
 solution1Step :: State -> Int -> MVar Int -> MVar (Set (Floors, Int)) -> [String] -> IO ()
-solution1Step st step resultMV historyMV elements = do
+solution1Step st step resultMV historyMV elements' = do
   history <- takeMVar historyMV
   --putStrLn $ show st ++ " " ++ show step-- ++ " " ++ show history
 --  when (step `mod` 50 == 0) $ putStr "*" >> hFlush stdout
   let nextStates = nextSteps st step history
   _ <- putMVar historyMV history
-  mapM_ (\st' -> solution1 st' step resultMV historyMV elements) nextStates
+  mapM_ (\st' -> solution1 st' step resultMV historyMV elements') nextStates
 
 solution1Test :: IO Bool
 solution1Test = (== 11) <$> solution inputTest
@@ -205,6 +213,6 @@ eleventhDecemberSolution1 = input >>= solution
 eleventhDecemberSolution2 :: IO Int
 eleventhDecemberSolution2 = do
   i <- input
-  let newInput = [Microchip "elerium", Microchip "dilithium", Generator "dilithium", Microchip "dilithium"]
-      totalInput = adjust (newInput ++) 1 i
+  let newInput = Set.fromList [Microchip "elerium", Microchip "dilithium", Generator "dilithium", Microchip "dilithium"]
+      totalInput = adjust (Set.union newInput) 1 i
   solution totalInput
