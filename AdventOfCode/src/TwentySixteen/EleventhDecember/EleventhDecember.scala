@@ -9,7 +9,8 @@ object EleventhDecember {
 
   def endCondition(state: State): Boolean =
     state.elevatorFloorNum == state.floors.last._1 &&
-  state.floors.init.isEmpty && !state.floors.last._2.isEmpty
+  state.floors.init.values.foldLeft(Set.empty[RTG])(_ ++ _).isEmpty &&
+  !state.floors.last._2.isEmpty
 
   def isMicrochip(rtg: RTG): Boolean = rtg match {
     case _: Microchip => true
@@ -25,36 +26,74 @@ object EleventhDecember {
     floor.filter(!isMicrochip(_)).isEmpty ||
   floor.filter(!isMicrochip(_)).exists((gen: RTG) => gen.element == microchip.element)
 
-  def generateLoads(floor: Floor): List[Floor] =
-    (floor.subsets(1) ++ floor.subsets(2)).toList.filter(validateFloor(_))
+  def generateLoads(floor: Floor): Set[Floor] =
+    (floor.subsets(1) ++ floor.subsets(2)).filter(validateFloor(_)).toSet
 
   def validateState(state: State): Boolean = state.floors.forall(x => validateFloor(x._2))
 
-  def nextStates(state: State): List[State] =
+  def nextStates(state: State): Set[State] =
     generateLoads(state.floors(state.elevatorFloorNum))
       .flatMap(moveLoad(state, _)).filter(validateState(_))
 
-  def moveLoad(state:State, load: Floor): List[State] =
-    List(state.elevatorFloorNum.max(0), state.elevatorFloorNum.min(state.floors.last._1))
+  def moveLoad(state:State, load: Floor): Set[State] = {
+    def toState(loads: List[(Int, Floor)]): Set[State] =
+      loads.map{
+        case (floorNum: Int, load: Floor) =>
+          State(
+            floorNum,
+            state.floors.map {
+              case (currentFloorNum: Int, oldFloor: Floor) => currentFloorNum match {
+                case x if x == state.elevatorFloorNum => (x, oldFloor.diff(load))
+                case x if x == floorNum => (x, oldFloor ++ load)
+                case x => (x, oldFloor)
+              }
+            }
+          )
+      }.toSet
+
+    val (uploads, downloads) = List(
+      (state.elevatorFloorNum - 1).max(1),
+      (state.elevatorFloorNum + 1).min(state.floors.last._1)
+    )
       .map((_, load))
       .filterNot{
         case (floorNum: Int, load: Floor) =>
           floorNum == state.elevatorFloorNum ||
           (floorNum < state.elevatorFloorNum && load.size == 2)
+      }.partition(x =>
+        x._1 > state.elevatorFloorNum && x._2.size == 2
+      )
+
+    if (uploads.isEmpty) toState(downloads) else toState(uploads)
+  }
+
+  import collection.parallel.ParSet
+
+  def solution(states: ParSet[State], chain: ParSet[State], step: Int): Option[Int] = {
+    val validStates = states.filterNot(x => chain.exists(y => stateEquality(x, y)))
+    validStates match {
+      case xs if xs.exists(endCondition(_)) => Some(step)
+      case xs if xs.isEmpty => None
+      case xs => {
+        val ns = xs.par.flatMap(nextStates(_))
+        solution(
+          ns.tail.foldLeft(ParSet(ns.head))((acc: ParSet[State], st: State) => if (acc.exists(st1 => stateEquality(st1,st))) acc else acc + st),
+          chain ++ states,
+          step + 1
+        )
       }
-      .map{
-        case (floorNum: Int, load: Floor) =>
-          State(
-            floorNum,
-            state.floors.map {
-              case (currentFloorNum: Int, load: Floor) => currentFloorNum match {
-                case x if x == state.elevatorFloorNum => (x, state.floors(x).diff(load))
-                case x if x == floorNum => (x, state.floors(x) ++ load)
-                case x => (x, state.floors(x))
-              }
-            }
-          )
-      }
+    }
+  }
+
+  def stateEquality(state1: State, state2: State) : Boolean =
+    state1.elevatorFloorNum == state2.elevatorFloorNum &&
+  state1.floors.values.zip(state2.floors.values)
+    .forall{
+      case (s1,s2) =>
+        s1.count(isMicrochip(_)) == s2.count(isMicrochip(_)) &&
+        s1.count(!isMicrochip(_)) == s2.count(!isMicrochip(_))
+    }
+
 
   object Input {
     def parse(s: String): State = State(
@@ -90,13 +129,16 @@ The fourth floor contains nothing relevant.""")
       scala.io.Source.fromFile("../../../input/2016/11December.txt")
         .mkString
     )
-
-
   }
 
 
   def main(args: Array[String]) : Unit = {
-    println(Input.testInput)
-    println(Input.input)
+    val sol2InitialState: State = State(
+      Input.input.elevatorFloorNum,
+      Input.input.floors.map { case (fln, fl) => if (fln == 1) (fln, fl ++ Set(Generator("elerium"), Generator("dilithium"), Microchip("elerium"), Microchip("dilithium"))) else (fln, fl) }
+    )
+    println("inputTest: " + solution(ParSet(Input.testInput), ParSet.empty, 0).get)
+    println("solution1: " + solution(ParSet(Input.input), ParSet.empty, 0).get)
+    println("solution2: " + solution(ParSet(sol2InitialState), ParSet.empty, 0).get)
   }
 }
