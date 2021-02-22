@@ -56,8 +56,47 @@ object EleventhDecember {
           )
       }
 
-  object ParseInput {
-    def parse(s: String): State = ???
+  object Input {
+    def parse(s: String): State = State(
+      elevatorFloorNum = 1,
+      floors = Map(s.linesIterator
+        .toList
+        .zipWithIndex
+        .map { case (line, index) => (index + 1, parseLine(line))} :_*
+      ))
 
+    def parseLine(line:String): Floor =
+      line
+        .split(' ')
+        .drop(4)
+        .filterNot(x => List("nothing", "relevant.", "a", "and").contains(x))
+        .map(_.filterNot(List('.', ',').contains(_)).stripSuffix("-compatible"))
+        .sliding(2, 2)
+        .map(toRTG(_))
+        .toSet
+
+    def toRTG(arrayInput: Array[String]) : RTG = arrayInput(1) match {
+      case "microchip" => Microchip(arrayInput(0))
+      case "generator" => Generator(arrayInput(0))
+    }
+
+    val testInput: State = parse(
+      s"""The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.
+The second floor contains a hydrogen generator.
+The third floor contains a lithium generator.
+The fourth floor contains nothing relevant.""")
+
+    val input : State = parse(
+      scala.io.Source.fromFile("../../../input/2016/11December.txt")
+        .mkString
+    )
+
+
+  }
+
+
+  def main(args: Array[String]) : Unit = {
+    println(Input.testInput)
+    println(Input.input)
   }
 }
