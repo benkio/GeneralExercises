@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cbe26716963074a432b5d067e8fd7b601dcee6a885d17b2642cc93c965ee04be
+-- hash: 6a366fa6d77563b0e066eabaa88706b5d57ba35b1119ed52143ba90842b7ed6c
 
 name:           AdventOfCode
 version:        0.1.0.0
@@ -48,8 +48,6 @@ library
       TwentyFifteen.TwentythirdDecember
       TwentySixteen.EighteenthDecember
       TwentySixteen.EighthDecember
-      TwentySixteen.EleventhDecember
-      TwentySixteen.EleventhDecemberBis
       TwentySixteen.FifteenthDecember
       TwentySixteen.FifthDecember
       TwentySixteen.FirstDecember

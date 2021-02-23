@@ -1,5 +1,11 @@
 module TwentySixteen.TwelfthDecember where
 
+data Instruction =
+  CPY (Either Int String) String
+  | INC String
+  | DEC String
+  | JNZ String Int
+
 input :: IO String
 input = readFile "input/2016/12December.txt"
 
