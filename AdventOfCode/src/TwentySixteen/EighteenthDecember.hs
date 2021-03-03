@@ -1,16 +1,49 @@
 module TwentySixteen.EighteenthDecember where
 
 input :: IO String
-input = readFile "input/2016/18December.txt"
+input = init <$> readFile "input/2016/18December.txt"
 
-solution1 :: String -> Int
-solution1 = undefined
+calculateTile :: Int -> [(Char, Int)] -> Char
+calculateTile index prevRow
+  | prevRowFiltered == "^^." = '^'
+  | prevRowFiltered == ".^^" = '^'
+  | prevRowFiltered == "^.." = '^'
+  | prevRowFiltered == "..^" = '^'
+  | otherwise = '.'
+  where
+    prevRowFiltered = concatMap ((: []) . fst) (prevRowNearIndex index prevRow)
+
+prevRowNearIndex :: Int -> [(Char, Int)] -> [(Char, Int)]
+prevRowNearIndex i prevRow =
+  ( amendPrevRowNearIndex i
+      . filter (\(_, x) -> x `elem` [(i - 1) .. (i + 1)])
+  )
+    prevRow
+
+amendPrevRowNearIndex :: Int -> [(Char, Int)] -> [(Char, Int)]
+amendPrevRowNearIndex index prevRowNearIndex
+  | (not . any (\(_, x) -> x == index - 1)) prevRowNearIndex = ('.', index - 1) : prevRowNearIndex
+  | (not . any (\(_, x) -> x == index + 1)) prevRowNearIndex = prevRowNearIndex ++ [('.', index - 1)]
+  | otherwise = prevRowNearIndex
+
+generateNextRowAccuml :: (Int, String) -> (Int, String)
+generateNextRowAccuml (acc, lastRow) =
+  let lastRowWithIndex = lastRow `zip` [0 ..]
+      indexes = fmap snd lastRowWithIndex
+   in (acc + (length . filter ('.' ==)) lastRow, fmap (`calculateTile` lastRowWithIndex) indexes)
+
+solution :: Int -> String -> Int
+solution totalRows =
+  fst
+    . (!! totalRows)
+    . iterate generateNextRowAccuml
+    . (\x -> (0, x))
+
+solution1Test :: Bool
+solution1Test = solution 10 ".^^.^.^^^^" == 38
 
 eighteenthDecemberSolution1 :: IO Int
-eighteenthDecemberSolution1 = undefined
-
-solution2 :: String -> Int
-solution2 = undefined
+eighteenthDecemberSolution1 = solution 40 <$> input
 
 eighteenthDecemberSolution2 :: IO Int
-eighteenthDecemberSolution2 = undefined
+eighteenthDecemberSolution2 = solution 400000 <$> input
