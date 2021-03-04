@@ -1,41 +1,41 @@
 module TwentySixteen.NineteenthDecember where
 
-import           Data.Functor
-
-data Elve = Elve {gifts :: Int, nextElveDistance :: Int} deriving (Show)
+import System.IO
+import Data.Functor
+import Data.Sequence (Seq, deleteAt, fromList)
+import qualified Data.Sequence as Seq (length, index)
 
 input :: IO Int
 input = (\x -> read x :: Int) . init <$> readFile "input/2016/19December.txt"
 
-elves :: Int -> [Elve]
-elves num =
-  let (x, y) = num `divMod` 2
-   in replicate y (Elve {gifts = 1, nextElveDistance = 1}) ++ replicate x (Elve {gifts = 2, nextElveDistance = 2})
+elves :: Int -> (Int, [Int])
+elves m = (m, [1, 3 .. m])
 
-initialIndex :: Int -> Int
-initialIndex x
-  | even x = 0
-  | odd x = x - 1
+solution1 :: (Int -> Bool) -> (Int, [Int]) -> Int
+solution1 _ (_, [x]) = x
+solution1 f (prevGenLength, elv) =
+  solution1 nextFilter (length elv, (fmap fst . filter (nextFilter . snd) . (`zip` [1..])) elv)
+  where
+    nextFilter = if even prevGenLength then f else not . f
 
--- solution1 :: Int -> [Elve] -> Int -> IO Int
--- solution1 index (e@Elve {gifts = g, nextElveDistance = d} : es) target
---   | g == target = return $ index + 1
---   | otherwise =
---     let e' = e {gifts = g + gifts (head es), nextElveDistance = d + nextElveDistance (head es)}
---         nextIndex = (index + nextElveDistance e') `mod` target
---         elves' = (tail es) ++ [e']
---      in do
---           putStrLn ("new Elves: " ++ (show e') ++ " index: " ++ show index ++ " nextIndex: " ++ show nextIndex)
---           solution1 nextIndex elves' target
-
-solution1Test :: IO Bool
-solution1Test = solution1 (initialIndex 5) (elves 5) 5 <&> (== 3)
+solution1Test :: Bool
+solution1Test = solution1 odd (elves 5) == 3
 
 nineteenthDecemberSolution1 :: IO Int
-nineteenthDecemberSolution1 = input >>= (\x -> solution1 (initialIndex x) (elves x) x)
+nineteenthDecemberSolution1 = solution1 odd . elves <$> input
 
-solution2 :: String -> Int
-solution2 = undefined
+solution2 :: Int -> Seq Int -> Int
+solution2 index l
+  | Seq.length l == 1 = Seq.index l 0
+  | otherwise = 
+   let
+     index' = (index + 1) `mod` Seq.length l
+     deleteIndex = (index + (Seq.length l `div` 2)) `mod` Seq.length l
+     l' = deleteAt deleteIndex l
+   in solution2 index' l'
+
+solution2Test :: Bool
+solution2Test = solution2 0 (fromList [1..5]) == 2
 
 nineteenthDecemberSolution2 :: IO Int
-nineteenthDecemberSolution2 = undefined
+nineteenthDecemberSolution2 = input <&> solution2 0 . (\x -> fromList [1..x])
