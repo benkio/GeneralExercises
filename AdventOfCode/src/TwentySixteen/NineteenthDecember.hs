@@ -1,8 +1,9 @@
 module TwentySixteen.NineteenthDecember where
 
+import Text.Printf
 import System.IO
 import Data.Functor
-import Data.Sequence (Seq, deleteAt, fromList)
+import Data.Sequence (Seq, deleteAt, fromList, (|>))
 import qualified Data.Sequence as Seq (length, index)
 
 input :: IO Int
@@ -24,18 +25,18 @@ solution1Test = solution1 odd (elves 5) == 3
 nineteenthDecemberSolution1 :: IO Int
 nineteenthDecemberSolution1 = solution1 odd . elves <$> input
 
-solution2 :: Int -> Seq Int -> Int
-solution2 index l
+solution2 :: Seq Int -> Int
+solution2 l
   | Seq.length l == 1 = Seq.index l 0
-  | otherwise = 
+  | otherwise =
    let
-     index' = (index + 1) `mod` Seq.length l
-     deleteIndex = (index + (Seq.length l `div` 2)) `mod` Seq.length l
-     l' = deleteAt deleteIndex l
-   in solution2 index' l'
+     deleteIndex = Seq.length l `div` 2
+     h = Seq.index l 0
+     l' = ((|> h) . deleteAt 0 . deleteAt deleteIndex) l
+   in solution2 l'
 
 solution2Test :: Bool
-solution2Test = solution2 0 (fromList [1..5]) == 2
+solution2Test = solution2 (fromList [1..5]) == 2
 
 nineteenthDecemberSolution2 :: IO Int
-nineteenthDecemberSolution2 = input <&> solution2 0 . (\x -> fromList [1..x])
+nineteenthDecemberSolution2 = input <&> solution2 . (\x -> fromList [1..x])
