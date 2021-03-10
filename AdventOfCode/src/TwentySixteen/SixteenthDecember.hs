@@ -20,7 +20,7 @@ generateChecksum s
 
 pairs :: String -> [String]
 pairs [] = []
-pairs s  = take 2 s : pairs (drop 2 s)
+pairs s = take 2 s : pairs (drop 2 s)
 
 solution :: Int -> String -> String
 solution diskSize = generateChecksum . generateDragonCurve diskSize

@@ -3,16 +3,25 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.TwentyFirstDecember where
 
-import           Data.List (foldl1', intercalate, intersect)
-import qualified Data.Map  as M (Map, difference, elems, empty, filter,
-                                 insertWith, map, toList, union)
+import Data.List (foldl1', intercalate, intersect)
+import qualified Data.Map as M
+  ( Map,
+    difference,
+    elems,
+    empty,
+    filter,
+    insertWith,
+    map,
+    toList,
+    union,
+  )
 
 type Ingredient = String
 
 type Allergien = String
 
-data Food =
-  Food [Ingredient] [Allergien]
+data Food
+  = Food [Ingredient] [Allergien]
   deriving (Show)
 
 input :: IO [Food]
@@ -24,22 +33,23 @@ foodAllergien (Food _ x) = x
 
 parseFood :: String -> Food
 parseFood =
-  (\(ing, allerg) ->
-     Food ((filter ("" /=) . words) ing) ((fmap init . words . drop 10) allerg)) .
-  span ('(' /=)
+  ( \(ing, allerg) ->
+      Food ((filter ("" /=) . words) ing) ((fmap init . words . drop 10) allerg)
+  )
+    . span ('(' /=)
 
 groupFoods :: [Food] -> M.Map Allergien [[Ingredient]]
 groupFoods = foldl combineFoodsByAllergien M.empty
   where
     combineFoodsByAllergien ::
-         M.Map Allergien [[Ingredient]]
-      -> Food
-      -> M.Map Allergien [[Ingredient]]
+      M.Map Allergien [[Ingredient]] ->
+      Food ->
+      M.Map Allergien [[Ingredient]]
     combineFoodsByAllergien m (Food ing allerg) =
       foldl (\acc a -> M.insertWith (++) a [ing] acc) m allerg
 
 intersectIngredientsInAllergen ::
-     M.Map Allergien [[Ingredient]] -> M.Map Allergien [Ingredient]
+  M.Map Allergien [[Ingredient]] -> M.Map Allergien [Ingredient]
 intersectIngredientsInAllergen = M.map (foldl1' intersect)
 
 commonIngredients :: M.Map Allergien [Ingredient] -> [Ingredient]
@@ -65,12 +75,15 @@ reduceAllergens allIngr
     restOfIngredients =
       M.map
         (filter (`notElem` (concat . M.elems) dangerousIngredientMap))
-        allIngr `M.difference`
-      dangerousIngredientMap
+        allIngr
+        `M.difference` dangerousIngredientMap
 
 twentyFirstDecemberSolution2 :: IO String
 twentyFirstDecemberSolution2 =
-   intercalate "," .
-   concatMap snd .
-   M.toList . reduceAllergens . intersectIngredientsInAllergen . groupFoods <$>
-  input
+  intercalate ","
+    . concatMap snd
+    . M.toList
+    . reduceAllergens
+    . intersectIngredientsInAllergen
+    . groupFoods
+    <$> input

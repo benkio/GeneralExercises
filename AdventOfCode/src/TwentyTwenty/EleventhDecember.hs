@@ -34,13 +34,14 @@ getSeat grid (x, y) = grid !! (y * (gridX + 1) + x)
 showGrid :: Grid -> String
 showGrid grid =
   fst $
-  foldl
-    (\(acc, y) ((_, y'), s) ->
-       if y /= y'
-         then (acc ++ "\n" ++ show s, y')
-         else (acc ++ show s, y))
-    ("", 0)
-    grid
+    foldl
+      ( \(acc, y) ((_, y'), s) ->
+          if y /= y'
+            then (acc ++ "\n" ++ show s, y')
+            else (acc ++ show s, y)
+      )
+      ("", 0)
+      grid
 
 createSeat :: Char -> SeatStatus
 createSeat 'L' = Empty
@@ -55,10 +56,11 @@ isOccupied _ = False
 howManyOccupied :: Grid -> Int
 howManyOccupied =
   foldl
-    (\acc s ->
-       if isOccupied s
-         then acc + 1
-         else acc)
+    ( \acc s ->
+        if isOccupied s
+          then acc + 1
+          else acc
+    )
     0
 
 buildGrid :: String -> Grid
@@ -71,9 +73,9 @@ buildGrid = (\l -> (>>=) l (uncurry buildRow)) . zip [0 ..] . lines
 getNeighborsCoordinate :: Coordinate -> [Coordinate]
 getNeighborsCoordinate (x, y) =
   [ (x', y')
-  | x' <- [(max (x - 1) 0) .. (min (x + 1) gridX)]
-  , y' <- [(max (y - 1) 0) .. (min (y + 1) gridY)]
-  , x' /= x || y' /= y
+    | x' <- [(max (x - 1) 0) .. (min (x + 1) gridX)],
+      y' <- [(max (y - 1) 0) .. (min (y + 1) gridY)],
+      x' /= x || y' /= y
   ]
 
 getNeighbors :: Grid -> Coordinate -> Grid

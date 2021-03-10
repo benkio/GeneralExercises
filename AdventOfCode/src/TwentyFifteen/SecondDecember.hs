@@ -1,11 +1,10 @@
 module TwentyFifteen.SecondDecember where
 
-data Box =
-  Box
-    { l :: Int
-    , w :: Int
-    , h :: Int
-    }
+data Box = Box
+  { l :: Int,
+    w :: Int,
+    h :: Int
+  }
   deriving (Show)
 
 input :: IO [Box]

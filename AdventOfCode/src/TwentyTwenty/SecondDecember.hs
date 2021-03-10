@@ -2,18 +2,19 @@
 --                           Advent Of Code - day 2                          --
 -------------------------------------------------------------------------------
 module TwentyTwenty.SecondDecember
-  ( solution1
-  , solution2
-  ) where
+  ( solution1,
+    solution2,
+  )
+where
 
 import Data.Maybe (fromJust, isJust)
 
-data Policy =
-  Policy Int Int Char
+data Policy
+  = Policy Int Int Char
   deriving (Show)
 
-data Password =
-  Password Policy String
+data Password
+  = Password Policy String
   deriving (Show)
 
 input :: IO [Password]
@@ -35,16 +36,18 @@ lineToPassword l =
 validPasswords :: (Password -> Bool) -> [Password] -> Int
 validPasswords validation =
   foldr
-    (\p v ->
-       if validation p
-         then v + 1
-         else v)
+    ( \p v ->
+        if validation p
+          then v + 1
+          else v
+    )
     0
 
 isValidPasswordOld :: Password -> Bool
 isValidPasswordOld (Password (Policy min' max' char) password)
   | ((\count -> count >= min' && count <= max') . length . filter (char ==))
-     password = True
+      password =
+    True
   | otherwise = False
 
 isValidPasswordNew :: Password -> Bool

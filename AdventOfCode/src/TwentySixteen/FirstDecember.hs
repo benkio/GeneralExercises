@@ -19,8 +19,8 @@ parseInput :: String -> [Instruction]
 parseInput = fmap (parseInstruction . takeWhile (',' /=)) . words
   where
     parseInstruction :: String -> Instruction
-    parseInstruction ('L':x) = L (read x :: Int)
-    parseInstruction ('R':x) = R (read x :: Int)
+    parseInstruction ('L' : x) = L (read x :: Int)
+    parseInstruction ('R' : x) = R (read x :: Int)
     parseInstruction x = error $ "Instruction not recognized: " ++ x
 
 move :: [Instruction] -> (Int, Int)
@@ -50,23 +50,24 @@ generateMiddlePoints (x, y) (a, b) = do
   c <-
     if x <= a
       then [x .. a]
-      else [x,x - 1 .. a]
+      else [x, x - 1 .. a]
   d <-
     if y <= b
       then [y .. b]
-      else [y,y - 1 .. b]
+      else [y, y - 1 .. b]
   return (c, d)
 
 solution2 :: [Instruction] -> Int
 solution2 =
-  uncurry (+) .
-  findDuplicate .
-  foldl1 (\l l' -> init l ++ generateMiddlePoints (last l) (head l')) .
-  fmap (: []) . moveNTrack
+  uncurry (+)
+    . findDuplicate
+    . foldl1 (\l l' -> init l ++ generateMiddlePoints (last l) (head l'))
+    . fmap (: [])
+    . moveNTrack
 
 findDuplicate :: [(Int, Int)] -> (Int, Int)
 findDuplicate [] = (0, 0)
-findDuplicate (x:xs) =
+findDuplicate (x : xs) =
   if x `elem` xs
     then x
     else findDuplicate xs

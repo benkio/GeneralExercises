@@ -18,20 +18,20 @@ isOpenSpace designerNum (x, y) =
           ((0 ==) . last)
           (\l -> init l ++ [snd (divMod (last l) 2), fst (divMod (last l) 2)])
           [value + designerNum]
-   in (even . sum) $ valueBinarySingle
+   in (even . sum) valueBinarySingle
 
 neighboors :: Int -> Coordinate -> [Coordinate]
 neighboors designerNum (x, y) =
   [ (a, b)
-  | a <- [(max 0 (x - 1)) .. x + 1]
-  , b <- [(max 0 (y - 1)) .. y + 1]
-  , (a == x || b == y) && (a /= x || b /= y)
-  , isOpenSpace designerNum (a, b)
+    | a <- [(max 0 (x - 1)) .. x + 1],
+      b <- [(max 0 (y - 1)) .. y + 1],
+      (a == x || b == y) && (a /= x || b /= y),
+      isOpenSpace designerNum (a, b)
   ]
 
 search :: [Coordinate] -> Coordinate -> Int -> [Coordinate] -> Int -> Int
 search is target step visited designerNum
-  | any (== target) is = step
+  | target `elem` is = step
   | otherwise =
     let nextCoordinates =
           (filter (`notElem` visited) . concatMap (neighboors designerNum)) is
@@ -44,7 +44,7 @@ thirteenthDecemberSolution1 :: IO Int
 thirteenthDecemberSolution1 = search [(1, 1)] (31, 39) 0 [] <$> input
 
 fiftyIterationStatus ::
-     [Coordinate] -> Int -> [Coordinate] -> Int -> [Coordinate]
+  [Coordinate] -> Int -> [Coordinate] -> Int -> [Coordinate]
 fiftyIterationStatus is step visited designerNum
   | step == 50 = visited ++ is
   | otherwise =

@@ -12,8 +12,8 @@ import Data.Maybe (fromJust, isJust)
 import Text.Printf (printf)
 import Text.Read (readMaybe)
 
-newtype HexColor =
-  HexColor String
+newtype HexColor
+  = HexColor String
   deriving (Show)
 
 data UnitOfMeasure
@@ -23,55 +23,55 @@ data UnitOfMeasure
 
 data Passport
   = Passport
-      { passportByr :: BirthYear
-      , passportIyr :: IssueYear
-      , passportEyr :: ExpirationYear
-      , passportHgt :: Height
-      , passportHcl :: HairColor
-      , passportEcl :: EyeColor
-      , passportPid :: PassportID
-      , passportCid :: CountryID
+      { passportByr :: BirthYear,
+        passportIyr :: IssueYear,
+        passportEyr :: ExpirationYear,
+        passportHgt :: Height,
+        passportHcl :: HairColor,
+        passportEcl :: EyeColor,
+        passportPid :: PassportID,
+        passportCid :: CountryID
       }
   | NorthPoleCredentials
-      { npcByr :: BirthYear
-      , npcIyr :: IssueYear
-      , npcEyr :: ExpirationYear
-      , npcHgt :: Height
-      , npcHcl :: HairColor
-      , npcEcl :: EyeColor
-      , npcPid :: PassportID
+      { npcByr :: BirthYear,
+        npcIyr :: IssueYear,
+        npcEyr :: ExpirationYear,
+        npcHgt :: Height,
+        npcHcl :: HairColor,
+        npcEcl :: EyeColor,
+        npcPid :: PassportID
       }
   deriving (Show)
 
-newtype BirthYear =
-  BirthYear Int
+newtype BirthYear
+  = BirthYear Int
   deriving (Show)
 
-newtype IssueYear =
-  IssueYear Int
+newtype IssueYear
+  = IssueYear Int
   deriving (Show)
 
-newtype ExpirationYear =
-  ExpirationYear Int
+newtype ExpirationYear
+  = ExpirationYear Int
   deriving (Show)
 
-newtype Height =
-  Height UnitOfMeasure
+newtype Height
+  = Height UnitOfMeasure
   deriving (Show)
 
-newtype HairColor =
-  HairColor HexColor
+newtype HairColor
+  = HairColor HexColor
   deriving (Show)
 
-newtype EyeColor =
-  EyeColor String
+newtype EyeColor
+  = EyeColor String
   deriving (Show)
 
-newtype PassportID =
-  PassportID Int
+newtype PassportID
+  = PassportID Int
 
-newtype CountryID =
-  CountryID Int
+newtype CountryID
+  = CountryID Int
   deriving (Show)
 
 instance Show PassportID where
@@ -107,14 +107,14 @@ instance ToValidate ExpirationYear where
 instance ToValidate Height where
   validate s =
     let typeName = "Height"
-     in Height <$>
-        prefixValidation s (getKey typeName) typeName unitOfMeasureValidation
+     in Height
+          <$> prefixValidation s (getKey typeName) typeName unitOfMeasureValidation
 
 instance ToValidate HairColor where
   validate s =
     let typeName = "HairColor"
-     in HairColor <$>
-        prefixValidation s (getKey typeName) typeName hexColorValidation
+     in HairColor
+          <$> prefixValidation s (getKey typeName) typeName hexColorValidation
 
 instance ToValidate EyeColor where
   validate s = do
@@ -141,19 +141,19 @@ instance ToValidate CountryID where
 
 instance ToValidate Passport where
   validate s =
-    validatePasswordField (words s) <>
-    validateNorthPoleCredentialsFields (words s)
+    validatePasswordField (words s)
+      <> validateNorthPoleCredentialsFields (words s)
 
 keys :: [(String, String)]
 keys =
-  [ ("BirthYear", "byr")
-  , ("IssueYear", "iyr")
-  , ("ExpirationYear", "eyr")
-  , ("Height", "hgt")
-  , ("HairColor", "hcl")
-  , ("EyeColor", "ecl")
-  , ("PassportId", "pid")
-  , ("CountryId", "cid")
+  [ ("BirthYear", "byr"),
+    ("IssueYear", "iyr"),
+    ("ExpirationYear", "eyr"),
+    ("Height", "hgt"),
+    ("HairColor", "hcl"),
+    ("EyeColor", "ecl"),
+    ("PassportId", "pid"),
+    ("CountryId", "cid")
   ]
 
 getKey :: String -> String
@@ -175,28 +175,29 @@ safeTail [] = []
 safeTail xs = tail xs
 
 prefixValidation ::
-     String
-  -> String
-  -> String
-  -> (String -> Either String a)
-  -> Either String a
+  String ->
+  String ->
+  String ->
+  (String -> Either String a) ->
+  Either String a
 prefixValidation s prefix typeName followUpValidation
   | (prefix ++ ":") `isPrefixOf` s =
     followUpValidation (drop (length prefix + 1) s)
   | otherwise = Left ("Unexpected " ++ typeName ++ " value: " ++ s)
 
 yearOrIdValidation ::
-     String -> String -> String -> (Int -> a) -> Either String a
+  String -> String -> String -> (Int -> a) -> Either String a
 yearOrIdValidation s prefix typeName typeConstructor =
   prefixValidation
     s
     prefix
     typeName
-    (\x ->
-       let yearOrId = readMaybe x :: Maybe Int
-        in case yearOrId of
-             Just v -> Right (typeConstructor v)
-             Nothing -> Left ("Unexpected " ++ typeName ++ " value: " ++ x))
+    ( \x ->
+        let yearOrId = readMaybe x :: Maybe Int
+         in case yearOrId of
+              Just v -> Right (typeConstructor v)
+              Nothing -> Left ("Unexpected " ++ typeName ++ " value: " ++ x)
+    )
 
 unitOfMeasureValidation :: String -> Either String UnitOfMeasure
 unitOfMeasureValidation s
@@ -209,19 +210,20 @@ unitOfMeasureValidation s
     measure = readMaybe (take (length s - 2) s) :: Maybe Int
 
 hexColorValidation :: String -> Either String HexColor
-hexColorValidation (x:xs)
-  | x == '#' &&
-      length xs == 6 &&
-      all (\y -> y `elem` (['a' .. 'z'] ++ fmap intToDigit [0 .. 9])) xs =
+hexColorValidation (x : xs)
+  | x == '#'
+      && length xs == 6
+      && all (\y -> y `elem` (['a' .. 'z'] ++ fmap intToDigit [0 .. 9])) xs =
     Right (HexColor (x : xs))
   | otherwise = Left ("Unexpected HexColor value: " ++ (x : xs))
 
 listValidation :: (ToValidate b) => String -> [String] -> Either String b
 listValidation typeName xs =
-  (foldr
-     (\x _ -> validate x)
-     (Left (typeName ++ " not found in input: " ++ show xs)) .
-   find (isPrefixOf (getKey typeName)))
+  ( foldr
+      (\x _ -> validate x)
+      (Left (typeName ++ " not found in input: " ++ show xs))
+      . find (isPrefixOf (getKey typeName))
+  )
     xs
 
 validateNorthPoleCredentialsFields :: [String] -> Either String Passport
@@ -235,13 +237,13 @@ validateNorthPoleCredentialsFields xs = do
   npcPidField <- listValidation @PassportID "PassportId" xs
   return $
     NorthPoleCredentials
-      { npcByr = npcByrField
-      , npcIyr = npcIyrField
-      , npcEyr = npcEyrField
-      , npcHgt = npcHgtField
-      , npcHcl = npcHclField
-      , npcEcl = npcEclField
-      , npcPid = npcPidField
+      { npcByr = npcByrField,
+        npcIyr = npcIyrField,
+        npcEyr = npcEyrField,
+        npcHgt = npcHgtField,
+        npcHcl = npcHclField,
+        npcEcl = npcEclField,
+        npcPid = npcPidField
       }
 
 validatePasswordField :: [String] -> Either String Passport
@@ -250,14 +252,14 @@ validatePasswordField xs = do
   passportCidField <- listValidation @CountryID "CountryId" xs
   return $
     Passport
-      { passportByr = npcByr npc
-      , passportIyr = npcIyr npc
-      , passportEyr = npcEyr npc
-      , passportHgt = npcHgt npc
-      , passportHcl = npcHcl npc
-      , passportEcl = npcEcl npc
-      , passportPid = npcPid npc
-      , passportCid = passportCidField
+      { passportByr = npcByr npc,
+        passportIyr = npcIyr npc,
+        passportEyr = npcEyr npc,
+        passportHgt = npcHgt npc,
+        passportHcl = npcHcl npc,
+        passportEcl = npcEcl npc,
+        passportPid = npcPid npc,
+        passportCid = passportCidField
       }
 
 fourthDecemberSolution1 :: IO Int
@@ -271,7 +273,11 @@ conditionRange y typeName range constructor
   | y >= fst range && y <= snd range = Right $ constructor y
   | otherwise =
     Left $
-    show y ++
-    " invalid " ++
-    typeName ++
-    " range (" ++ (show . fst) range ++ "-" ++ (show . snd) range ++ ")"
+      show y
+        ++ " invalid "
+        ++ typeName
+        ++ " range ("
+        ++ (show . fst) range
+        ++ "-"
+        ++ (show . snd) range
+        ++ ")"

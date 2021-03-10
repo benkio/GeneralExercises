@@ -1,6 +1,6 @@
 module TwentyFifteen.TenthDecember where
 
-import           Data.List (group)
+import Data.List (group)
 
 input :: IO Int
 input = read <$> readFile "input/2015/10December.txt"

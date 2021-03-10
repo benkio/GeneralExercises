@@ -1,9 +1,9 @@
 module TwentySixteen.TwentiethDecember where
 
-import           Data.List
-import           Data.Maybe
-import           Data.Set   (Set, empty, fromList, notMember, toList)
-import qualified Data.Set   as Set (union)
+import Data.List
+import Data.Maybe
+import Data.Set (Set, empty, fromList, notMember, toList)
+import qualified Data.Set as Set (union)
 
 input :: IO [(Int, Int)]
 input =

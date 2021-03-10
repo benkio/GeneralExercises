@@ -2,13 +2,12 @@ module TwentyFifteen.FourteenthDecember where
 
 import Data.List
 
-data Rendeer =
-  Rendeer
-    { name :: String
-    , speed :: Int
-    , stamina :: Int
-    , rest :: Int
-    }
+data Rendeer = Rendeer
+  { name :: String,
+    speed :: Int,
+    stamina :: Int,
+    rest :: Int
+  }
   deriving (Show)
 
 input :: IO [Rendeer]
@@ -16,20 +15,21 @@ input = fmap parseRendeer . lines <$> readFile "input/2015/14December.txt"
 
 parseRendeer :: String -> Rendeer
 parseRendeer =
-  (\ws ->
-     Rendeer
-       { name = head ws
-       , speed = read (ws !! 3) :: Int
-       , stamina = read (ws !! 6) :: Int
-       , rest = read (ws !! (length ws - 2)) :: Int
-       }) .
-  words
+  ( \ws ->
+      Rendeer
+        { name = head ws,
+          speed = read (ws !! 3) :: Int,
+          stamina = read (ws !! 6) :: Int,
+          rest = read (ws !! (length ws - 2)) :: Int
+        }
+  )
+    . words
 
 inputTest :: [Rendeer]
 inputTest =
   (fmap parseRendeer . lines)
     "Comet can fly 14 km/s for 10 seconds, but then must rest for 127 seconds.\n\
-            \Dancer can fly 16 km/s for 11 seconds, but then must rest for 162 seconds."
+    \Dancer can fly 16 km/s for 11 seconds, but then must rest for 162 seconds."
 
 rendeerRace1 :: Rendeer -> [Int]
 rendeerRace1 Rendeer {speed = rsp, stamina = rst, rest = rr} =
@@ -41,7 +41,7 @@ secondDistanceStep rst rr rsp distance sec
   | otherwise = distance + rsp
 
 isRestTime :: [Int] -> Int -> Int -> Bool
-isRestTime (r:rs) rest sec
+isRestTime (r : rs) rest sec
   | (sec - r) <= 0 && r == rest = True
   | (sec - r) <= 0 && r /= rest = False
   | otherwise = isRestTime rs rest (sec - r)
@@ -57,8 +57,10 @@ fourteenthDecemberSolution1 = solution1 2503 <$> input
 
 rendeerRace2 :: [Rendeer] -> [[Int]]
 rendeerRace2 rs =
-  (scanl calculateLeader (fmap (const 0) rs) .
-   transpose . fmap (tail . rendeerRace1))
+  ( scanl calculateLeader (fmap (const 0) rs)
+      . transpose
+      . fmap (tail . rendeerRace1)
+  )
     rs
 
 calculateLeader :: [Int] -> [Int] -> [Int]
@@ -68,10 +70,11 @@ calculateLeader currentPoints rendeerDistances =
       (leaderIndex, _) =
         maximumBy (\(_, x) (_, y) -> compare x y) rendeerDistancesIndexed
    in fmap
-        (\(i, p) ->
-           if i == leaderIndex
-             then p + 1
-             else p)
+        ( \(i, p) ->
+            if i == leaderIndex
+              then p + 1
+              else p
+        )
         currentPointsIndexed
 
 solution2 :: Int -> [Rendeer] -> Int

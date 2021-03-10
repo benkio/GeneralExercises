@@ -21,19 +21,17 @@ data Spell
       }
   deriving (Show, Eq)
 
-data Boss =
-  Boss
-    { bHit :: Int
-    , bDamage :: Int
-    }
+data Boss = Boss
+  { bHit :: Int,
+    bDamage :: Int
+  }
   deriving (Show)
 
-data Player =
-  Player
-    { pHit :: Int
-    , pArmor :: Int
-    , pMana :: Int
-    }
+data Player = Player
+  { pHit :: Int,
+    pArmor :: Int,
+    pMana :: Int
+  }
   deriving (Show)
 
 player :: Player
@@ -155,17 +153,17 @@ calcManaSpent = sum . fmap sMana
 
 calcPotentialDamage :: [Spell] -> Int
 calcPotentialDamage [] = 0
-calcPotentialDamage (Drain {}:xs) = 2 + calcPotentialDamage xs
-calcPotentialDamage (Poison {}:xs) = 18 + calcPotentialDamage xs
-calcPotentialDamage (MagicMissle {}:xs) = 4 + calcPotentialDamage xs
-calcPotentialDamage (_:xs) = calcPotentialDamage xs
+calcPotentialDamage (Drain {} : xs) = 2 + calcPotentialDamage xs
+calcPotentialDamage (Poison {} : xs) = 18 + calcPotentialDamage xs
+calcPotentialDamage (MagicMissle {} : xs) = 4 + calcPotentialDamage xs
+calcPotentialDamage (_ : xs) = calcPotentialDamage xs
 
 solution ::
-     Boss
-  -> Int
-  -> Int
-  -> (Spell -> [Spell] -> StateT (Player, Boss) IO [Spell])
-  -> IO Int
+  Boss ->
+  Int ->
+  Int ->
+  (Spell -> [Spell] -> StateT (Player, Boss) IO [Spell]) ->
+  IO Int
 solution _ result 0 _ = return result
 solution boss result count fBoss = do
   randomSpell <- randomRIO (0, length spells - 1)

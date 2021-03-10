@@ -3,34 +3,40 @@ module TwentySixteen.SeventhDecember where
 import Data.Bifunctor
 import Data.List
 
-data IPV7 =
-  IPV7
-    { outside :: [String]
-    , inside :: [String]
-    }
+data IPV7 = IPV7
+  { outside :: [String],
+    inside :: [String]
+  }
   deriving (Show)
 
 input :: IO [IPV7]
 input =
-  fmap (parseIPV7 . splitBySquare) . lines <$>
-  readFile "input/2016/7December.txt"
+  fmap (parseIPV7 . splitBySquare) . lines
+    <$> readFile "input/2016/7December.txt"
 
 splitBySquare :: String -> [String]
 splitBySquare [] = []
 splitBySquare s =
-  ((\(x, y) ->
-      if null y
-        then [x]
-        else ((\(x', y') -> [x, x'] ++ splitBySquare (tail y')) .
-              break (']' ==) . tail)
-               y) .
-   break ('[' ==))
+  ( ( \(x, y) ->
+        if null y
+          then [x]
+          else
+            ( (\(x', y') -> [x, x'] ++ splitBySquare (tail y'))
+                . break (']' ==)
+                . tail
+            )
+              y
+    )
+      . break ('[' ==)
+  )
     s
 
 parseIPV7 :: [String] -> IPV7
 parseIPV7 =
-  (\(out, in') -> IPV7 {outside = out, inside = in'}) .
-  bimap (fmap fst) (fmap fst) . partition (even . snd) . (`zip` [0 ..])
+  (\(out, in') -> IPV7 {outside = out, inside = in'})
+    . bimap (fmap fst) (fmap fst)
+    . partition (even . snd)
+    . (`zip` [0 ..])
 
 abbaCheck :: String -> Bool
 abbaCheck [] = False
@@ -51,9 +57,9 @@ inputTest :: [IPV7]
 inputTest =
   (fmap (parseIPV7 . splitBySquare) . lines)
     "abba[mnop]qrst\n\
-\abcd[bddb]xyyx\n\
-\aaaa[qwer]tyui\n\
-\ioxxoj[asdfgh]zxcvbn"
+    \abcd[bddb]xyyx\n\
+    \aaaa[qwer]tyui\n\
+    \ioxxoj[asdfgh]zxcvbn"
 
 solution1Test :: Bool
 solution1Test = solution1 inputTest2 == 2
@@ -85,9 +91,9 @@ inputTest2 :: [IPV7]
 inputTest2 =
   (fmap (parseIPV7 . splitBySquare) . lines)
     "aba[bab]xyz\n\
-\xyx[xyx]xyx\n\
-\aaa[kek]eke\n\
-\zazbz[bzb]cdb"
+    \xyx[xyx]xyx\n\
+    \aaa[kek]eke\n\
+    \zazbz[bzb]cdb"
 
 solution2Test :: Bool
 solution2Test = solution2 inputTest2 == 3

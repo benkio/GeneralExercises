@@ -3,10 +3,16 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.TwentyThirdDecember where
 
-import           Data.Char           (digitToInt)
-import           Data.Vector         as V (Vector, length, modify, replicate,
-                                           (!), (//))
-import           Data.Vector.Mutable (write)
+import Data.Char (digitToInt)
+import Data.Vector as V
+  ( Vector,
+    length,
+    modify,
+    replicate,
+    (!),
+    (//),
+  )
+import Data.Vector.Mutable (write)
 
 input :: IO [Int]
 input = fmap digitToInt . init <$> readFile "input/2020/23December.txt"
@@ -44,11 +50,11 @@ crubSingleMove iteration currentCup cups =
       afterLastElemToMovePointer = cups ! c
       newCups =
         modify
-          (\v -> do
-             write v currentCup afterLastElemToMovePointer --  cups[cup] = cups[c];
-             write v dest a -- cups[dest] = a;
-             write v c afterDestinationCupPointer -- cups[c] = temp;
-           )
+          ( \v -> do
+              write v currentCup afterLastElemToMovePointer --  cups[cup] = cups[c];
+              write v dest a -- cups[dest] = a;
+              write v c afterDestinationCupPointer -- cups[c] = temp;
+          )
           cups
       newCurrentCup = newCups ! currentCup
    in crubSingleMove (iteration - 1) newCurrentCup newCups
@@ -66,18 +72,20 @@ cupsToString = concatMap show . takeWhile (1 /=) . rebuildSequenceStartingFrom 1
 
 twentyThirdDecemberSolution1 :: IO String
 twentyThirdDecemberSolution1 =
-  cupsToString . snd . (\l -> crubSingleMove 100 (head l) (buildVector l)) <$>
-  input
+  cupsToString . snd . (\l -> crubSingleMove 100 (head l) (buildVector l))
+    <$> input
 
 expandInputToOneMilion :: [Int] -> Vector Int
 expandInputToOneMilion xs = buildVector $ xs ++ [maximum xs + 1 .. 1000000]
 
 solution2 =
-  (\v ->
-     let a = v ! 1
-         b = v ! b
-      in a * b) .
-  snd . (\l -> crubSingleMove 10000000 (head l) (expandInputToOneMilion l))
+  ( \v ->
+      let a = v ! 1
+          b = v ! b
+       in a * b
+  )
+    . snd
+    . (\l -> crubSingleMove 10000000 (head l) (expandInputToOneMilion l))
 
 -- This failed!!! It just run and never return, I did it in scala, 30 sec -.-"
 twentyThirdDecemberSolution2 :: IO Int

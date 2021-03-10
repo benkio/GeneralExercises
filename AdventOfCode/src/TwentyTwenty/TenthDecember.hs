@@ -24,11 +24,12 @@ arrangementsBySequentValues =
   2 :
   fmap
     sum
-    (transpose
-       [ arrangementsBySequentValues
-       , tail arrangementsBySequentValues
-       , (tail . tail) arrangementsBySequentValues
-       ])
+    ( transpose
+        [ arrangementsBySequentValues,
+          tail arrangementsBySequentValues,
+          (tail . tail) arrangementsBySequentValues
+        ]
+    )
 
 groupByDifferences :: [Int] -> [[Int]]
 groupByDifferences xs = foldl go [[]] joltDifferencesZip
@@ -49,7 +50,8 @@ tenthDecemberSolution1 = do
 
 tenthDecemberSolution2 :: IO Int
 tenthDecemberSolution2 =
-  product .
-  fmap (fst . last . (arrangementsBySequentValues `zip`)) .
-  groupByDifferences . (0 :) <$>
-  input
+  product
+    . fmap (fst . last . (arrangementsBySequentValues `zip`))
+    . groupByDifferences
+    . (0 :)
+    <$> input

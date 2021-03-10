@@ -35,14 +35,16 @@ interpreter (Left (F v)) (d, p) = (d, moveInterpreter (setMoveValue d v) p)
 interpreter (Left m) (d, p) = (d, moveInterpreter m p)
 
 viewPointInterpreter ::
-     Either Move Direction -> ViewPointState -> ViewPointState
+  Either Move Direction -> ViewPointState -> ViewPointState
 viewPointInterpreter (Right d') ((vp1, vp2), p) =
   (fixRotation (directionInterpreter d' vp1, directionInterpreter d' vp2), p)
 viewPointInterpreter (Left (F v)) ((vp1, vp2), (p1, p2)) =
-  ( (vp1, vp2)
-  , (moveInterpreter (multiplyMoveValue vp2 v) .
-     moveInterpreter (multiplyMoveValue vp1 v))
-      (p1, p2))
+  ( (vp1, vp2),
+    ( moveInterpreter (multiplyMoveValue vp2 v)
+        . moveInterpreter (multiplyMoveValue vp1 v)
+    )
+      (p1, p2)
+  )
 viewPointInterpreter (Left m) (vp, p) = (moveInterpreter m vp, p)
 
 -- interpret Direction --------------
@@ -53,59 +55,59 @@ directionInterpreter dir@(L d) p@(E v)
   | d `div` 90 == 3 = S v
   | otherwise =
     error $
-    "unexpected direction " ++ show dir ++ " applied to position " ++ show p
+      "unexpected direction " ++ show dir ++ " applied to position " ++ show p
 directionInterpreter dir@(L d) p@(W v)
   | d `div` 90 == 1 = S v
   | d `div` 90 == 2 = E v
   | d `div` 90 == 3 = N v
   | otherwise =
     error $
-    "unexpected direction " ++ show dir ++ " applied to position " ++ show p
+      "unexpected direction " ++ show dir ++ " applied to position " ++ show p
 directionInterpreter dir@(L d) p@(S v)
   | d `div` 90 == 1 = E v
   | d `div` 90 == 2 = N v
   | d `div` 90 == 3 = W v
   | otherwise =
     error $
-    "unexpected direction " ++ show dir ++ " applied to position " ++ show p
+      "unexpected direction " ++ show dir ++ " applied to position " ++ show p
 directionInterpreter dir@(L d) p@(N v)
   | d `div` 90 == 1 = W v
   | d `div` 90 == 2 = S v
   | d `div` 90 == 3 = E v
   | otherwise =
     error $
-    "unexpected direction " ++ show dir ++ " applied to position " ++ show p
+      "unexpected direction " ++ show dir ++ " applied to position " ++ show p
 directionInterpreter dir@(R d) p@(E v)
   | d `div` 90 == 1 = S v
   | d `div` 90 == 2 = W v
   | d `div` 90 == 3 = N v
   | otherwise =
     error $
-    "unexpected direction " ++ show dir ++ " applied to position " ++ show p
+      "unexpected direction " ++ show dir ++ " applied to position " ++ show p
 directionInterpreter dir@(R d) p@(W v)
   | d `div` 90 == 1 = N v
   | d `div` 90 == 2 = E v
   | d `div` 90 == 3 = S v
   | otherwise =
     error $
-    "unexpected direction " ++ show dir ++ " applied to position " ++ show p
+      "unexpected direction " ++ show dir ++ " applied to position " ++ show p
 directionInterpreter dir@(R d) p@(S v)
   | d `div` 90 == 1 = W v
   | d `div` 90 == 2 = N v
   | d `div` 90 == 3 = E v
   | otherwise =
     error $
-    "unexpected direction " ++ show dir ++ " applied to position " ++ show p
+      "unexpected direction " ++ show dir ++ " applied to position " ++ show p
 directionInterpreter dir@(R d) p@(N v)
   | d `div` 90 == 1 = E v
   | d `div` 90 == 2 = S v
   | d `div` 90 == 3 = W v
   | otherwise =
     error $
-    "unexpected direction " ++ show dir ++ " applied to position " ++ show p
+      "unexpected direction " ++ show dir ++ " applied to position " ++ show p
 directionInterpreter dir p =
   error $
-  "unexpected direction " ++ show dir ++ " applied to position " ++ show p
+    "unexpected direction " ++ show dir ++ " applied to position " ++ show p
 
 -- interpret move -------------------
 moveInterpreter :: Move -> (Move, Move) -> (Move, Move)
@@ -141,13 +143,13 @@ interpretMove m m' =
   error $ "unexpected move applied " ++ show m ++ " to position " ++ show m'
 
 createInstruction :: String -> Instruction
-createInstruction ('N':v) = Left $ N (read v :: Int)
-createInstruction ('S':v) = Left $ S (read v :: Int)
-createInstruction ('E':v) = Left $ E (read v :: Int)
-createInstruction ('W':v) = Left $ W (read v :: Int)
-createInstruction ('F':v) = Left $ F (read v :: Int)
-createInstruction ('L':v) = Right $ L (read v :: Int)
-createInstruction ('R':v) = Right $ R (read v :: Int)
+createInstruction ('N' : v) = Left $ N (read v :: Int)
+createInstruction ('S' : v) = Left $ S (read v :: Int)
+createInstruction ('E' : v) = Left $ E (read v :: Int)
+createInstruction ('W' : v) = Left $ W (read v :: Int)
+createInstruction ('F' : v) = Left $ F (read v :: Int)
+createInstruction ('L' : v) = Right $ L (read v :: Int)
+createInstruction ('R' : v) = Right $ R (read v :: Int)
 createInstruction s = error $ "not recognized input " ++ s
 
 setMoveValue :: Move -> Int -> Move
@@ -177,15 +179,17 @@ input = fmap createInstruction . lines <$> readFile "input/2020/12December.txt"
 
 twelfthDecemberSolution1 :: IO Int
 twelfthDecemberSolution1 =
-  (\(eo, ns) -> getMoveValue eo + getMoveValue ns) .
-  snd . foldl (flip interpreter) initialState <$>
-  input
+  (\(eo, ns) -> getMoveValue eo + getMoveValue ns)
+    . snd
+    . foldl (flip interpreter) initialState
+    <$> input
 
 twelfthDecemberSolution2 :: IO Int
 twelfthDecemberSolution2 =
-  (\(eo, ns) -> getMoveValue eo + getMoveValue ns) .
-  snd . foldl (flip viewPointInterpreter) viewPointInitialState <$>
-  input
+  (\(eo, ns) -> getMoveValue eo + getMoveValue ns)
+    . snd
+    . foldl (flip viewPointInterpreter) viewPointInitialState
+    <$> input
 
 isNorthSouth :: Move -> Bool
 isNorthSouth (N _) = True
@@ -199,8 +203,8 @@ fixRotation (eo, ns)
 
 testInput =
   fmap createInstruction . lines $
-  "F10\n\
-\N3\n\
-\F7\n\
-\R90\n\
-\F11"
+    "F10\n\
+    \N3\n\
+    \F7\n\
+    \R90\n\
+    \F11"

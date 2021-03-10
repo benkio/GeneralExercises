@@ -21,25 +21,34 @@ input = fmap parseInstruction . lines <$> readFile "input/2016/8December.txt"
 parseInstruction :: String -> Instruction
 parseInstruction s
   | "rect " `isPrefixOf` s =
-    ((\x ->
-        Rect
-          (read (takeWhile ('x' /=) x) :: Int)
-          (read ((tail . dropWhile ('x' /=)) x) :: Int)) .
-     fromJust . stripPrefix "rect ")
+    ( ( \x ->
+          Rect
+            (read (takeWhile ('x' /=) x) :: Int)
+            (read ((tail . dropWhile ('x' /=)) x) :: Int)
+      )
+        . fromJust
+        . stripPrefix "rect "
+    )
       s
   | "rotate row y=" `isPrefixOf` s =
-    ((\x ->
-        RotateRow
-          (read (takeWhile (' ' /=) x) :: Int)
-          (read ((drop 2 . dropWhile ('y' /=)) x) :: Int)) .
-     fromJust . stripPrefix "rotate row y=")
+    ( ( \x ->
+          RotateRow
+            (read (takeWhile (' ' /=) x) :: Int)
+            (read ((drop 2 . dropWhile ('y' /=)) x) :: Int)
+      )
+        . fromJust
+        . stripPrefix "rotate row y="
+    )
       s
   | "rotate column x=" `isPrefixOf` s =
-    ((\x ->
-        RotateColumn
-          (read (takeWhile (' ' /=) x) :: Int)
-          (read ((drop 2 . dropWhile ('y' /=)) x) :: Int)) .
-     fromJust . stripPrefix "rotate column x=")
+    ( ( \x ->
+          RotateColumn
+            (read (takeWhile (' ' /=) x) :: Int)
+            (read ((drop 2 . dropWhile ('y' /=)) x) :: Int)
+      )
+        . fromJust
+        . stripPrefix "rotate column x="
+    )
       s
   | otherwise = error $ "Unable to parse: " ++ s
 
@@ -55,19 +64,22 @@ initialGridTest = createGrid 7 3
 
 showGrid :: Grid -> String
 showGrid m =
-  (unlines .
-   fmap
-     (foldl
-        (\acc' (_, c) ->
-           acc' ++
-           [ if c
-               then '#'
-               else '.'
-           ])
-        "") .
-   groupBy (\((_, y), _) ((_, y'), _) -> y == y') .
-   sortOn (\((x, y), _) -> x + y * ((+ 1) . fst . fst . Map.findMax) m) .
-   Map.toList)
+  ( unlines
+      . fmap
+        ( foldl
+            ( \acc' (_, c) ->
+                acc'
+                  ++ [ if c
+                         then '#'
+                         else '.'
+                     ]
+            )
+            ""
+        )
+      . groupBy (\((_, y), _) ((_, y'), _) -> y == y')
+      . sortOn (\((x, y), _) -> x + y * ((+ 1) . fst . fst . Map.findMax) m)
+      . Map.toList
+  )
     m
 
 applyInstruction :: Grid -> Instruction -> Grid
@@ -78,17 +90,19 @@ applyInstruction m i@(RotateColumn _ _) = Map.union (columnShift m i) m
 
 rowShift :: Grid -> Instruction -> Grid
 rowShift m (RotateRow y p) =
-  (Map.mapKeys
-     (\(x', y') -> ((x' + p) `mod` ((+ 1) . fst . fst . Map.findMax) m, y')) .
-   Map.filterWithKey (\(_, y') _ -> y' == y))
+  ( Map.mapKeys
+      (\(x', y') -> ((x' + p) `mod` ((+ 1) . fst . fst . Map.findMax) m, y'))
+      . Map.filterWithKey (\(_, y') _ -> y' == y)
+  )
     m
 rowShift m _ = m
 
 columnShift :: Grid -> Instruction -> Grid
 columnShift m (RotateColumn x p) =
-  (Map.mapKeys
-     (\(x', y') -> (x', (y' + p) `mod` ((+ 1) . snd . fst . Map.findMax) m)) .
-   Map.filterWithKey (\(x', _) _ -> x' == x))
+  ( Map.mapKeys
+      (\(x', y') -> (x', (y' + p) `mod` ((+ 1) . snd . fst . Map.findMax) m))
+      . Map.filterWithKey (\(x', _) _ -> x' == x)
+  )
     m
 columnShift m _ = m
 
@@ -102,9 +116,9 @@ inputTest :: [Instruction]
 inputTest =
   (fmap parseInstruction . lines)
     "rect 3x2\n\
-\rotate column x=1 by 1\n\
-\rotate row y=0 by 4\n\
-\rotate column x=1 by 1"
+    \rotate column x=1 by 1\n\
+    \rotate row y=0 by 4\n\
+    \rotate column x=1 by 1"
 
 solutionTest :: Bool
 solutionTest = countLitPixels (solution initialGridTest inputTest) == 6

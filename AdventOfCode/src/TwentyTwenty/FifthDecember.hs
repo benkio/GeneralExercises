@@ -32,12 +32,11 @@ instance Selector ColumnSelector where
   isRowSelector L = False
   isRowSelector R = False
 
-data Seat =
-  Seat
-    { row :: Int
-    , column :: Int
-    , seatId :: Int
-    }
+data Seat = Seat
+  { row :: Int,
+    column :: Int,
+    seatId :: Int
+  }
   deriving (Show)
 
 rowsRange :: (Int, Int)
@@ -65,11 +64,12 @@ createColumnSelector _ = Nothing
 getSelectors :: String -> ([RowSelector], [ColumnSelector])
 getSelectors =
   foldl
-    (\(r, c) x ->
-       maybe
-         (maybe (r, c) (\y -> (r, c ++ [y])) (createColumnSelector x))
-         (\y -> (r ++ [y], c))
-         (createRowSelector x))
+    ( \(r, c) x ->
+        maybe
+          (maybe (r, c) (\y -> (r, c ++ [y])) (createColumnSelector x))
+          (\y -> (r ++ [y], c))
+          (createRowSelector x)
+    )
     ([], [])
 
 calculateSeatId :: Int -> Int -> Int
@@ -77,20 +77,26 @@ calculateSeatId r c = r * 8 + c
 
 calculateRow :: [RowSelector] -> Int
 calculateRow xs =
-  ((\x ->
-      if isLowerHalf (last xs)
-        then fst x
-        else snd x) .
-   foldl findRow rowsRange . init)
+  ( ( \x ->
+        if isLowerHalf (last xs)
+          then fst x
+          else snd x
+    )
+      . foldl findRow rowsRange
+      . init
+  )
     xs
 
 calculateColumn :: [ColumnSelector] -> Int
 calculateColumn xs =
-  ((\x ->
-      if isLowerHalf (last xs)
-        then fst x
-        else snd x) .
-   foldl findRow columnsRange . init)
+  ( ( \x ->
+        if isLowerHalf (last xs)
+          then fst x
+          else snd x
+    )
+      . foldl findRow columnsRange
+      . init
+  )
     xs
 
 selectSeat' :: ([RowSelector], [ColumnSelector]) -> Seat

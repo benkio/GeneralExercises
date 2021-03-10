@@ -2,8 +2,8 @@ module TwentySixteen.ThirdDecember where
 
 import Data.List
 
-data Shape =
-  Shape Int Int Int
+data Shape
+  = Shape Int Int Int
   deriving (Show)
 
 input :: IO [Shape]
@@ -25,12 +25,12 @@ thirdDecemberSolution1 = length . solution1 <$> input
 
 inputCol :: IO [Shape]
 inputCol =
-  fmap parseShape . groupTriangles . transpose . fmap words . lines <$>
-  readFile "input/2016/3December.txt"
+  fmap parseShape . groupTriangles . transpose . fmap words . lines
+    <$> readFile "input/2016/3December.txt"
 
 groupTriangles :: (Eq a) => [[a]] -> [[a]]
 groupTriangles [] = []
-groupTriangles (x:xs) =
+groupTriangles (x : xs) =
   filter ((== 3) . length) $ columnCombinations x ++ groupTriangles xs
 
 columnCombinations :: (Eq a) => [a] -> [[a]]

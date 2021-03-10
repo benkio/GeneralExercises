@@ -8,10 +8,10 @@ input = readFile "input/2015/5December.txt"
 inputTest :: String
 inputTest =
   "ugknbfddgicrmopn\n\
-\aaa\n\
-\jchzalrnumimnmhp\n\
-\haegwjzuvuyypxyu\n\
-\dvszwmarrgswjxmb"
+  \aaa\n\
+  \jchzalrnumimnmhp\n\
+  \haegwjzuvuyypxyu\n\
+  \dvszwmarrgswjxmb"
 
 testSolution1 :: Bool
 testSolution1 =
@@ -22,27 +22,30 @@ solution1 = fmap isNice
 
 isNice :: String -> Bool
 isNice s
-  | hasThreeVowels s &&
-      hasTwoAdjacentLetters s && doesNotContainForbiddenSequences s = True
+  | hasThreeVowels s
+      && hasTwoAdjacentLetters s
+      && doesNotContainForbiddenSequences s =
+    True
   | otherwise = False
 
 hasThreeVowels :: String -> Bool
 hasThreeVowels =
-  (>= 3) .
-  foldl
-    (\num x ->
-       if x `elem` "aeiou"
-         then num + 1
-         else num)
-    0
+  (>= 3)
+    . foldl
+      ( \num x ->
+          if x `elem` "aeiou"
+            then num + 1
+            else num
+      )
+      0
 
 hasTwoAdjacentLetters :: String -> Bool
 hasTwoAdjacentLetters [] = False
-hasTwoAdjacentLetters (x:xs) = findAdjacentLetter xs x
+hasTwoAdjacentLetters (x : xs) = findAdjacentLetter xs x
   where
     findAdjacentLetter :: String -> Char -> Bool
     findAdjacentLetter [] _ = False
-    findAdjacentLetter (y:ys) c = (c == y) || findAdjacentLetter ys y
+    findAdjacentLetter (y : ys) c = (c == y) || findAdjacentLetter ys y
 
 doesNotContainForbiddenSequences :: String -> Bool
 doesNotContainForbiddenSequences s =
@@ -65,7 +68,7 @@ isNice2 s
 equalLetterWithOneInBetween :: String -> Bool
 equalLetterWithOneInBetween s =
   foldl (\acc (x, _, y) -> x == y || acc) False $
-  zip3 s (tail s) (tail (tail s))
+    zip3 s (tail s) (tail (tail s))
 
 twoPairNoOverlap :: String -> Bool
 twoPairNoOverlap [] = False
@@ -76,9 +79,9 @@ twoPairNoOverlap s =
 inputTest2 :: String
 inputTest2 =
   "qjhvhtzxzqqjkmpb\n\
-\xxyxx\n\
-\uurcxstgmygtbstg\n\
-\ieodomkazucvgmuy"
+  \xxyxx\n\
+  \uurcxstgmygtbstg\n\
+  \ieodomkazucvgmuy"
 
 testSolution2 :: Bool
 testSolution2 =

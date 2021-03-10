@@ -67,7 +67,7 @@ testInput =
     \rotate based on position of letter d"
 
 solution1 :: String -> [Instruction] -> String
-solution1 s is = toList $ foldl (\acc i -> applyInstruction acc i) (fromList s) is
+solution1 s is = toList $ foldl applyInstruction (fromList s) is
 
 testSolution1 :: Bool
 testSolution1 = solution1 "abcde" testInput == "decab"
@@ -76,7 +76,7 @@ twentyfirstDecemberSolution1 :: IO String
 twentyfirstDecemberSolution1 = solution1 "abcdefgh" <$> input
 
 solution2 :: String -> [Instruction] -> String
-solution2 s is = toList $ foldl (\acc i -> unapplyInstruction acc i) (fromList s) (reverse is)
+solution2 s is = toList $ foldl unapplyInstruction (fromList s) (reverse is)
 
 unapplyInstruction :: Seq Char -> Instruction -> Seq Char
 unapplyInstruction s (Rotate R x) = (fromList . take (length s) . drop x . cycle . toList) s
@@ -110,10 +110,10 @@ test = do
   is <- input
   let s = fromList "abcdefgh"
       s' = fromList "gbhafcde"
-      encrypt = scanl (\acc i -> applyInstruction acc i) s is
-      decrypt = scanl (\acc i -> unapplyInstruction acc i) s' (reverse is)
-  putStrLn $ show (zip3 (reverse encrypt) decrypt (reverse is))
-  return $ (show encrypt) == (show (reverse decrypt))
+      encrypt = scanl applyInstruction s is
+      decrypt = scanl unapplyInstruction s' (reverse is)
+  print (zip3 (reverse encrypt) decrypt (reverse is))
+  return $ show encrypt == show (reverse decrypt)
 
 twentyfirstDecemberSolution2 :: IO String
 twentyfirstDecemberSolution2 = solution2 "fbgdceah" <$> input

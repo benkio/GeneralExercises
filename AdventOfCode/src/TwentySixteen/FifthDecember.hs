@@ -4,14 +4,14 @@ import Control.Monad (mfilter)
 import Data.Maybe
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-  ( (//)
-  , all
-  , filter
-  , foldl
-  , generate
-  , indexed
-  , length
-  , map
+  ( all,
+    filter,
+    foldl,
+    generate,
+    indexed,
+    length,
+    map,
+    (//),
   )
 import Text.Read (readMaybe)
 import TwentyFifteen.FourthDecember (generateMD5)
@@ -24,7 +24,7 @@ inputTest = "abc"
 
 findPassword :: String -> [Int] -> Int -> String
 findPassword _ _ 0 = ""
-findPassword prefix (x:xs) countdown
+findPassword prefix (x : xs) countdown
   | all ('0' ==) (take 5 md5) =
     md5 !! 5 : findPassword prefix xs (countdown - 1)
   | otherwise = findPassword prefix xs countdown
@@ -41,7 +41,7 @@ fifthDecemberSolution1 :: IO String
 fifthDecemberSolution1 = solution1 <$> input
 
 findPasswordWithPosition :: String -> [Int] -> Vector Char -> String
-findPasswordWithPosition prefix (x:xs) result
+findPasswordWithPosition prefix (x : xs) result
   | Vector.all ('_' /=) result = Vector.foldl (\acc c -> acc ++ [c]) [] result
   | all ('0' ==) (take 5 md5) && isJust maybeIndex =
     findPasswordWithPosition
@@ -53,9 +53,13 @@ findPasswordWithPosition prefix (x:xs) result
     md5 = generateMD5 prefix x
     maybeIndex =
       mfilter
-        (`elem` (Vector.map fst .
-                 Vector.filter (('_' ==) . snd) . Vector.indexed)
-                  result)
+        ( `elem`
+            ( Vector.map fst
+                . Vector.filter (('_' ==) . snd)
+                . Vector.indexed
+            )
+              result
+        )
         (readMaybe [md5 !! 5] :: Maybe Int)
 
 solution2 :: String -> String

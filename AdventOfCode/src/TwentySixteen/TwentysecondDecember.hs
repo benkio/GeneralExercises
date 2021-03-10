@@ -17,7 +17,7 @@ data Node = Node
   deriving (Eq)
 
 instance Show Node where
-  show Node { size = s, used = u, avail = a, usedPercent = p } =
+  show Node {size = s, used = u, avail = a, usedPercent = p} =
     printf "Node: s %d - u %d - a %d - p %d%%" s u a p
 
 input :: IO Grid
@@ -74,21 +74,29 @@ nodeTransfer (n1, n2) =
 possibleTransfers :: Map Coordinate Node -> [(Coordinate, Coordinate)]
 possibleTransfers grid =
   let ns = toList grid
-  in [(c1, c2) | (c1, n1) <- ns, (c2, n2) <- ns, used n1 /= 0, used n1 <= avail n2, isNeighboor c1 c2]
+   in [ (c1, c2)
+        | (c1, n1) <- ns,
+          used n1 /= 0,
+          (c2, n2) <- ns,
+          used n1 <= avail n2,
+          isNeighboor c1 c2
+      ]
 
 isNeighboor :: Coordinate -> Coordinate -> Bool
-isNeighboor (x, y) (x', y') = (x `elem` [x'-1, x'+1] && y == y') || (y `elem` [y'-1, y'+1] && x == x')
+isNeighboor (x, y) (x', y') = (x `elem` [x' -1, x' + 1] && y == y') || (y `elem` [y' -1, y' + 1] && x == x')
 
 inputTest :: Grid
-inputTest = (fromList . fmap parseNode . lines) "/dev/grid/node-x0-y0   10T    8T     2T   80%\n\
-\/dev/grid/node-x0-y1   11T    6T     5T   54%\n\
-\/dev/grid/node-x0-y2   32T   28T     4T   87%\n\
-\/dev/grid/node-x1-y0    9T    7T     2T   77%\n\
-\/dev/grid/node-x1-y1    8T    0T     8T    0%\n\
-\/dev/grid/node-x1-y2   11T    7T     4T   63%\n\
-\/dev/grid/node-x2-y0   10T    6T     4T   60%\n\
-\/dev/grid/node-x2-y1    9T    8T     1T   88%\n\
-\/dev/grid/node-x2-y2    9T    6T     3T   66%"
+inputTest =
+  (fromList . fmap parseNode . lines)
+    "/dev/grid/node-x0-y0   10T    8T     2T   80%\n\
+    \/dev/grid/node-x0-y1   11T    6T     5T   54%\n\
+    \/dev/grid/node-x0-y2   32T   28T     4T   87%\n\
+    \/dev/grid/node-x1-y0    9T    7T     2T   77%\n\
+    \/dev/grid/node-x1-y1    8T    0T     8T    0%\n\
+    \/dev/grid/node-x1-y2   11T    7T     4T   63%\n\
+    \/dev/grid/node-x2-y0   10T    6T     4T   60%\n\
+    \/dev/grid/node-x2-y1    9T    8T     1T   88%\n\
+    \/dev/grid/node-x2-y2    9T    6T     3T   66%"
 
 test :: Bool
 test = solution2 inputTest == 7

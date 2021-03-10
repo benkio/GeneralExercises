@@ -1,19 +1,19 @@
 module TwentyFifteen.EighteenthDecember where
 
 import Data.List
-import Data.Map as Map
-  ( filter
-  , findMax
-  , findWithDefault
-  , fromList
-  , mapWithKey
-  , size
-  , toList
-  , updateAt
-  , updateMax
-  , updateMin
-  )
 import Data.Map (Map)
+import Data.Map as Map
+  ( filter,
+    findMax,
+    findWithDefault,
+    fromList,
+    mapWithKey,
+    size,
+    toList,
+    updateAt,
+    updateMax,
+    updateMin,
+  )
 
 type Coordinate = (Int, Int)
 
@@ -24,36 +24,40 @@ input = parseGrid <$> readFile "input/2015/18December.txt"
 
 parseGrid :: String -> Grid
 parseGrid =
-  fromList .
-  concatMap (\(y, l) -> (\(x, v) -> ((x, y), v == '#')) <$> zip [0 ..] l) .
-  zip [0 ..] . lines
+  fromList
+    . concatMap (\(y, l) -> (\(x, v) -> ((x, y), v == '#')) <$> zip [0 ..] l)
+    . zip [0 ..]
+    . lines
 
 showGrid :: Grid -> String
 showGrid m =
-  (unlines .
-   fmap
-     (foldl
-        (\acc' (_, c) ->
-           acc' ++
-           [ if c
-               then '#'
-               else '.'
-           ])
-        "") .
-   groupBy (\((_, y), _) ((_, y'), _) -> y == y') .
-   sortOn (\((x, y), _) -> x + y * ((+ 1) . snd . fst . Map.findMax) m) .
-   Map.toList)
+  ( unlines
+      . fmap
+        ( foldl
+            ( \acc' (_, c) ->
+                acc'
+                  ++ [ if c
+                         then '#'
+                         else '.'
+                     ]
+            )
+            ""
+        )
+      . groupBy (\((_, y), _) ((_, y'), _) -> y == y')
+      . sortOn (\((x, y), _) -> x + y * ((+ 1) . snd . fst . Map.findMax) m)
+      . Map.toList
+  )
     m
 
 inputTest :: Grid
 inputTest =
   parseGrid
     ".#.#.#\n\
-\...##.\n\
-\#....#\n\
-\..#...\n\
-\#.#..#\n\
-\####.."
+    \...##.\n\
+    \#....#\n\
+    \..#...\n\
+    \#.#..#\n\
+    \####.."
 
 neighboursCoordinates :: Coordinate -> [Coordinate]
 neighboursCoordinates (x, y) =
@@ -82,11 +86,11 @@ solution1Test =
   let expectedGrid =
         parseGrid
           "......\n\
-\......\n\
-\..##..\n\
-\..##..\n\
-\......\n\
-\......"
+          \......\n\
+          \..##..\n\
+          \..##..\n\
+          \......\n\
+          \......"
    in expectedGrid == solution1 4 inputTest
 
 eighteenthDecemberSolution1 :: IO Int
@@ -113,11 +117,11 @@ solution2Test =
   let expectedGrid =
         parseGrid
           "##.###\n\
-\.##..#\n\
-\.##...\n\
-\.##...\n\
-\#.#...\n\
-\##...#"
+          \.##..#\n\
+          \.##...\n\
+          \.##...\n\
+          \#.#...\n\
+          \##...#"
    in expectedGrid == solution2 5 inputTest
 
 eighteenthDecemberSolution2 :: IO Int

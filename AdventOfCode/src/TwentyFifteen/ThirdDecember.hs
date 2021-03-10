@@ -1,8 +1,8 @@
 module TwentyFifteen.ThirdDecember where
 
-import           Data.Bifunctor (bimap)
-import           Data.List      (partition)
-import           Data.Set       as S (Set, fromList, size, union)
+import Data.Bifunctor (bimap)
+import Data.List (partition)
+import Data.Set as S (Set, fromList, size, union)
 
 data Direction
   = N
@@ -17,12 +17,12 @@ initialCoordinate :: Coordinate
 initialCoordinate = (0, 0)
 
 parseDirection :: String -> [Direction]
-parseDirection []       = []
-parseDirection ('^':xs) = N : parseDirection xs
-parseDirection ('<':xs) = E : parseDirection xs
-parseDirection ('>':xs) = W : parseDirection xs
-parseDirection ('v':xs) = S : parseDirection xs
-parseDirection (_:xs)   = parseDirection xs
+parseDirection [] = []
+parseDirection ('^' : xs) = N : parseDirection xs
+parseDirection ('<' : xs) = E : parseDirection xs
+parseDirection ('>' : xs) = W : parseDirection xs
+parseDirection ('v' : xs) = S : parseDirection xs
+parseDirection (_ : xs) = parseDirection xs
 
 moveSanta :: Coordinate -> Direction -> Coordinate
 moveSanta (x, y) N = (x, y + 1)
@@ -39,8 +39,8 @@ input = parseDirection <$> readFile "input/2015/3December.txt"
 inputTest :: String
 inputTest =
   ">\n\
-            \^>v<\n\
-            \^v^v^v^v^v"
+  \^>v<\n\
+  \^v^v^v^v^v"
 
 solution1 :: [Direction] -> Int
 solution1 = S.size . visitedHouses
@@ -52,7 +52,7 @@ solution1Test =
 splitDirections :: [Direction] -> ([Direction], [Direction])
 splitDirections ds =
   (bimap (fmap snd) (fmap snd) . partition (\(x, _) -> even x)) $
-  [0 ..] `zip` ds
+    [0 ..] `zip` ds
 
 solution2Test :: Bool
 solution2Test =

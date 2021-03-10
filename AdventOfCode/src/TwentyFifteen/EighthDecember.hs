@@ -10,9 +10,9 @@ input = lines <$> readFile "input/2015/8December.txt"
 inputTest :: String
 inputTest =
   "\"\"\n\
-\\"abc\"\n\
-\\"aaa\\\"aaa\"\n\
-\\"\\x27\""
+  \\"abc\"\n\
+  \\"aaa\\\"aaa\"\n\
+  \\"\\x27\""
 
 solution1 :: [String] -> Int
 solution1 xs =

@@ -11,20 +11,22 @@ input = parseRowColumn <$> readFile "input/2015/25December.txt"
 
 parseRowColumn :: String -> Coordinate
 parseRowColumn =
-  (\(x, y) -> (read x :: Int, read y :: Int)) .
-  (\s ->
-     ( (init . reverse . takeWhile (' ' /=) . dropWhile (',' /=) . reverse) s
-     , (init . reverse . takeWhile (' ' /=) . tail . reverse) s))
+  (\(x, y) -> (read x :: Int, read y :: Int))
+    . ( \s ->
+          ( (init . reverse . takeWhile (' ' /=) . dropWhile (',' /=) . reverse) s,
+            (init . reverse . takeWhile (' ' /=) . tail . reverse) s
+          )
+      )
 
 initialMap :: Map Coordinate Int
 initialMap =
   (Map.fromList . concatMap parseRows . (`zip` [1 ..]) . lines)
     "20151125  18749137  17289845  30943339  10071777  33511524\n\
-\31916031  21629792  16929656   7726640  15514188   4041754\n\
-\16080970   8057251   1601130   7981243  11661866  16474243\n\
-\24592653  32451966  21345942   9380097  10600672  31527494\n\
-\   77061  17552253  28094349   6899651   9250759  31663883\n\
-\33071741   6796745  25397450  24659492   1534922  27995004"
+    \31916031  21629792  16929656   7726640  15514188   4041754\n\
+    \16080970   8057251   1601130   7981243  11661866  16474243\n\
+    \24592653  32451966  21345942   9380097  10600672  31527494\n\
+    \   77061  17552253  28094349   6899651   9250759  31663883\n\
+    \33071741   6796745  25397450  24659492   1534922  27995004"
 
 parseRows :: (String, Int) -> [(Coordinate, Int)]
 parseRows (s, y) =

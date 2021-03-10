@@ -26,22 +26,22 @@ parseInstruction i = parseInstruction' $ words i
     parseInstruction' s = error $ "not recognized input: " ++ show s
 
 toOffset :: String -> Int
-toOffset ('+':num) = read num :: Int
-toOffset ('-':num) = negate (read num :: Int)
+toOffset ('+' : num) = read num :: Int
+toOffset ('-' : num) = negate (read num :: Int)
 toOffset s = error $ "offset not recognized: " ++ s
 
 input :: IO (Vector Instruction)
 input =
-  Vector.fromList . fmap parseInstruction . lines <$>
-  readFile "input/2015/23December.txt"
+  Vector.fromList . fmap parseInstruction . lines
+    <$> readFile "input/2015/23December.txt"
 
 inputTest :: Vector Instruction
 inputTest =
   (Vector.fromList . fmap parseInstruction . lines)
     "inc a\n\
-\jio a, +2\n\
-\tpl a\n\
-\inc a"
+    \jio a, +2\n\
+    \tpl a\n\
+    \inc a"
 
 interpreter :: Int -> State (Int, Int, Vector Instruction) (Int, Int)
 interpreter addr = do

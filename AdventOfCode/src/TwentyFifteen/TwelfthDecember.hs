@@ -15,16 +15,19 @@ parseToObject = decode . BS.pack
 
 inputTest :: [(Object, Object, Int)]
 inputTest =
-  [ ( fromJust (parseToObject "{\"a\":[1,2,3]}")
-    , fromJust (parseToObject "{\"a\":2,\"b\":4}")
-    , 6)
-  , ( fromJust (parseToObject "{\"a\": [[[3]]]}")
-    , fromJust (parseToObject "{\"a\":{\"b\":4},\"c\":-1}")
-    , 3)
-  , ( fromJust (parseToObject "{\"a\":[-1,1]}")
-    , fromJust (parseToObject "{\"a\":[-1,{\"a\":1}]}")
-    , 0)
-  , (fromJust (parseToObject "{\"a\":[]}"), fromJust (parseToObject "{}"), 0)
+  [ ( fromJust (parseToObject "{\"a\":[1,2,3]}"),
+      fromJust (parseToObject "{\"a\":2,\"b\":4}"),
+      6
+    ),
+    ( fromJust (parseToObject "{\"a\": [[[3]]]}"),
+      fromJust (parseToObject "{\"a\":{\"b\":4},\"c\":-1}"),
+      3
+    ),
+    ( fromJust (parseToObject "{\"a\":[-1,1]}"),
+      fromJust (parseToObject "{\"a\":[-1,{\"a\":1}]}"),
+      0
+    ),
+    (fromJust (parseToObject "{\"a\":[]}"), fromJust (parseToObject "{}"), 0)
   ]
 
 foldValue :: Int -> Value -> (Object -> Bool) -> (Object -> Int) -> Int
@@ -44,8 +47,9 @@ solution1 = foldl (\acc x -> foldValue acc x (const False) solution1) 0
 solution1Test :: Bool
 solution1Test =
   all
-    (\(o, o', expected) ->
-       solution1 o == solution1 o' && solution1 o' == expected)
+    ( \(o, o', expected) ->
+        solution1 o == solution1 o' && solution1 o' == expected
+    )
     inputTest
 
 isRedObject :: Object -> Bool
@@ -60,10 +64,10 @@ solution2Test = all (\(o, expected) -> solution2 o == expected) inputTest2
 
 inputTest2 :: [(Object, Int)]
 inputTest2 =
-  [ (fromJust (parseToObject "{\"a\":[1,2,3]}"), 6)
-  , (fromJust (parseToObject "{\"a\": [1,{\"c\":\"red\",\"b\":2},3]}"), 4)
-  , (fromJust (parseToObject "{\"d\":\"red\",\"e\":[1,2,3,4],\"f\":5}"), 0)
-  , (fromJust (parseToObject "{\"a\":[1,\"red\",5]}"), 6)
+  [ (fromJust (parseToObject "{\"a\":[1,2,3]}"), 6),
+    (fromJust (parseToObject "{\"a\": [1,{\"c\":\"red\",\"b\":2},3]}"), 4),
+    (fromJust (parseToObject "{\"d\":\"red\",\"e\":[1,2,3,4],\"f\":5}"), 0),
+    (fromJust (parseToObject "{\"a\":[1,\"red\",5]}"), 6)
   ]
 
 solution2 :: Object -> Int

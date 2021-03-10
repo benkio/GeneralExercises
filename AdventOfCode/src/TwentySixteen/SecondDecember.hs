@@ -44,16 +44,16 @@ testInput :: [[Instruction]]
 testInput =
   (fmap parseInstructions . lines)
     "ULL\n\
-\RRDDD\n\
-\LURDL\n\
-\UUUUD"
+    \RRDDD\n\
+    \LURDL\n\
+    \UUUUD"
 
 solution1Test :: Bool
 solution1Test = solution (0, 0) keypadMap testInput == [1, 9, 8, 5]
 
 solution :: Coordinate -> [(Coordinate, a)] -> [[Instruction]] -> [a]
 solution _ _ [] = []
-solution c m (i:is) =
+solution c m (i : is) =
   let c' = foldl (applyInstruction (fmap fst m)) c i
    in coordinateToKey c' m : solution c' m is
 
@@ -65,8 +65,8 @@ newKeypad = keypad ++ [(0, 2), (2, 0), (0, -2), (-2, 0)]
 
 newKeypadMap :: [(Coordinate, String)]
 newKeypadMap =
-  newKeypad `zip`
-  ["A", "6", "2", "B", "7", "3", "C", "8", "4", "1", "9", "D", "5"]
+  newKeypad
+    `zip` ["A", "6", "2", "B", "7", "3", "C", "8", "4", "1", "9", "D", "5"]
 
 solution2Test :: Bool
 solution2Test = concat (solution (-2, 0) newKeypadMap testInput) == "5DB3"

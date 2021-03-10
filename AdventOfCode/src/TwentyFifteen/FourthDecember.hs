@@ -1,7 +1,7 @@
 module TwentyFifteen.FourthDecember where
 
 import qualified Data.ByteString.Lazy.Char8 as B
-import qualified Data.Digest.Pure.MD5       as M
+import qualified Data.Digest.Pure.MD5 as M
 
 input :: IO String
 input = readFile "input/2015/4December.txt"
@@ -9,7 +9,7 @@ input = readFile "input/2015/4December.txt"
 inputTest :: String
 inputTest =
   "abcdef\n\
-            \pqrstuv"
+  \pqrstuv"
 
 testSolution1 :: Bool
 testSolution1 =
@@ -21,7 +21,7 @@ generateMD5 prefix num =
    in show $ M.md5 md5input
 
 bruteSearchLeadingZeros :: String -> [Int] -> Int -> Int
-bruteSearchLeadingZeros prefix (x:xs) zeros
+bruteSearchLeadingZeros prefix (x : xs) zeros
   | all ('0' ==) md5Prefix = x
   | otherwise = bruteSearchLeadingZeros prefix xs zeros
   where

@@ -3,13 +3,13 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.TwentySecondDecember where
 
-import           Data.Bifunctor
+import Data.Bifunctor
 
 input :: IO (Player, Player)
 input = parsePlayersDecks <$> readFile "input/2020/22December.txt"
 
-data Player =
-  Player Int [Int]
+data Player
+  = Player Int [Int]
   deriving (Show, Eq)
 
 playerId :: Player -> Int
@@ -22,30 +22,30 @@ infiniteLoopInputTest :: (Player, Player)
 infiniteLoopInputTest =
   parsePlayersDecks
     "Player 1:\n\
-\43\n\
-\19\n\
-\\n\
-\Player 2:\n\
-\2\n\
-\29\n\
-\14"
+    \43\n\
+    \19\n\
+    \\n\
+    \Player 2:\n\
+    \2\n\
+    \29\n\
+    \14"
 
 inputTest :: (Player, Player)
 inputTest =
   parsePlayersDecks
     "Player 1:\n\
-\9\n\
-\2\n\
-\6\n\
-\3\n\
-\1\n\
-\\n\
-\Player 2:\n\
-\5\n\
-\8\n\
-\4\n\
-\7\n\
-\10"
+    \9\n\
+    \2\n\
+    \6\n\
+    \3\n\
+    \1\n\
+    \\n\
+    \Player 2:\n\
+    \5\n\
+    \8\n\
+    \4\n\
+    \7\n\
+    \10"
 
 parsePlayersDecks :: String -> (Player, Player)
 parsePlayersDecks =
@@ -60,7 +60,7 @@ parsePlayersDecks =
 combat :: Player -> Player -> Player
 combat (Player _ []) x = x
 combat x (Player _ []) = x
-combat p1@(Player x1 (c1:cs1)) p2@(Player x2 (c2:cs2))
+combat p1@(Player x1 (c1 : cs1)) p2@(Player x2 (c2 : cs2))
   | c1 > c2 = combat (Player x1 (cs1 ++ [c1, c2])) (Player x2 cs2)
   | c2 > c1 = combat (Player x1 cs1) (Player x2 (cs2 ++ [c2, c1]))
   | otherwise = error $ "No draw allowed " ++ show p1 ++ " " ++ show p2
@@ -73,7 +73,7 @@ twentySecondDecemberSolution1 :: IO Int
 twentySecondDecemberSolution1 = calculateScore combat <$> input
 
 recursiveCombatStep1 ::
-     [(Player, Player)] -> (Player, Player) -> (Player, Player)
+  [(Player, Player)] -> (Player, Player) -> (Player, Player)
 recursiveCombatStep1 historyStack (p1, p2)
   | (p1, p2) `elem` historyStack = (p1, p2Empty)
   | otherwise = recursiveCombatStep2 historyStack (p1, p2)
@@ -81,10 +81,10 @@ recursiveCombatStep1 historyStack (p1, p2)
     p2Empty = Player (playerId p2) []
 
 recursiveCombatStep2 ::
-     [(Player, Player)] -> (Player, Player) -> (Player, Player)
+  [(Player, Player)] -> (Player, Player) -> (Player, Player)
 recursiveCombatStep2 historyStack x@(Player _ [], _) = x
 recursiveCombatStep2 historyStack x@(_, Player _ []) = x
-recursiveCombatStep2 historyStack s@(Player x1 (c1:cs1), Player x2 (c2:cs2))
+recursiveCombatStep2 historyStack s@(Player x1 (c1 : cs1), Player x2 (c2 : cs2))
   | length cs2 >= c2 && length cs1 >= c1 =
     let (rp1, rp2) =
           recursiveCombatStep1

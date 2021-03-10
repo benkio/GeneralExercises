@@ -1,10 +1,10 @@
 module TwentySixteen.SeventeenthDecember where
 
 import qualified Data.ByteString.Lazy.Char8 as B
-import qualified Data.Digest.Pure.MD5       as M
-import           Data.Functor
-import           Data.List
-import           Data.Maybe
+import qualified Data.Digest.Pure.MD5 as M
+import Data.Functor
+import Data.List
+import Data.Maybe
 
 data Door = U | D | L | R deriving (Show, Eq, Ord)
 
@@ -95,7 +95,7 @@ solutionLongest :: [(Coordinate, [Door])] -> [Door] -> String -> IO [Door]
 solutionLongest [] longest _ = return longest
 solutionLongest poss longest hash
   | any ((== gridMaxCoordinate) . fst) poss = do
-    let terminated = (filter ((== gridMaxCoordinate) . fst)) poss
+    let terminated = filter ((== gridMaxCoordinate) . fst) poss
         longest' =
           ( maximumBy (\d d' -> compare (length d) (length d'))
               . (\dss -> dss ++ [longest])

@@ -11,22 +11,22 @@ inputTest :: HappinessMap
 inputTest =
   (Map.fromList . fmap parseHappiness . lines)
     "Alice would gain 54 happiness units by sitting next to Bob.\n\
-\Alice would lose 79 happiness units by sitting next to Carol.\n\
-\Alice would lose 2 happiness units by sitting next to David.\n\
-\Bob would gain 83 happiness units by sitting next to Alice.\n\
-\Bob would lose 7 happiness units by sitting next to Carol.\n\
-\Bob would lose 63 happiness units by sitting next to David.\n\
-\Carol would lose 62 happiness units by sitting next to Alice.\n\
-\Carol would gain 60 happiness units by sitting next to Bob.\n\
-\Carol would gain 55 happiness units by sitting next to David.\n\
-\David would gain 46 happiness units by sitting next to Alice.\n\
-\David would lose 7 happiness units by sitting next to Bob.\n\
-\David would gain 41 happiness units by sitting next to Carol."
+    \Alice would lose 79 happiness units by sitting next to Carol.\n\
+    \Alice would lose 2 happiness units by sitting next to David.\n\
+    \Bob would gain 83 happiness units by sitting next to Alice.\n\
+    \Bob would lose 7 happiness units by sitting next to Carol.\n\
+    \Bob would lose 63 happiness units by sitting next to David.\n\
+    \Carol would lose 62 happiness units by sitting next to Alice.\n\
+    \Carol would gain 60 happiness units by sitting next to Bob.\n\
+    \Carol would gain 55 happiness units by sitting next to David.\n\
+    \David would gain 46 happiness units by sitting next to Alice.\n\
+    \David would lose 7 happiness units by sitting next to Bob.\n\
+    \David would gain 41 happiness units by sitting next to Carol."
 
 input :: IO HappinessMap
 input =
-  Map.fromList . fmap parseHappiness . lines <$>
-  readFile "input/2015/13December.txt"
+  Map.fromList . fmap parseHappiness . lines
+    <$> readFile "input/2015/13December.txt"
 
 parseHappiness :: String -> ((String, String), Int)
 parseHappiness s =
@@ -62,8 +62,9 @@ thirteenthDecemberSolution1 = solution1 <$> input
 
 generateMe :: HappinessMap -> HappinessMap
 generateMe =
-  Map.fromList .
-  concatMap (\p -> [(("Me", p), 0), ((p, "Me"), 0)]) . allPartecipants
+  Map.fromList
+    . concatMap (\p -> [(("Me", p), 0), ((p, "Me"), 0)])
+    . allPartecipants
 
 solution2 :: HappinessMap -> Int
 solution2 m =

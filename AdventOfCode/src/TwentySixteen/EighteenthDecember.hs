@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module TwentySixteen.EighteenthDecember where
 
 input :: IO String
@@ -14,11 +16,9 @@ calculateTile index prevRow
     prevRowFiltered = concatMap ((: []) . fst) (prevRowNearIndex index prevRow)
 
 prevRowNearIndex :: Int -> [(Char, Int)] -> [(Char, Int)]
-prevRowNearIndex i prevRow =
-  ( amendPrevRowNearIndex i
-      . filter (\(_, x) -> x `elem` [(i - 1) .. (i + 1)])
-  )
-    prevRow
+prevRowNearIndex i =
+  amendPrevRowNearIndex i
+    . filter (\(_, x) -> x `elem` [(i - 1) .. (i + 1)])
 
 amendPrevRowNearIndex :: Int -> [(Char, Int)] -> [(Char, Int)]
 amendPrevRowNearIndex index prevRowNearIndex
@@ -37,7 +37,7 @@ solution totalRows =
   fst
     . (!! totalRows)
     . iterate generateNextRowAccuml
-    . (\x -> (0, x))
+    . (0,)
 
 solution1Test :: Bool
 solution1Test = solution 10 ".^^.^.^^^^" == 38

@@ -1,9 +1,17 @@
 module TwentyFifteen.SixthDecember where
 
-import qualified Data.Char  as Char
-import           Data.Map   as M (Map, adjust, alter, delete, elems, empty,
-                                  insertWith, size)
-import           Data.Maybe
+import qualified Data.Char as Char
+import Data.Map as M
+  ( Map,
+    adjust,
+    alter,
+    delete,
+    elems,
+    empty,
+    insertWith,
+    size,
+  )
+import Data.Maybe
 
 type Coordinate = (Int, Int)
 
@@ -13,16 +21,16 @@ data LightStatus
   | Toggle
   deriving (Show, Read, Eq)
 
-data Instruction =
-  Instruction LightStatus Coordinate Coordinate
+data Instruction
+  = Instruction LightStatus Coordinate Coordinate
   deriving (Show)
 
 litLights :: M.Map Coordinate a
 litLights = M.empty
 
 capitalized :: String -> String
-capitalized (h:t) = Char.toUpper h : map Char.toLower t
-capitalized []    = []
+capitalized (h : t) = Char.toUpper h : map Char.toLower t
+capitalized [] = []
 
 input :: IO [Instruction]
 input = fmap parseInstruction . lines <$> readFile "input/2015/6December.txt"
@@ -44,7 +52,7 @@ instructionToGrid (Instruction _ (x1, y1) (x2, y2)) =
   [(x, y) | x <- [x1 .. x2], y <- [y1 .. y2]]
 
 applyInstruction ::
-     M.Map Coordinate LightStatus -> Instruction -> M.Map Coordinate LightStatus
+  M.Map Coordinate LightStatus -> Instruction -> M.Map Coordinate LightStatus
 applyInstruction lights i@(Instruction On _ _) =
   foldl
     (\m (x, y) -> M.insertWith (\_ _ -> On) (x, y) On m)
@@ -54,14 +62,16 @@ applyInstruction lights i@(Instruction Off _ _) =
   foldl (\m (x, y) -> M.delete (x, y) m) lights (instructionToGrid i)
 applyInstruction lights i@(Instruction Toggle _ _) =
   foldl
-    (\m (x, y) ->
-       M.alter
-         (\a ->
-            if isJust a
-              then Nothing
-              else Just On)
-         (x, y)
-         m)
+    ( \m (x, y) ->
+        M.alter
+          ( \a ->
+              if isJust a
+                then Nothing
+                else Just On
+          )
+          (x, y)
+          m
+    )
     lights
     (instructionToGrid i)
 

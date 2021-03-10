@@ -24,7 +24,7 @@ instructionValue (Jump v _) = v
 instructionValue (Acc v _) = v
 
 stripPlus :: String -> String
-stripPlus ('+':s) = s
+stripPlus ('+' : s) = s
 stripPlus s = s
 
 switchNopNJump :: Instruction -> Instruction
@@ -57,8 +57,8 @@ parseInstruction p _ = Nop 0 p
 
 input :: IO [Instruction]
 input =
-  fmap (uncurry parseInstruction) . zip [0 ..] . lines <$>
-  readFile "input/2020/8December.txt"
+  fmap (uncurry parseInstruction) . zip [0 ..] . lines
+    <$> readFile "input/2020/8December.txt"
 
 loopDetector :: (Int, [Instruction]) -> Int -> [Instruction] -> (Int, Int)
 loopDetector (acc, instructionTrace) pointer is
@@ -73,9 +73,10 @@ loopDetector (acc, instructionTrace) pointer is
 
 fixLoop :: [Instruction] -> [(Int, Int)]
 fixLoop is =
-  filter (\(_, p) -> p == (instructionPosition (last is) + 1)) .
-  fmap (loopDetector (0, []) 0) . nub $
-  fmap (replaceInstruction is . switchNopNJump) is
+  filter (\(_, p) -> p == (instructionPosition (last is) + 1))
+    . fmap (loopDetector (0, []) 0)
+    . nub
+    $ fmap (replaceInstruction is . switchNopNJump) is
 
 eighthDecemberSolution1 :: IO Int
 eighthDecemberSolution1 = fst . loopDetector (0, []) 0 <$> input

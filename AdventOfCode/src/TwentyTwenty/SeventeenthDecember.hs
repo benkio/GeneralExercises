@@ -7,17 +7,17 @@ module TwentyTwenty.SeventeenthDecember where
 
 import Data.List (groupBy, sortBy, transpose)
 import qualified Data.Map as M
-  ( Map
-  , difference
-  , filter
-  , filterWithKey
-  , fromList
-  , keys
-  , lookup
-  , mapWithKey
-  , size
-  , toList
-  , union
+  ( Map,
+    difference,
+    filter,
+    filterWithKey,
+    fromList,
+    keys,
+    lookup,
+    mapWithKey,
+    size,
+    toList,
+    union,
   )
 
 type Coordinate = (Int, Int, Int)
@@ -46,22 +46,24 @@ initialGrid = M.fromList . foldl lineToCubes [] . zip [0 ..] . lines
     lineToCubes acc (y, s) =
       let xCubes =
             foldl
-              (\acc' (x, c) ->
-                 if c == '#'
-                   then acc' ++ [((x, y, 0), True)]
-                   else acc' ++ [((x, y, 0), False)])
+              ( \acc' (x, c) ->
+                  if c == '#'
+                    then acc' ++ [((x, y, 0), True)]
+                    else acc' ++ [((x, y, 0), False)]
+              )
               []
               (zip [0 ..] s)
        in acc ++ xCubes
 
 showGrid :: Grid -> String
 showGrid =
-  snd .
-  foldl collapseGrid ((0, 0), "") .
-  sortBy (flip (\(c, _) (c', _) -> compareCondinates c c')) . M.toList
+  snd
+    . foldl collapseGrid ((0, 0), "")
+    . sortBy (flip (\(c, _) (c', _) -> compareCondinates c c'))
+    . M.toList
   where
     collapseGrid ::
-         ((Int, Int), String) -> (Coordinate, Bool) -> ((Int, Int), String)
+      ((Int, Int), String) -> (Coordinate, Bool) -> ((Int, Int), String)
     collapseGrid ((y', z'), acc) ((_, y, z), s) =
       let (z'', acc') =
             if z /= z'
@@ -71,25 +73,29 @@ showGrid =
             if y /= y'
               then (y, acc' ++ "\n")
               else (y', acc')
-       in ( (y'', z'')
-          , acc'' ++
-            (if s
-               then "#"
-               else "."))
+       in ( (y'', z''),
+            acc''
+              ++ ( if s
+                     then "#"
+                     else "."
+                 )
+          )
 
 neighborCoordinates :: Coordinate -> [Coordinate]
 neighborCoordinates (x, y, z) =
   [ (a, b, c)
-  | a <- [x - 1 .. x + 1]
-  , b <- [y - 1 .. y + 1]
-  , c <- [z - 1 .. z + 1]
-  , a /= x || b /= y || c /= z
+    | a <- [x - 1 .. x + 1],
+      b <- [y - 1 .. y + 1],
+      c <- [z - 1 .. z + 1],
+      a /= x || b /= y || c /= z
   ]
 
 findNeighbors :: Coordinate -> Grid -> Grid
 findNeighbors c g =
-  (M.fromList .
-   fmap (\x -> maybe (x, False) (x, ) (M.lookup x g)) . neighborCoordinates)
+  ( M.fromList
+      . fmap (\x -> maybe (x, False) (x,) (M.lookup x g))
+      . neighborCoordinates
+  )
     c
 
 neighborToStatus :: Bool -> Grid -> Bool
@@ -107,9 +113,9 @@ enlargeGrid g =
       emptyGrid =
         M.fromList
           [ ((a, b, c), False)
-          | a <- [lx - 1 .. hx + 1]
-          , b <- [ly - 1 .. hy + 1]
-          , c <- [lz - 1 .. hz + 1]
+            | a <- [lx - 1 .. hx + 1],
+              b <- [ly - 1 .. hy + 1],
+              c <- [lz - 1 .. hz + 1]
           ]
    in M.union g emptyGrid
 
@@ -119,8 +125,9 @@ shrinkGridIfExternalFalse g =
         (\ks -> (minimum ks, maximum ks)) (M.keys g)
       internalGrid =
         M.filterWithKey
-          (\(x, y, z) _ ->
-             (x < hx && x > lx) && (y < hy && y > ly) && (z < hz && z > lz))
+          ( \(x, y, z) _ ->
+              (x < hx && x > lx) && (y < hy && y > ly) && (z < hz && z > lz)
+          )
           g
       externalGrid = M.difference g internalGrid
       externalGridNonEmpty = (any snd . M.toList) externalGrid
@@ -157,14 +164,15 @@ initialGrid2 :: String -> Grid2
 initialGrid2 = M.fromList . foldl lineToCubes [] . zip [0 ..] . lines
   where
     lineToCubes ::
-         [(Coordinate2, Bool)] -> (Int, String) -> [(Coordinate2, Bool)]
+      [(Coordinate2, Bool)] -> (Int, String) -> [(Coordinate2, Bool)]
     lineToCubes acc (y, s) =
       let xCubes =
             foldl
-              (\acc' (x, c) ->
-                 if c == '#'
-                   then acc' ++ [((x, y, 0, 0), True)]
-                   else acc' ++ [((x, y, 0, 0), False)])
+              ( \acc' (x, c) ->
+                  if c == '#'
+                    then acc' ++ [((x, y, 0, 0), True)]
+                    else acc' ++ [((x, y, 0, 0), False)]
+              )
               []
               (zip [0 ..] s)
        in acc ++ xCubes
@@ -172,17 +180,19 @@ initialGrid2 = M.fromList . foldl lineToCubes [] . zip [0 ..] . lines
 neighborCoordinates2 :: Coordinate2 -> [Coordinate2]
 neighborCoordinates2 (x, y, z, w) =
   [ (a, b, c, d)
-  | a <- [x - 1 .. x + 1]
-  , b <- [y - 1 .. y + 1]
-  , c <- [z - 1 .. z + 1]
-  , d <- [w - 1 .. w + 1]
-  , a /= x || b /= y || c /= z || d /= w
+    | a <- [x - 1 .. x + 1],
+      b <- [y - 1 .. y + 1],
+      c <- [z - 1 .. z + 1],
+      d <- [w - 1 .. w + 1],
+      a /= x || b /= y || c /= z || d /= w
   ]
 
 findNeighbors2 :: Coordinate2 -> Grid2 -> Grid2
 findNeighbors2 c g =
-  (M.fromList .
-   fmap (\x -> maybe (x, False) (x, ) (M.lookup x g)) . neighborCoordinates2)
+  ( M.fromList
+      . fmap (\x -> maybe (x, False) (x,) (M.lookup x g))
+      . neighborCoordinates2
+  )
     c
 
 neighborToStatus2 :: Bool -> Grid2 -> Bool
@@ -200,10 +210,10 @@ enlargeGrid2 g =
       emptyGrid =
         M.fromList
           [ ((a, b, c, d), False)
-          | a <- [lx - 1 .. hx + 1]
-          , b <- [ly - 1 .. hy + 1]
-          , c <- [lz - 1 .. hz + 1]
-          , d <- [lw - 1 .. hw + 1]
+            | a <- [lx - 1 .. hx + 1],
+              b <- [ly - 1 .. hy + 1],
+              c <- [lz - 1 .. hz + 1],
+              d <- [lw - 1 .. hw + 1]
           ]
    in M.union g emptyGrid
 
@@ -213,9 +223,12 @@ shrinkGridIfExternalFalse2 g =
         (\ks -> (minimum ks, maximum ks)) (M.keys g)
       internalGrid =
         M.filterWithKey
-          (\(x, y, z, w) _ ->
-             (x < hx && x > lx) &&
-             (y < hy && y > ly) && (z < hz && z > lz) && (w < hw && w > lw))
+          ( \(x, y, z, w) _ ->
+              (x < hx && x > lx)
+                && (y < hy && y > ly)
+                && (z < hz && z > lz)
+                && (w < hw && w > lw)
+          )
           g
       externalGrid = M.difference g internalGrid
       externalGridNonEmpty = (any snd . M.toList) externalGrid
@@ -230,8 +243,9 @@ checkCube2 grid (coord, cube) =
 computeStep2 :: Grid2 -> Grid2
 computeStep2 g =
   let enlargedGrid = enlargeGrid2 g
-   in (shrinkGridIfExternalFalse2 .
-       M.mapWithKey (curry (checkCube2 enlargedGrid)))
+   in ( shrinkGridIfExternalFalse2
+          . M.mapWithKey (curry (checkCube2 enlargedGrid))
+      )
         enlargedGrid
 
 testSolution2 :: Int

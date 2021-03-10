@@ -18,8 +18,9 @@ numbersToString :: [Int] -> String
 numbersToString [] = []
 numbersToString xs =
   map
-    (\x ->
-       (fst . fromJust . find (\(_, v) -> v == x) . Map.toList) alphabetToNums)
+    ( \x ->
+        (fst . fromJust . find (\(_, v) -> v == x) . Map.toList) alphabetToNums
+    )
     xs
 
 zip3List :: [Int] -> [[Int]]
@@ -42,11 +43,12 @@ hasTwoDifferentNonOverlappingPairs =
 
 generateNewPassword :: [Int] -> [Int]
 generateNewPassword =
-  (\(l, r) ->
-     if r == 1
-       then 1 : l
-       else l) .
-  foldr moveLastChar ([], 1)
+  ( \(l, r) ->
+      if r == 1
+        then 1 : l
+        else l
+  )
+    . foldr moveLastChar ([], 1)
   where
     moveLastChar :: Int -> ([Int], Int) -> ([Int], Int)
     moveLastChar x (acc, r) =
@@ -58,8 +60,10 @@ generateNewPassword =
 
 generateNewValidPassword :: [Int] -> [Int]
 generateNewValidPassword xs
-  | hasTwoDifferentNonOverlappingPairs xs &&
-      hasThreeConsecutive xs && not (hasForbiddenLetters xs) = xs
+  | hasTwoDifferentNonOverlappingPairs xs
+      && hasThreeConsecutive xs
+      && not (hasForbiddenLetters xs) =
+    xs
   | otherwise = generateNewValidPassword $ generateNewPassword xs
 
 inputTest :: [String]
@@ -70,8 +74,10 @@ solution1Test = ["abcdffaa", "ghjaabcc"] == fmap solution inputTest
 
 solution :: String -> String
 solution =
-  numbersToString .
-  generateNewValidPassword . generateNewPassword . stringToNumbers
+  numbersToString
+    . generateNewValidPassword
+    . generateNewPassword
+    . stringToNumbers
 
 eleventhDecemberSolution1 :: IO String
 eleventhDecemberSolution1 = solution <$> input

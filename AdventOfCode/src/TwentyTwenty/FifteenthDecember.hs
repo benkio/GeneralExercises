@@ -11,16 +11,17 @@ import Prelude hiding (lookup)
 
 input :: IO [(Int, Int)]
 input =
-  (`zip` [1 ..]) .
-  fmap (\x -> read x :: Int) .
-  filter ("" /=) .
-  foldl
-    (\acc x ->
-       if x == ',' || x == '\n'
-         then acc ++ [""]
-         else init acc ++ [last acc ++ [x]])
-    [""] <$>
-  readFile "input/2020/15December.txt"
+  (`zip` [1 ..])
+    . fmap (\x -> read x :: Int)
+    . filter ("" /=)
+    . foldl
+      ( \acc x ->
+          if x == ',' || x == '\n'
+            then acc ++ [""]
+            else init acc ++ [last acc ++ [x]]
+      )
+      [""]
+    <$> readFile "input/2020/15December.txt"
 
 type SpokenNumbers = Map Int Int
 

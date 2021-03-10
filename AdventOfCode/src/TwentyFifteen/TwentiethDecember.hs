@@ -15,12 +15,14 @@ housePresents = sum . fmap (* 10) . findDivisors
 
 findDivisors :: Int -> [Int]
 findDivisors x =
-  (concatMap
-     (\y ->
-        if x `div` y == y
-          then [y]
-          else [y, x `div` y]) .
-   filter (\i -> x `mod` i == 0))
+  ( concatMap
+      ( \y ->
+          if x `div` y == y
+            then [y]
+            else [y, x `div` y]
+      )
+      . filter (\i -> x `mod` i == 0)
+  )
     [1 .. (ceiling (sqrt (fromIntegral x)))]
 
 twentiethDecemberSolution1 :: IO Int
