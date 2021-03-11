@@ -1,10 +1,16 @@
 module TwentySixteen.TwentysecondDecember where
 
-import Data.Map (Map, fromList, toList)
+import Data.List (any)
+import Data.Map (Map, fromList, toList, union)
 import qualified Data.Map as Map
+import Data.Maybe
+import Data.Set (Set, singleton)
+import qualified Data.Set as Set (union, empty, fromList)
 import Text.Printf
 
 type Coordinate = (Int, Int)
+
+type Status = (Coordinate, Grid)
 
 type Grid = Map Coordinate Node
 
@@ -14,11 +20,14 @@ data Node = Node
     avail :: Int,
     usedPercent :: Int
   }
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 instance Show Node where
   show Node {size = s, used = u, avail = a, usedPercent = p} =
     printf "Node: s %d - u %d - a %d - p %d%%" s u a p
+
+lookup' :: Coordinate -> Grid -> Node
+lookup' c = fromJust . Map.lookup c
 
 input :: IO Grid
 input = fromList . fmap parseNode . drop 2 . lines <$> readFile "input/2016/22December.txt"
@@ -85,6 +94,32 @@ possibleTransfers grid =
 isNeighboor :: Coordinate -> Coordinate -> Bool
 isNeighboor (x, y) (x', y') = (x `elem` [x' -1, x' + 1] && y == y') || (y `elem` [y' -1, y' + 1] && x == x')
 
+moveNode :: Coordinate -> (Coordinate -> Bool) -> Grid -> [Grid]
+moveNode c targetFilter g =
+  ( fmap
+      ( \(x, y) ->
+          let (n1, n2) = nodeTransfer (lookup' x g, lookup' y g)
+              insertMap = fromList [(x, n1), (y, n2)]
+           in union insertMap g
+      )
+      . filter (\(c', c'') -> c' == c && targetFilter c'')
+      . possibleTransfers
+  )
+    g
+
+nextStatus :: Status -> [Status]
+nextStatus s = undefined
+
+solution2 :: Int -> [Status] -> Set Status -> Int
+solution2 steps statuses history
+  | any ((== (0, 0)) . fst) statuses = steps
+  | otherwise =
+    let nextStatuses = (filter (`notElem` history) . concatMap nextStatus) statuses
+     in solution2 (steps + 1) statuses (Set.union (Set.fromList nextStatuses) history)
+
+twentysecondDecemberSolution2 :: IO Int
+twentysecondDecemberSolution2 = undefined
+
 inputTest :: Grid
 inputTest =
   (fromList . fmap parseNode . lines)
@@ -99,10 +134,4 @@ inputTest =
     \/dev/grid/node-x2-y2    9T    6T     3T   66%"
 
 test :: Bool
-test = solution2 inputTest == 7
-
-solution2 :: Grid -> Int
-solution2 = undefined
-
-twentysecondDecemberSolution2 :: IO Int
-twentysecondDecemberSolution2 = undefined
+test = solution2 0 [((2, 0), inputTest)] Set.empty  == 7
