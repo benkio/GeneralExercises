@@ -1,11 +1,15 @@
+{-# LANGUAGE TupleSections #-}
+
 module TwentySixteen.TwentysecondDecember where
 
+import Data.Bifunctor
+import Data.Foldable (msum)
 import Data.List (any)
-import Data.Map (Map, fromList, toList, union)
+import Data.Map (Map, findMax, fromList, toList, union)
 import qualified Data.Map as Map
 import Data.Maybe
 import Data.Set (Set, singleton)
-import qualified Data.Set as Set (union, empty, fromList)
+import qualified Data.Set as Set (empty, fromList, union)
 import Text.Printf
 
 type Coordinate = (Int, Int)
@@ -17,14 +21,13 @@ type Grid = Map Coordinate Node
 data Node = Node
   { size :: Int,
     used :: Int,
-    avail :: Int,
-    usedPercent :: Int
+    avail :: Int
   }
   deriving (Eq, Ord)
 
 instance Show Node where
-  show Node {size = s, used = u, avail = a, usedPercent = p} =
-    printf "Node: s %d - u %d - a %d - p %d%%" s u a p
+  show Node {size = s, used = u, avail = a} =
+    printf "Node: s %d - u %d - a %d" s u a
 
 lookup' :: Coordinate -> Grid -> Node
 lookup' c = fromJust . Map.lookup c
@@ -39,8 +42,7 @@ parseNode =
         Node
           { size = ((\x -> read x :: Int) . init) (l !! 1),
             used = ((\x -> read x :: Int) . init) (l !! 2),
-            avail = ((\x -> read x :: Int) . init) (l !! 3),
-            usedPercent = ((\x -> read x :: Int) . init) (l !! 4)
+            avail = ((\x -> read x :: Int) . init) (l !! 3)
           }
       )
   )
@@ -76,8 +78,8 @@ target = (34, 0)
 
 nodeTransfer :: (Node, Node) -> (Node, Node)
 nodeTransfer (n1, n2) =
-  ( n1 {used = 0, avail = size n1, usedPercent = 0},
-    n2 {used = used n2 + used n1, avail = avail n2 - used n1, usedPercent = (used n2 + used n1) `div` (size n2 `div` 100)}
+  ( n1 {used = 0, avail = size n1},
+    n2 {used = used n2 + used n1, avail = avail n2 - used n1}
   )
 
 possibleTransfers :: Map Coordinate Node -> [(Coordinate, Coordinate)]
@@ -94,31 +96,59 @@ possibleTransfers grid =
 isNeighboor :: Coordinate -> Coordinate -> Bool
 isNeighboor (x, y) (x', y') = (x `elem` [x' -1, x' + 1] && y == y') || (y `elem` [y' -1, y' + 1] && x == x')
 
-moveNode :: Coordinate -> (Coordinate -> Bool) -> Grid -> [Grid]
-moveNode c targetFilter g =
-  ( fmap
-      ( \(x, y) ->
+moveNode :: Coordinate -> (Coordinate -> Bool) -> Grid -> [(Coordinate, Coordinate)] -> IO [Grid]
+moveNode c targetFilter g transfers =
+  ( mapM
+      ( \(x, y) -> do
           let (n1, n2) = nodeTransfer (lookup' x g, lookup' y g)
               insertMap = fromList [(x, n1), (y, n2)]
-           in union insertMap g
+          --print $ show x ++ " -> " ++ show y
+          return $ union insertMap g
       )
       . filter (\(c', c'') -> c' == c && targetFilter c'')
-      . possibleTransfers
-  )
-    g
+  ) transfers
 
-nextStatus :: Status -> [Status]
-nextStatus s = undefined
+nextStatus :: Status -> IO [Status]
+nextStatus (t, grid) = do
+  let transfers = possibleTransfers grid
+  targetMoves <- moveNode t (\c -> c == (fst t - 1, 0)) grid transfers
+  if (not . null) targetMoves
+    then return $ fmap (first (\x -> x - 1) t,) targetMoves
+    else do
+    firstRowMoves <- (fmap (concat . filter (not . null)) . traverse (\c -> moveNode c (t /=) grid transfers) . reverse) [(x, 0) | x <- [0 .. fst t - 1]]
+    let ((maxX, maxY), _) = findMax grid
+    otherRowMoves <- (fmap (concat . filter (not . null)) . traverse (\c -> moveNode c (t /=) grid transfers)) [(x, y) | x <- [0 .. maxX], y <- [1 .. maxY]]
+    return $ fmap (t,) $ firstRowMoves ++ otherRowMoves
 
-solution2 :: Int -> [Status] -> Set Status -> Int
+solution2 :: Int -> [Status] -> Set Status -> IO Int
+solution2 _ [] _ = error "no next status generated"
 solution2 steps statuses history
-  | any ((== (0, 0)) . fst) statuses = steps
-  | otherwise =
-    let nextStatuses = (filter (`notElem` history) . concatMap nextStatus) statuses
-     in solution2 (steps + 1) statuses (Set.union (Set.fromList nextStatuses) history)
+  | any ((== (0, 0)) . fst) statuses = return steps
+  | otherwise = do
+    nextStatuses' <- traverse (fmap (filter (`notElem` history)) . nextStatus) statuses
+    let nextStatuses =
+          ( ( \l ->
+                foldl
+                  ( \acc s ->
+                      let accTargetX = (fst . fst . last) acc
+                          sTargetX = (fst . fst) s
+                       in case (accTargetX < sTargetX, accTargetX == sTargetX, accTargetX > sTargetX) of
+                            (True, _, _) -> acc
+                            (_, True, _) -> s : acc
+                            (_, _, True) -> [s]
+                  )
+                  [head l]
+                  (tail l)
+            )
+              . concat
+          )
+            nextStatuses'
+    (print . fst . last) nextStatuses
+    --    _ <- getLine
+    solution2 (steps + 1) nextStatuses (Set.union (Set.fromList nextStatuses) history)
 
 twentysecondDecemberSolution2 :: IO Int
-twentysecondDecemberSolution2 = undefined
+twentysecondDecemberSolution2 = input >>= \x -> solution2 0 [(target, x)] Set.empty
 
 inputTest :: Grid
 inputTest =
@@ -133,5 +163,5 @@ inputTest =
     \/dev/grid/node-x2-y1    9T    8T     1T   88%\n\
     \/dev/grid/node-x2-y2    9T    6T     3T   66%"
 
-test :: Bool
-test = solution2 0 [((2, 0), inputTest)] Set.empty  == 7
+test :: IO Bool
+test = (== 7) <$> solution2 0 [((2, 0), inputTest)] Set.empty
