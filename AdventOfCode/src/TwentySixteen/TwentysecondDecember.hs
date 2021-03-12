@@ -2,6 +2,7 @@
 
 module TwentySixteen.TwentysecondDecember where
 
+import Data.Functor
 import Data.Bifunctor
 import Data.List
 import Data.Map (Map, adjust, fromList, toList)
@@ -92,13 +93,12 @@ isNeighboor (x, y) (x', y') = (x `elem` [x' -1, x' + 1] && y == y') || (y `elem`
 neighboors :: Coordinate -> [Coordinate]
 neighboors (x, y) = [(a, b) | a <- [max 0 (x -1) .. min maxX (x + 1)], b <- [max 0 (y -1) .. min maxY (y + 1)], isNeighboor (a, b) (x, y)]
 
-selectNextMoves :: Set Coordinate -> [(Coordinate, Coordinate)] -> Set Coordinate -> IO [(Coordinate, Coordinate)]
-selectNextMoves targets availableTransfers visited = do
+selectNextMoves :: Set Coordinate -> [(Coordinate, Coordinate)] -> Set Coordinate -> [(Coordinate, Coordinate)]
+selectNextMoves targets availableTransfers visited =
   let selectedTransfers = filter ((`Set.member` targets) . fst) availableTransfers
-  --  print $ "target " ++ show targets ++ " - visited " ++ show visited
-  if null selectedTransfers
-    then selectNextMoves (((`Set.difference` visited) . Set.unions . Set.map (Set.fromList . neighboors)) targets) availableTransfers (Set.union visited targets)
-    else return selectedTransfers
+  in if null selectedTransfers
+     then selectNextMoves (((`Set.difference` visited) . Set.unions . Set.map (Set.fromList . neighboors)) targets) availableTransfers (Set.union visited targets)
+     else selectedTransfers
 
 performTransfer :: Grid -> (Coordinate, Coordinate) -> Grid
 performTransfer grid (x, y) =
@@ -106,51 +106,42 @@ performTransfer grid (x, y) =
       insertMap = fromList [(x, n1), (y, n2)]
    in Map.union insertMap grid
 
-nextStatusAll :: Status -> IO [((Coordinate, (Coordinate, Coordinate)), Status)]
-nextStatusAll (t, grid) = do
-  let nextTargetMove = first (\x -> x - 1) t
-      transfers = filter ((t, second (+ 1) t) /=) $ possibleTransfers grid
-  --nextMoves <- if (t, nextTargetMove) `elem` transfers then return [(t, nextTargetMove)] else selectNextMoves (Set.singleton nextTargetMove) transfers (Set.singleton t)
-  -- print ("nm " ++ show nextMoves)
-  return $
-    fmap
+nextStatusAll :: Status -> [((Coordinate, (Coordinate, Coordinate)), Status)]
+nextStatusAll (t, grid) =
+  let transfers = filter ((t, second (+ 1) t) /=) $ possibleTransfers grid
+  in fmap
       ( \(c1, c2) ->
           let nextGrid = performTransfer grid (c1, c2)
            in if c1 == t then ((t, (c1, c2)), (c2, nextGrid)) else ((t, (c1, c2)), (t, nextGrid))
       )
-      transfers --nextMoves
+      transfers
 
-nextStatus :: Status -> IO [((Coordinate, (Coordinate, Coordinate)), Status)]
-nextStatus (t, grid) = do
+nextStatus :: Status -> [((Coordinate, (Coordinate, Coordinate)), Status)]
+nextStatus (t, grid) =
   let nextTargetMove = first (\x -> x - 1) t
       transfers = filter ((t, second (+ 1) t) /=) $ possibleTransfers grid
-  nextMoves <- if (t, nextTargetMove) `elem` transfers then return [(t, nextTargetMove)] else selectNextMoves (Set.singleton nextTargetMove) transfers (Set.singleton t)
-  -- print ("nm " ++ show nextMoves)
-  return $
-    fmap
+      nextMoves = if (t, nextTargetMove) `elem` transfers then [(t, nextTargetMove)] else selectNextMoves (Set.singleton nextTargetMove) transfers (Set.singleton t)
+  in fmap
       ( \(c1, c2) ->
           let nextGrid = performTransfer grid (c1, c2)
            in if c1 == t then ((t, (c1, c2)), (c2, nextGrid)) else ((t, (c1, c2)), (t, nextGrid))
       )
       nextMoves
 
-solution2 :: [Status] -> Status -> Map Coordinate (Set (Coordinate, Coordinate)) -> IO Int
+solution2 :: [Status] -> Status -> Map Coordinate (Set (Coordinate, Coordinate)) -> Int
 solution2 chain status history
-  | ((== (0, 0)) . fst) status = (return . length) chain
-  | otherwise = do
-    nextSs <- nextStatus status
-    let maybeNextS = find (\((t, c), _) -> (not . Set.member c) ((fromJust . Map.lookup t) history)) nextSs
-    if isNothing maybeNextS
-      then do
-        nextSs' <- nextStatusAll status
-        let maybeNextS' = find (\((t, c), _) -> (not . Set.member c) ((fromJust . Map.lookup t) history)) nextSs'
-        if isNothing maybeNextS'
-          then print "########## backtrack ##########" >> solution2 (init chain) (last chain) (foldl (\h ((t, c), _) -> adjust (Set.insert c) t h) history nextSs')
-          else print ((show . snd . fst . fromJust) maybeNextS') >> solution2 (chain ++ [status]) ((snd . fromJust) maybeNextS') (foldl (\h ((t, c), _) -> adjust (Set.insert c) t h) history maybeNextS')
-      else print ((show . snd . fst . fromJust) maybeNextS) >> solution2 (chain ++ [status]) ((snd . fromJust) maybeNextS) (foldl (\h ((t, c), _) -> adjust (Set.insert c) t h) history maybeNextS)
+  | ((== (0, 0)) . fst) status = length chain
+  | otherwise =
+    let nextSs = nextStatus status
+        maybeNextS = (find (\((t, c), _) -> (not . Set.member c) ((fromJust . Map.lookup t) history)) . sortOn (snd . snd)) nextSs
+        nextSs' = nextStatusAll status
+        maybeNextS' = (find (\((t, c), _) -> (not . Set.member c) ((fromJust . Map.lookup t) history)) . sortOn (snd . snd)) nextSs'
+    in if isNothing maybeNextS
+       then solution2 (takeWhile (status /=) chain ++ [status]) ((snd . fromJust) maybeNextS') (foldl (\h ((t, c), _) -> adjust (Set.insert c) t h) history maybeNextS')
+      else solution2 (takeWhile (status /=) chain ++ [status]) ((snd . fromJust) maybeNextS) (foldl (\h ((t, c), _) -> adjust (Set.insert c) t h) history maybeNextS)
 
 twentysecondDecemberSolution2 :: IO Int
-twentysecondDecemberSolution2 = input >>= \x -> solution2 [] (target, x) startingHistory
+twentysecondDecemberSolution2 = input <&> \x -> solution2 [] (target, x) startingHistory
   where
     startingHistory = fromList [((x, 0), Set.empty) | x <- [0 .. maxX]]
 
@@ -167,7 +158,7 @@ inputTest =
     \/dev/grid/node-x2-y1    9T    8T     1T   88%\n\
     \/dev/grid/node-x2-y2    9T    6T     3T   66%"
 
-test :: IO Bool
-test = (== 7) <$> solution2 [] ((2, 0), inputTest) startingHistory
+test :: Bool
+test = solution2 [] ((2, 0), inputTest) startingHistory == 7
   where
     startingHistory = fromList [((x, 0), Set.empty) | x <- [0 .. 2]]
