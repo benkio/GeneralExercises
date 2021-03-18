@@ -1,26 +1,27 @@
 module TwentySixteen.TwelfthDecember where
 
+import Data.Bifoldable
 import Data.List
 import Data.Map (Map, adjust)
 import qualified Data.Map as Map (fromList, lookup)
 import Data.Maybe
-import Data.Vector (Vector, (!))
-import qualified Data.Vector as Vector (fromList)
+import Data.Sequence (Seq, index)
+import qualified Data.Sequence as Sequence (fromList)
 import Text.Read
 
 data Instruction
   = CPY (Either Int String) String
   | INC String
   | DEC String
-  | JNZ (Either Int String) Int
+  | JNZ (Either Int String) (Either Int String)
   deriving (Show)
 
 registers :: Map String Int
 registers = Map.fromList [("a", 0), ("b", 0), ("c", 0), ("d", 0)]
 
-input :: IO (Vector Instruction)
+input :: IO (Seq Instruction)
 input =
-  Vector.fromList . fmap parseInstruction . lines
+  Sequence.fromList . fmap parseInstruction . lines
     <$> readFile "input/2016/12December.txt"
 
 parseInstruction :: String -> Instruction
@@ -44,13 +45,13 @@ parseInstruction s
         )
           s
       )
-      (((\x -> read x :: Int) . dropWhile (' ' /=) . drop 4) s)
+      (((\x -> maybe (Right x) Left (readMaybe x :: Maybe Int)) . tail . dropWhile (' ' /=) . drop 4) s)
 
-interpreter1 :: Vector Instruction -> Int -> Map String Int -> Map String Int
+interpreter1 :: Seq Instruction -> Int -> Map String Int -> Map String Int
 interpreter1 is pointer regs
   | length is <= pointer = regs
   | otherwise =
-    let (pointer', regs') = interpretInstruction (is ! pointer) pointer regs
+    let (pointer', regs') = interpretInstruction (is `index` pointer) pointer regs
      in interpreter1 is pointer' regs'
 
 interpretInstruction ::
@@ -63,11 +64,15 @@ interpretInstruction (CPY (Left v) r) pointer regs =
 interpretInstruction (CPY (Right r') r) pointer regs =
   (pointer + 1, adjust (const ((fromJust . Map.lookup r') regs)) r regs)
 interpretInstruction (JNZ (Left v) p) pointer regs
-  | v /= 0 = (pointer + p, regs)
+  | v /= 0 = (pointer + p', regs)
   | otherwise = (pointer + 1, regs)
+  where
+    p' = bifoldr const (\x _ -> (fromJust . Map.lookup x) regs) 0 p
 interpretInstruction (JNZ (Right r') p) pointer regs
-  | (fromJust . Map.lookup r') regs /= 0 = (pointer + p, regs)
+  | (fromJust . Map.lookup r') regs /= 0 = (pointer + p', regs)
   | otherwise = (pointer + 1, regs)
+  where
+    p' = bifoldr const (\x _ -> (fromJust . Map.lookup x) regs) 0 p
 
 twelfthDecemberSolution1 :: IO Int
 twelfthDecemberSolution1 =
