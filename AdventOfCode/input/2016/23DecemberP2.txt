@@ -4,16 +4,16 @@ cpy a d
 cpy 0 a
 mul b d
 cpy d a
-cpy 0 c
-cpy 0 c
-cpy 0 c
+noop
+noop
 cpy 0 d
+cpy 0 c
 dec b
 cpy b c
 cpy c d
-add d c
-cpy 0 d
-cpy 0 d
+dec d
+inc c
+jnz d -2
 tgl c
 cpy -16 c
 jnz 1 c
