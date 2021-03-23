@@ -9,7 +9,7 @@ import qualified Data.Set as Set (empty, fromList, union)
 
 -- - Compute the path between all nodes: head to all the rest then tail until empty
 --   Map ((Coordinate, Coordinate), Int)
--- - Look for salesman algorithm to solve the graph.
+-- - Look for salesman algorithm to solve the graph. permutations of all elements and find the min by looking at the graph
 
 data Status = Open | Wall | HVAC Int deriving (Show, Eq)
 
@@ -71,15 +71,18 @@ robotSearch grid visited positions step
 endCondition :: Grid -> Bool
 endCondition = null . Map.filter isHVAC
 
-search :: Grid -> Coordinate -> Int -> IO Int
-search grid startingPoint acc
-  | endCondition grid' = return acc
-  | otherwise = do
-    (newPosition, steps) <- robotSearch grid' Set.empty [startingPoint] 0
-    putStrLn ("newPosition " ++ show newPosition ++ " steps " ++ show steps)
-    search grid' newPosition (acc + steps)
-  where
-    grid' = Map.adjust (const Open) startingPoint grid
+buildGraph :: Grid -> Map (Coordinate, Coordinate) Int
+buildGraph hvacs = undefined
+
+-- search :: Grid -> Coordinate -> Int -> IO Int
+-- search grid startingPoint acc
+--   | endCondition grid' = return acc
+--   | otherwise = do
+--     (newPosition, steps) <- robotSearch grid' Set.empty [startingPoint] 0
+--     putStrLn ("newPosition " ++ show newPosition ++ " steps " ++ show steps)
+--     search grid' newPosition (acc + steps)
+--   where
+--     grid' = Map.adjust (const Open) startingPoint grid
 
 inputTest :: Grid
 inputTest =
@@ -90,13 +93,13 @@ inputTest =
     \#4.......3#\n\
     \###########"
 
-test :: IO Bool
-test = (== 14) <$> search inputTest (0, 0) 0
+-- test :: IO Bool
+-- test = (== 14) <$> search inputTest (0, 0) 0
 
-twentyfourthDecemberSolution1 :: IO Int
-twentyfourthDecemberSolution1 = input >>= (\i -> search i (startingPoint i) 0)
-  where
-    startingPoint = hvacPosition 0
+-- twentyfourthDecemberSolution1 :: IO Int
+-- twentyfourthDecemberSolution1 = input >>= (\i -> search i (startingPoint i) 0)
+--   where
+--     startingPoint = hvacPosition 0
 
 solution2 :: String -> Int
 solution2 = undefined
