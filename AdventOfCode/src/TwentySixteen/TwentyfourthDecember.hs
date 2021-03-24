@@ -4,13 +4,9 @@ module TwentySixteen.TwentyfourthDecember where
 
 import Data.List
 import Data.Map (Map, (!))
-import qualified Data.Map as Map (empty, filter, insert, toList, union, fromList, keys)
+import qualified Data.Map as Map (empty, filter, findMax, fromList, insert, keys, toList, union)
 import Data.Set (Set, notMember)
 import qualified Data.Set as Set (empty, fromList, union)
-
--- - Compute the path between all nodes: head to all the rest then tail until empty
---   Map ((Coordinate, Coordinate), Int)
--- - Look for salesman algorithm to solve the graph. permutations of all elements and find the min by looking at the graph
 
 data Status = Open | Wall | HVAC Int deriving (Show, Eq)
 
@@ -41,7 +37,7 @@ parseGrid = fst . foldl foldLine (Map.empty, 0)
         . init
 
 hvacPosition :: Int -> Grid -> Coordinate
-hvacPosition hvacId = fst . head . Map.toList . Map.filter (HVAC hvacId ==)
+hvacPosition hId = fst . head . Map.toList . Map.filter (HVAC hId ==)
 
 hvacId :: Status -> Maybe Int
 hvacId (HVAC x) = Just x
@@ -55,35 +51,31 @@ isHVAC :: Status -> Bool
 isHVAC (HVAC _) = True
 isHVAC _ = False
 
-maxCell :: Coordinate
-maxCell = (176, 36)
+neighboors :: Coordinate -> Coordinate -> [Coordinate]
+neighboors maxCell (x, y) = [(a, b) | a <- [max 0 (x -1) .. min (fst maxCell) (x + 1)], b <- [max 0 (y -1) .. min (snd maxCell) (y + 1)], (a == x || b == y) && (a /= x || b /= y)]
 
-neighboors :: Coordinate -> [Coordinate]
-neighboors (x, y) = [(a, b) | a <- [max 0 (x -1) .. min (fst maxCell) (x + 1)], b <- [max 0 (y -1) .. min (snd maxCell) (y + 1)], (a == x || b == y) && (a /= x || b /= y)]
-
-robotSearch :: Grid -> Set Coordinate -> [Coordinate] -> Coordinate -> Int -> IO Int
-robotSearch grid visited positions targetPosition step
-  | targetPosition `elem` positions = return step
-  | otherwise = putStrLn ("visited: " ++ (show . length) visited) >> robotSearch grid (Set.union visited (Set.fromList positions)) nextPositions targetPosition (step + 1)
+robotSearch :: Grid -> Set Coordinate -> [Coordinate] -> [Coordinate] -> Int -> [(Coordinate, Int)]
+robotSearch _ _ _ [] _ = []
+robotSearch grid visited positions targetPositions step
+  | any (`elem` targetPositions) positions =
+    let hvac = filter (`elem` targetPositions) positions
+     in fmap (,step) hvac ++ robotSearch grid visited positions (targetPositions \\ hvac) step
+  | otherwise = robotSearch grid (Set.union visited (Set.fromList positions)) nextPositions targetPositions (step + 1)
   where
-    nextPositions = (filter (`notMember` visited) . concatMap neighboors) positions
+    nextPositions = (filter (\x -> x `notMember` visited && x `elem` Map.keys grid) . nub . concatMap (neighboors ((fst . Map.findMax) grid))) positions
 
-buildGraph :: Grid -> [Coordinate] -> IO (Map (Coordinate, Coordinate) Int)
-buildGraph _ [] = return Map.empty
-buildGraph grid (h:hs) = do
-  partialGraph <- mapM (\(c,c') -> (\x -> [((c,c'),x), ((c',c),x)]) <$> robotSearch grid Set.empty [c] c' 0) $ replicate (length hs) h `zip` hs
-  Map.union ((Map.fromList . concat) partialGraph) <$> buildGraph grid hs
+buildGraph :: Grid -> [Coordinate] -> Map (Coordinate, Coordinate) Int
+buildGraph _ [] = Map.empty
+buildGraph grid (h : hs) =
+  let partialGraph = (\(c, x) -> [((h, c), x), ((c, h), x)]) <$> robotSearch grid Set.empty [h] hs 0
+   in Map.union ((Map.fromList . concat) partialGraph) $ buildGraph grid hs
 
 computeSteps :: Map (Coordinate, Coordinate) Int -> [Coordinate] -> Int
 computeSteps graph hvacs = foldl (\acc x -> acc + (graph ! x)) 0 $ hvacs `zip` tail hvacs
 
-search :: Grid -> IO Int
-search grid = do
-  let hvacs = (Map.keys . Map.filter isHVAC) grid
-      initialRobotPosition = hvacPosition 0 grid
-  graph <- buildGraph grid hvacs
-  putStrLn $ show graph
-  ((\(p, x) -> print p >> return x ) . minimumBy (\(_, a) (_, b) -> compare a b) . fmap (\p -> (p, computeSteps graph p)) . filter (\p -> head p == initialRobotPosition) . permutations) hvacs
+search :: [Coordinate] -> ([Coordinate] -> Bool) -> Grid -> Int
+search hvacs filterPermutations grid =
+  (minimum . fmap (computeSteps (buildGraph grid hvacs)) . filter filterPermutations . permutations) hvacs
 
 inputTest :: Grid
 inputTest =
@@ -94,14 +86,23 @@ inputTest =
     \#4.......3#\n\
     \###########"
 
-test :: IO Bool
-test = (== 14) <$> search inputTest
+test :: Bool
+test = search hvacs filterPermutations inputTest == 14
+  where
+    hvacs = (Map.keys . Map.filter isHVAC) inputTest
+    initialRobotPosition = hvacPosition 0 inputTest
+    filterPermutations = \p -> head p == initialRobotPosition
 
 twentyfourthDecemberSolution1 :: IO Int
-twentyfourthDecemberSolution1 = input >>= search
-
-solution2 :: String -> Int
-solution2 = undefined
+twentyfourthDecemberSolution1 = (\x -> search (hvacs x) (filterPermutations x) x) <$> input
+  where
+    hvacs x = (Map.keys . Map.filter isHVAC) x
+    initialRobotPosition x = hvacPosition 0 x
+    filterPermutations = \x p -> head p == initialRobotPosition x
 
 twentyfourthDecemberSolution2 :: IO Int
-twentyfourthDecemberSolution2 = undefined
+twentyfourthDecemberSolution2 = (\x -> search (hvacs x) (filterPermutations x) x) <$> input
+  where
+    hvacs x = (Map.keys . Map.filter isHVAC) x ++ [initialRobotPosition x]
+    initialRobotPosition x = hvacPosition 0 x
+    filterPermutations = \x p -> head p == initialRobotPosition x && last p == initialRobotPosition x

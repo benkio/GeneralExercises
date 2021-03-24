@@ -1,9 +1,7 @@
-{-# LANGUAGE TupleSections #-}
-
 module TwentySixteen.TwentysecondDecember where
 
-import Data.Functor
 import Data.Bifunctor
+import Data.Functor
 import Data.List
 import Data.Map (Map, adjust, fromList, toList)
 import qualified Data.Map as Map (insert, lookup, singleton, union)
@@ -96,9 +94,9 @@ neighboors (x, y) = [(a, b) | a <- [max 0 (x -1) .. min maxX (x + 1)], b <- [max
 selectNextMoves :: Set Coordinate -> [(Coordinate, Coordinate)] -> Set Coordinate -> [(Coordinate, Coordinate)]
 selectNextMoves targets availableTransfers visited =
   let selectedTransfers = filter ((`Set.member` targets) . fst) availableTransfers
-  in if null selectedTransfers
-     then selectNextMoves (((`Set.difference` visited) . Set.unions . Set.map (Set.fromList . neighboors)) targets) availableTransfers (Set.union visited targets)
-     else selectedTransfers
+   in if null selectedTransfers
+        then selectNextMoves (((`Set.difference` visited) . Set.unions . Set.map (Set.fromList . neighboors)) targets) availableTransfers (Set.union visited targets)
+        else selectedTransfers
 
 performTransfer :: Grid -> (Coordinate, Coordinate) -> Grid
 performTransfer grid (x, y) =
@@ -109,24 +107,24 @@ performTransfer grid (x, y) =
 nextStatusAll :: Status -> [((Coordinate, (Coordinate, Coordinate)), Status)]
 nextStatusAll (t, grid) =
   let transfers = filter ((t, second (+ 1) t) /=) $ possibleTransfers grid
-  in fmap
-      ( \(c1, c2) ->
-          let nextGrid = performTransfer grid (c1, c2)
-           in if c1 == t then ((t, (c1, c2)), (c2, nextGrid)) else ((t, (c1, c2)), (t, nextGrid))
-      )
-      transfers
+   in fmap
+        ( \(c1, c2) ->
+            let nextGrid = performTransfer grid (c1, c2)
+             in if c1 == t then ((t, (c1, c2)), (c2, nextGrid)) else ((t, (c1, c2)), (t, nextGrid))
+        )
+        transfers
 
 nextStatus :: Status -> [((Coordinate, (Coordinate, Coordinate)), Status)]
 nextStatus (t, grid) =
   let nextTargetMove = first (\x -> x - 1) t
       transfers = filter ((t, second (+ 1) t) /=) $ possibleTransfers grid
       nextMoves = if (t, nextTargetMove) `elem` transfers then [(t, nextTargetMove)] else selectNextMoves (Set.singleton nextTargetMove) transfers (Set.singleton t)
-  in fmap
-      ( \(c1, c2) ->
-          let nextGrid = performTransfer grid (c1, c2)
-           in if c1 == t then ((t, (c1, c2)), (c2, nextGrid)) else ((t, (c1, c2)), (t, nextGrid))
-      )
-      nextMoves
+   in fmap
+        ( \(c1, c2) ->
+            let nextGrid = performTransfer grid (c1, c2)
+             in if c1 == t then ((t, (c1, c2)), (c2, nextGrid)) else ((t, (c1, c2)), (t, nextGrid))
+        )
+        nextMoves
 
 solution2 :: [Status] -> Status -> Map Coordinate (Set (Coordinate, Coordinate)) -> Int
 solution2 chain status history
@@ -136,9 +134,9 @@ solution2 chain status history
         maybeNextS = (find (\((t, c), _) -> (not . Set.member c) ((fromJust . Map.lookup t) history)) . sortOn (snd . snd)) nextSs
         nextSs' = nextStatusAll status
         maybeNextS' = (find (\((t, c), _) -> (not . Set.member c) ((fromJust . Map.lookup t) history)) . sortOn (snd . snd)) nextSs'
-    in if isNothing maybeNextS
-       then solution2 (takeWhile (status /=) chain ++ [status]) ((snd . fromJust) maybeNextS') (foldl (\h ((t, c), _) -> adjust (Set.insert c) t h) history maybeNextS')
-      else solution2 (takeWhile (status /=) chain ++ [status]) ((snd . fromJust) maybeNextS) (foldl (\h ((t, c), _) -> adjust (Set.insert c) t h) history maybeNextS)
+     in if isNothing maybeNextS
+          then solution2 (takeWhile (status /=) chain ++ [status]) ((snd . fromJust) maybeNextS') (foldl (\h ((t, c), _) -> adjust (Set.insert c) t h) history maybeNextS')
+          else solution2 (takeWhile (status /=) chain ++ [status]) ((snd . fromJust) maybeNextS) (foldl (\h ((t, c), _) -> adjust (Set.insert c) t h) history maybeNextS)
 
 twentysecondDecemberSolution2 :: IO Int
 twentysecondDecemberSolution2 = input <&> \x -> solution2 [] (target, x) startingHistory
