@@ -1,0 +1,84 @@
+
+Skip to content
+Pull requests
+Issues
+Marketplace
+Explore
+@benkio
+scala /
+scala3-example-project
+
+46
+289
+
+    103
+
+Code
+Issues 2
+Pull requests 1
+Actions
+Security
+
+    Insights
+
+scala3-example-project/.gitignore
+@ShapelessCat
+ShapelessCat Update .gitignore
+Latest commit ce8172a on 28 Dec 2020
+History
+4 contributors
+@smarter
+@ShapelessCat
+@nicolasstucki
+@ferhtaydn
+35 lines (30 sloc) 370 Bytes
+.DS_Store
+*.class
+*.log
+*~
+
+# sbt specific
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+project/local-plugins.sbt
+.history
+.bsp
+
+# Scala-IDE specific
+.scala_dependencies
+.cache
+.classpath
+.project
+.settings
+classes/
+
+# idea
+.idea
+.idea_modules
+/.worksheet/
+
+# Dotty-IDE
+.dotty-ide-artifact
+.dotty-ide.json
+
+# Visual Studio Code
+.vscode
+
+    © 2021 GitHub, Inc.
+    Terms
+    Privacy
+    Security
+    Status
+    Docs
+
+    Contact GitHub
+    Pricing
+    API
+    Training
+    Blog
+    About
+
