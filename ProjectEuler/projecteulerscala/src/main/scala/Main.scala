@@ -5,6 +5,9 @@
   Es4:  ${pad(ProjectEuler.es4)} Es5: ${pad(ProjectEuler.es5)} Es6: ${pad(ProjectEuler.es6)}
   Es7:  ${pad(ProjectEuler.es7)} Es8: ${pad(ProjectEuler.es8)} Es9: ${pad(ProjectEuler.es9)}
   Es10: ${pad(ProjectEuler.es10)}
+
+  ******************** Problems Results 11-20 ********************
+  Es11:  ${pad(ProjectEuler2.es11)}
   """)
 
 def pad[A: Numeric](x: A): String = x.toString.padTo(15, " ").mkString
