@@ -1,4 +1,5 @@
 import scala.collection._
+import scala.math._
 
 object ProjectEuler2:
   def es11: Int =
@@ -42,3 +43,11 @@ object ProjectEuler2:
     def maxBy4(xss: Iterable[Iterable[Int]]): Int =
       xss.map(xs => xs.sliding(4, 1).map(_.product).max).max
     List(horizontally, vertically, diagonallyLeft, diagonallyRight).map(maxBy4).max
+
+  def es12: Long =
+    def totalFactors(n: Long): Int =
+      val divisors1 = (1 to ((sqrt(n.toDouble).round).toInt)).filter(n % _ == 0)
+      (divisors1 ++ divisors1.map(n / _)).length
+    val triangularNumbers: LazyList[Long] =
+      LazyList.iterate(1L)(_ + 1L).scanLeft(0L) { case (sum, x) => sum + x }
+    triangularNumbers.find(totalFactors(_) > 500).get
