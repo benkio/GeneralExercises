@@ -8,6 +8,7 @@
 
   ******************** Problems Results 11-20 ********************
   Es11:  ${pad(ProjectEuler2.es11)} Es12: ${pad(ProjectEuler2.es12)} Es13: ${ProjectEuler2.es13}
+  Es14:  ${pad(ProjectEuler2.es14)}
   """)
 
 def pad[A: Numeric](x: A): String = x.toString.padTo(15, " ").mkString

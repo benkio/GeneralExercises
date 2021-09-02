@@ -170,7 +170,7 @@ object ProjectEuler2:
       //  println(s"value: $value - result: $result - visited: ${visited.size}")
       value match {
         case v if visited.contains(v) => go(v + 1, result, visited)
-        case v if v == 100000 => result
+        case v if v == 1000000 => result
         case v => {
           val (currentChain, visitedCount) = chainLength(v, List.empty, visited)
           go(
