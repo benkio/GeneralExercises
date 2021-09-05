@@ -182,3 +182,6 @@ object ProjectEuler2:
       }
     }
     go(1, 0, Map.empty)
+
+  def es15: BigInt =
+    Range.BigInt(1, 40, 1).product / (Range.BigInt(1, 20, 1).product * Range.BigInt(1, 20, 1).product)
