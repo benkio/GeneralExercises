@@ -159,7 +159,11 @@ object ProjectEuler2:
 
   def es14: Long =
     @tailrec
-    def chainLength(value: Long, computed: List[Long], visited: Map[Long, Long]): (List[Long], Long) =
+    def chainLength(
+        value: Long,
+        computed: List[Long],
+        visited: Map[Long, Long]
+    ): (List[Long], Long) =
       value match {
         case v if v == 1                   => (1 :: computed, 0)
         case v if visited.get(v).isDefined => (computed, visited(v))
@@ -170,12 +174,16 @@ object ProjectEuler2:
       //  println(s"value: $value - result: $result - visited: ${visited.size}")
       value match {
         case v if visited.contains(v) => go(v + 1, result, visited)
-        case v if v == 1000000 => result
+        case v if v == 1000000        => result
         case v => {
           val (currentChain, visitedCount) = chainLength(v, List.empty, visited)
           go(
             v + 1,
-            if visited.get(result).isEmpty || (currentChain.length + visitedCount) > visited(result) then v else result,
+            if visited.get(result).isEmpty || (currentChain.length + visitedCount) > visited(
+                result
+              )
+            then v
+            else result,
             visited ++ List((v -> (currentChain.length + visitedCount)))
           )
         }
@@ -184,4 +192,51 @@ object ProjectEuler2:
     go(1, 0, Map.empty)
 
   def es15: BigInt =
-    Range.BigInt(1, 40, 1).product / (Range.BigInt(1, 20, 1).product * Range.BigInt(1, 20, 1).product)
+    Range
+      .BigInt(1, 40, 1)
+      .product / (Range.BigInt(1, 20, 1).product * Range.BigInt(1, 20, 1).product)
+
+  def es16: Int =
+    BigInt(2).pow(1000).toString.map(_.asDigit).sum
+
+  def es17 =
+    def speak(num: Int, printZero: Boolean = true): String = num match {
+      case x if (x < 0) => s"negative ${speak(-num)}"
+      case x if (num >= 1000000000) =>
+        s"${speak(num / 1000000000)} billion ${speak(num % 1000000000, false)}"
+      case x if (num >= 1000000) =>
+        s"${speak(num / 1000000)} million ${speak(num % 1000000, false)}"
+      case x if (num >= 1000) => s"${speak(num / 1000)} thousand ${speak(num % 1000, false)}"
+      case x if (num >= 100) && (num % 100 > 0) =>
+        s"${speak(num / 100)} hundred and ${speak(num % 100, false)}"
+      case x if (num >= 100) && !(num % 100 > 0) => s"${speak(num / 100)} hundred"
+      case x if (num >= 20) =>
+        (num / 10) match {
+          case 2     => s"twenty ${speak(num % 10, false)}"
+          case 3     => s"thirty ${speak(num % 10, false)}"
+          case 4     => s"forty ${speak(num % 10, false)}"
+          case 5     => s"fifty ${speak(num % 10, false)}"
+          case n @ _ => s"${speak(n).stripSuffix("t")}ty ${speak(num % 10, false)}"
+        }
+      case 0     => if printZero then "zero" else ""
+      case 1     => "one"
+      case 2     => "two"
+      case 3     => "three"
+      case 4     => "four"
+      case 5     => "five"
+      case 6     => "six"
+      case 7     => "seven"
+      case 8     => "eight"
+      case 9     => "nine"
+      case 10    => "ten"
+      case 11    => "eleven"
+      case 12    => "twelve"
+      case 13    => "thirteen"
+      case 15    => "fifteen";
+      case n @ _ => s"${speak(n - 10).stripSuffix("t")}teen"
+    }
+    (1 to 1000).map(n => speak(n).filterNot(_.isSpaceChar).length).sum
+
+  def es18 = ???
+  def es19 = ???
+  def es20 = ???
