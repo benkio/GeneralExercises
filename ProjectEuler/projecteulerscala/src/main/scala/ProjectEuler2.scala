@@ -290,4 +290,9 @@ object ProjectEuler2:
       case _ => false
     }.length
 
-  def es20 = ???
+  def es20 = 
+    List.range[BigInt](1, 101)
+      .product
+      .toString
+      .map(_.asDigit)
+      .sum
