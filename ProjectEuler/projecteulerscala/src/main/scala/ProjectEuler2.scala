@@ -261,5 +261,33 @@ object ProjectEuler2:
     }
     result.head
 
-  def es19 = ???
+  def es19 =
+    def nextDay(day: String): String = day match {
+      case "Monday"    => "Tuesday"
+      case "Tuesday"   => "Wednesday"
+      case "Wednesday" => "Thursday"
+      case "Thursday"  => "Friday"
+      case "Friday"    => "Saturday"
+      case "Saturday"  => "Sunday"
+      case "Sunday"    => "Monday"
+    }
+    val days = LazyList.iterate("Monday")(nextDay)
+    def monthDays(month: Int, year: Int): Int = month match {
+      case x if List(9, 4, 6, 11).contains(x) => 30
+      case x if x == 2 && isLeap(year)        => 29
+      case x if x == 2 && !isLeap(year)       => 28
+      case _                                  => 31
+    }
+    def isLeap(year: Int): Boolean =
+      (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+    val totalDays = for {
+      y <- (1900 to 2000)
+      m <- (1 to 12)
+      d <- (1 to monthDays(m, y))
+    } yield (d, m, y)
+    days.zip(totalDays).filter{
+      case ("Sunday", (1, _, y)) if y >= 1901 => true
+      case _ => false
+    }.length
+
   def es20 = ???
