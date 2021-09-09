@@ -3,6 +3,7 @@ import scala.annotation._
 import scala.math._
 
 object ProjectEuler2:
+
   def es11: Int =
     val input: String =
       s"""08 02 22 97 38 15 00 40 00 75 04 05 07 78 52 12 50 77 91 08
@@ -171,7 +172,6 @@ object ProjectEuler2:
         case v => chainLength(v * 3 + 1, v :: computed, visited)
       }
     def go(value: Long, result: Long, visited: Map[Long, Long]): Long = {
-      //  println(s"value: $value - result: $result - visited: ${visited.size}")
       value match {
         case v if visited.contains(v) => go(v + 1, result, visited)
         case v if v == 1000000        => result
