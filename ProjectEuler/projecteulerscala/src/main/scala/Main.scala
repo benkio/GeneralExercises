@@ -11,6 +11,9 @@
   Es14:  ${pad(ProjectEuler2.es14)} Es15: ${pad(ProjectEuler2.es15)} Es16: ${pad(ProjectEuler2.es16)}
   Es17:  ${pad(ProjectEuler2.es17)} Es18: ${pad(ProjectEuler2.es18)} Es19: ${pad(ProjectEuler2.es19)}
   Es20:  ${pad(ProjectEuler2.es20)}
+
+  ******************** Problems Results 21-30 ********************
+  Es21:  ${pad(ProjectEuler3.es21)}
   """)
 
 def pad[A: Numeric](x: A): String = x.toString.padTo(15, " ").mkString

@@ -46,13 +46,13 @@ object ProjectEuler2:
       xss.map(xs => xs.sliding(4, 1).map(_.product).max).max
     List(horizontally, vertically, diagonallyLeft, diagonallyRight).map(maxBy4).max
 
+  def findFactors(n: Long): List[Int] =
+    val divisors1 = (1 to ((sqrt(n.toDouble).round).toInt)).filter(n % _ == 0)
+    (divisors1 ++ divisors1.map(n.toInt / _)).toList
   def es12: Long =
-    def totalFactors(n: Long): Int =
-      val divisors1 = (1 to ((sqrt(n.toDouble).round).toInt)).filter(n % _ == 0)
-      (divisors1 ++ divisors1.map(n / _)).length
     val triangularNumbers: LazyList[Long] =
       LazyList.iterate(1L)(_ + 1L).scanLeft(0L) { case (sum, x) => sum + x }
-    triangularNumbers.find(totalFactors(_) > 500).get
+    triangularNumbers.find(findFactors(_).length > 500).get
 
   def es13: String =
     val input: String =
@@ -285,13 +285,17 @@ object ProjectEuler2:
       m <- (1 to 12)
       d <- (1 to monthDays(m, y))
     } yield (d, m, y)
-    days.zip(totalDays).filter{
-      case ("Sunday", (1, _, y)) if y >= 1901 => true
-      case _ => false
-    }.length
+    days
+      .zip(totalDays)
+      .filter {
+        case ("Sunday", (1, _, y)) if y >= 1901 => true
+        case _                                  => false
+      }
+      .length
 
-  def es20 = 
-    List.range[BigInt](1, 101)
+  def es20 =
+    List
+      .range[BigInt](1, 101)
       .product
       .toString
       .map(_.asDigit)
