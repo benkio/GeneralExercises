@@ -2,7 +2,7 @@
 
 module ProjectEuler3 where
 
-import Data.List (find, sort)
+import Data.List (find, sort, (\\))
 import Data.Maybe (fromJust, isJust)
 import qualified Data.Text as T (pack, replace, splitOn, unpack)
 import ProjectEuler2 (findDivisors)
@@ -40,3 +40,20 @@ nameScore = sum . fmap (\c -> maybe 0 snd $ find ((== c) . fst) alphabetIndexed)
 
 es22 :: IO Int
 es22 = sum . zipWith (*) [1 ..] . fmap nameScore <$> es22Input
+
+-- Es 23 ---------------------------------------------------------------
+
+limitComposedAbundantNumbers :: Int
+limitComposedAbundantNumbers = 28123
+
+isAbundant :: Int -> Bool
+isAbundant x = ((> x) . sum . filter (/= x). findDivisors) x
+
+abundantNumbers :: [Int]
+abundantNumbers = [x | x <- [12..limitComposedAbundantNumbers], isAbundant x]
+
+composedAbundantNumbers :: [Int]
+composedAbundantNumbers = undefined
+
+es23 :: Int
+es23 = (sum . filter (`notElem` composedAbundantNumbers)) [1..limitComposedAbundantNumbers]
