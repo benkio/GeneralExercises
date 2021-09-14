@@ -1,3 +1,4 @@
+import io.Source._
 import scala.collection._
 import scala.annotation._
 import scala.math._
@@ -23,3 +24,26 @@ object ProjectEuler3:
   }
 
   def es21: Int = findAmicableNumbersSeq(List.range(1, 10000), Set.empty).sum
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  def es22Input: List[String] =
+    fromInputStream(getClass.getResourceAsStream("/p022_names.txt")).mkString
+      .split("\",\"")
+      .map(_.replace("\"", ""))
+      .sorted
+      .toList
+
+  val alphabethIndexed: List[(Char, Int)] =
+    ('A' to 'Z').zip(1 to 26).toList
+
+  def calculateNameScore(name: String): Int =
+    name.map(c => alphabethIndexed.find(_._1 == c).map(_._2).getOrElse(0)).sum
+
+  def es22: Int =
+    es22Input
+      .zip(LazyList.from(1))
+      .map { case (name, index) =>
+        calculateNameScore(name) * index
+      }
+      .sum
