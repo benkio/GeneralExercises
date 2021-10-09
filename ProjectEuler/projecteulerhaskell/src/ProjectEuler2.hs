@@ -241,7 +241,6 @@ es16 :: Int
 es16 = (sum . fmap digitToInt. show)(2 ^ (1000 :: Integer))
 
 -- Es 17 ------------------------------------------------------
-
 oneDigitNumMap :: [(Int, String)]
 oneDigitNumMap = [
   (0, ""), -- not used: eg ten, twenty...
