@@ -28,7 +28,7 @@ library:
     - parallel
     - text
     - containers
-    
+
 executables:
   projecteulerhaskell-exe:
     main:                Main.hs
@@ -39,6 +39,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - projecteulerhaskell
+    - timeit
 
 tests:
   projecteulerhaskell-test:

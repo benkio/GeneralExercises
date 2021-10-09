@@ -2,18 +2,20 @@
 
 module ProjectEuler3 where
 
-import Data.List (find, sort, (\\))
+
+import Data.List (find, sort, (\\), tails)
 import Data.Maybe (fromJust, isJust)
-import qualified Data.Set as S (Set, fromList, toList, cartesianProduct, map, filter, notMember)
+import qualified Data.Set as Set (Set, fromList, toList, cartesianProduct, map, filter, notMember, empty, union)
 import qualified Data.Text as T (pack, replace, splitOn, unpack)
 import ProjectEuler2 (findDivisors)
+import ProjectEuler
 
 -- Es 21 ----------------------------------------------------------------------
 
 amicableNum :: Int -> Maybe [Int]
 amicableNum x =
-  let divisorSum = (sum . filter (/= x) . S.toList . findDivisors) x
-      amicableDivisorSum = (sum . filter (/= divisorSum) .  S.toList . findDivisors) divisorSum
+  let divisorSum = (sum . findDivisors) x
+      amicableDivisorSum = (sum . findDivisors) divisorSum
    in if amicableDivisorSum == x && x /= divisorSum then Just [x, divisorSum] else Nothing
 
 findAmicables :: [Int] -> [Int] -> [Int]
@@ -31,7 +33,7 @@ es21 = sum $ findAmicables [1 .. 10000] []
 -- Es 22 ---------------------------------------------------------------
 
 es22Input :: IO [String]
-es22Input = sort . fmap (T.unpack . T.replace "\"" "") . T.splitOn "\",\"" . T.pack <$> readFile "p022_names.txt"
+es22Input = sort . fmap (T.unpack . T.replace "\"" "") . T.splitOn "\",\"" . T.pack <$> readFile "data/p022_names.txt"
 
 alphabetIndexed :: [(Char, Int)]
 alphabetIndexed = ['A' .. 'Z'] `zip` [1 ..]
@@ -44,17 +46,17 @@ es22 = sum . zipWith (*) [1 ..] . fmap nameScore <$> es22Input
 
 -- Es 23 ---------------------------------------------------------------
 
-limitComposedAbundantNumbers :: Int
-limitComposedAbundantNumbers = 28123
+limit :: Int
+limit = 28123
 
 isAbundant :: Int -> Bool
-isAbundant x = ((> x) . sum . filter (/= x). S.toList . findDivisors) x
+isAbundant x = ((> x) . sum . findDivisors) x
 
-abundantNumbers :: [Int]
-abundantNumbers = [x | x <- [12..limitComposedAbundantNumbers], isAbundant x]
+abundants :: [Int]
+abundants = [x | x <- [1..limit], isAbundant x]
 
-composedAbundantNumbers :: S.Set Int
-composedAbundantNumbers = (S.filter (< limitComposedAbundantNumbers) . S.map (uncurry (+))) $ S.cartesianProduct (S.fromList abundantNumbers) (S.fromList abundantNumbers)
+abundantsSum :: Set.Set Int
+abundantsSum = Set.fromList [ x + y | (x:ys) <- tails abundants, y <- x:ys, x + y <= 28123 ]
 
 es23 :: Int
-es23 = undefined -- (sum . filter (`S.notMember` composedAbundantNumbers)) [1..limitComposedAbundantNumbers]
+es23 = sum $ [1..limit] \\ Set.toList abundantsSum
