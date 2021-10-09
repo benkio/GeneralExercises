@@ -4,6 +4,7 @@ module ProjectEuler2 where
 import Data.List (transpose, foldr, foldl', find, cycle, isPrefixOf, isSuffixOf)
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Char (digitToInt)
+import qualified Data.Set as S (Set, fromList)
 import Control.Monad ((>>=))
 import Control.Applicative ((<$>))
 
@@ -84,11 +85,11 @@ maxGrid' = maximum [maxVertical, maxHorizontal, maxDiagonalSlash, maxDiagonalBac
 triangleNumbers :: [Int]
 triangleNumbers = tail $ scanl (+) 0 [1..]
 
-findDivisors :: Int -> [Int]
+findDivisors :: Int -> S.Set Int
 findDivisors n =
   let divisors = filter ((==0) . mod n) [1..((round . sqrt . fromIntegral) n)]
       divisors' = fmap (div n) divisors
-  in  divisors ++ divisors'
+  in  S.fromList $ divisors ++ divisors'
 
 triangleNumberWith500Divisors :: Int
 triangleNumberWith500Divisors = find' 500 triangleNumbers -- find from Data.List is not very efficient!!!

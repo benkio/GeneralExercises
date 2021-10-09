@@ -4,6 +4,7 @@ module ProjectEuler3 where
 
 import Data.List (find, sort, (\\))
 import Data.Maybe (fromJust, isJust)
+import qualified Data.Set as S (Set, fromList, toList, cartesianProduct, map, filter, notMember)
 import qualified Data.Text as T (pack, replace, splitOn, unpack)
 import ProjectEuler2 (findDivisors)
 
@@ -11,8 +12,8 @@ import ProjectEuler2 (findDivisors)
 
 amicableNum :: Int -> Maybe [Int]
 amicableNum x =
-  let divisorSum = (sum . filter (/= x) . findDivisors) x
-      amicableDivisorSum = (sum . filter (/= divisorSum) . findDivisors) divisorSum
+  let divisorSum = (sum . filter (/= x) . S.toList . findDivisors) x
+      amicableDivisorSum = (sum . filter (/= divisorSum) .  S.toList . findDivisors) divisorSum
    in if amicableDivisorSum == x && x /= divisorSum then Just [x, divisorSum] else Nothing
 
 findAmicables :: [Int] -> [Int] -> [Int]
@@ -47,13 +48,13 @@ limitComposedAbundantNumbers :: Int
 limitComposedAbundantNumbers = 28123
 
 isAbundant :: Int -> Bool
-isAbundant x = ((> x) . sum . filter (/= x). findDivisors) x
+isAbundant x = ((> x) . sum . filter (/= x). S.toList . findDivisors) x
 
 abundantNumbers :: [Int]
 abundantNumbers = [x | x <- [12..limitComposedAbundantNumbers], isAbundant x]
 
-composedAbundantNumbers :: [Int]
-composedAbundantNumbers = undefined
+composedAbundantNumbers :: S.Set Int
+composedAbundantNumbers = (S.filter (< limitComposedAbundantNumbers) . S.map (uncurry (+))) $ S.cartesianProduct (S.fromList abundantNumbers) (S.fromList abundantNumbers)
 
 es23 :: Int
-es23 = (sum . filter (`notElem` composedAbundantNumbers)) [1..limitComposedAbundantNumbers]
+es23 = undefined -- (sum . filter (`S.notMember` composedAbundantNumbers)) [1..limitComposedAbundantNumbers]
