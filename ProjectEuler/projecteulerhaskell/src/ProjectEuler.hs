@@ -1,7 +1,5 @@
 module ProjectEuler where
 
-import Control.Parallel.Strategies (using, rpar, parListChunk)
-import Data.List (find, sort)
 import Data.Maybe (fromJust, isJust)
 
 -- Es 1
@@ -15,14 +13,17 @@ es2 = sum $ takeWhile (< 4000000) $ filter even fibonacci
     fibonacci = [1, 2] ++ zipWith (+) fibonacci (tail fibonacci)
 
 -- Es 3
+primes :: [Int]
 primes = 2 : filter (null . tail . primeFactors) [3,5..]
 
+primeFactors :: Int -> [Int]
 primeFactors n = factor n primes
   where
-    factor n (p:ps)
-        | p*p > n        = [n]
-        | n `mod` p == 0 = p : factor (n `div` p) (p:ps)
-        | otherwise      =     factor n ps
+    factor _ [] = []
+    factor v (p:ps)
+        | p*p > v        = [v]
+        | v `mod` p == 0 = p : factor (v `div` p) (p:ps)
+        | otherwise      =     factor v ps
 
 es3 :: Int
 es3 = let target = 600851475143
@@ -42,8 +43,9 @@ es5 = head [x | x <- [20, 40..], all (\p -> x `mod` p == 0 ) [11..20]]
 -- Es 6
 es6 :: Int
 es6 =
-  let squared100N = foldl (+) 0 [x ^ 2 | x <- [1..100]]
-      sumSquared100N = (^2) $ foldl (+) 0 [1..100]
+  let
+    squared100N = sum [x * x | x <- [1..100]]
+    sumSquared100N = (\x -> x * x) $ sum [1..100]
   in sumSquared100N - squared100N
 
 -- Es 7
@@ -53,7 +55,7 @@ es7 = primes !! 10001
 -- Es 8
 chunksOfMax :: Int -> Int -> String -> Integer
 chunksOfMax acc 0 _ = toInteger acc
-chunksOfMax acc n [] = toInteger acc
+chunksOfMax acc _ [] = toInteger acc
 chunksOfMax acc n xs =
   let current = foldl (\x y -> x * (read [y] :: Int)) 1 (take n xs)
   in if current > acc then chunksOfMax current n (tail xs) else chunksOfMax acc n (tail xs)
@@ -71,17 +73,18 @@ findMN = findCoeff [1..]
     formula m =
       let (d, r) = (500 `divMod` m)
       in if r == 0 then Just (d - m) else Nothing
+    findCoeff [] = error "not reachable"
     findCoeff (n:ns)
-      | isJust m && (fromJust m) ^ 2 < n ^ 2 = (n, fromJust m)
+      | isJust m && fromJust m * fromJust m < n*n = (n, fromJust m)
       | otherwise = findCoeff ns
         where m = formula n
 
 es9 :: Int
 es9 =
   let (m, n) = findMN
-      a = m^2 - n^2
+      a = m*m - n*n
       b = 2 * m * n
-      c = m^2 + n^2
+      c = m*m + n*n
   in a * b * c
 
 -- Es 10

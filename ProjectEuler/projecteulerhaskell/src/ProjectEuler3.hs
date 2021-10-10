@@ -2,13 +2,12 @@
 
 module ProjectEuler3 where
 
-
-import Data.List (find, sort, (\\), tails)
+import Data.List (find, sort, (\\))
 import Data.Maybe (fromJust, isJust)
-import qualified Data.Set as Set (Set, fromList, toList, cartesianProduct, map, filter, notMember, empty, union)
+import qualified Data.Set as Set (Set, fromList, toList, empty, union)
 import qualified Data.Text as T (pack, replace, splitOn, unpack)
 import ProjectEuler2 (findDivisors)
-import ProjectEuler
+--import ProjectEuler
 
 -- Es 21 ----------------------------------------------------------------------
 
@@ -55,8 +54,9 @@ isAbundant x = ((> x) . sum . findDivisors) x
 abundants :: [Int]
 abundants = [x | x <- [1..limit], isAbundant x]
 
-abundantsSum :: Set.Set Int
-abundantsSum = Set.fromList [ x + y | (x:ys) <- tails abundants, y <- x:ys, x + y <= 28123 ]
+abundantsSum :: Set.Set Int -> [Int] -> Set.Set Int
+abundantsSum acc [] = acc
+abundantsSum acc abus@(x:xs) = abundantsSum (((acc `Set.union`) . Set.fromList . filter (<= limit) . fmap (+x)) abus) xs
 
 es23 :: Int
-es23 = sum $ [1..limit] \\ Set.toList abundantsSum
+es23 = sum $ [1..limit] \\ Set.toList (abundantsSum Set.empty abundants)

@@ -1,12 +1,12 @@
 {-# LANGUAGE TupleSections #-}
 module ProjectEuler2 where
 
-import Data.List (transpose, foldr, foldl', find, cycle, isPrefixOf, isSuffixOf, union)
-import Data.Maybe (Maybe(..), fromJust)
+import Data.List (transpose, union, foldl', find, isPrefixOf, isSuffixOf)
+import Data.Maybe (fromJust)
 import Data.Char (digitToInt)
-import qualified Data.Set as S (Set, fromList)
-import Control.Monad ((>>=))
-import Control.Applicative ((<$>))
+--import qualified Data.Set as S (Set, fromList)
+-- import Control.Monad ((>>=))
+-- import Control.Applicative ((<$>))
 
 
 -- Es 11 ----------------------------------------------------------------------
@@ -34,7 +34,7 @@ inputGrid =
  \ 01 70 54 71 83 51 54 69 16 92 33 48 61 43 52 01 89 19 67 48"
 
 readIntLines :: String -> [[Int]]
-readIntLines = (fmap (fmap (\x -> read x :: Int) . words) . lines)
+readIntLines = fmap (fmap (\x -> read x :: Int) . words) . lines
 
 horizontal :: [[Int]]
 horizontal = readIntLines inputGrid
@@ -87,8 +87,11 @@ triangleNumbers = tail $ scanl (+) 0 [1..]
 
 findDivisors :: Int -> [Int]
 findDivisors n =
-  let divisors = filter ((==0) . mod n) [1..((round . sqrt . fromIntegral) n)]
-      divisors' = (fmap (div n) . drop 1) divisors
+  let
+    isqrt :: Int -> Int
+    isqrt x = floor . sqrt $ (fromIntegral x :: Float)
+    divisors = filter ((==0) . mod n) [1..isqrt n]
+    divisors' = (fmap (div n) . drop 1) divisors
   in  divisors `union` divisors'
 
 es12 :: Int
@@ -209,7 +212,7 @@ es13 = (take 10 . show . sum . fmap (\x -> read x :: Integer) . lines) inputGrid
 
 generator :: Int -> Int
 generator n
-  | n `mod` 2 == 0 = n `div` 2
+  | even n = n `div` 2
   | otherwise = 3 * n + 1
 
 collatzSequence :: Int -> Int
@@ -238,7 +241,7 @@ es15 =
 -- Es 16 -----------------------------------------------------------------
 
 es16 :: Int
-es16 = (sum . fmap digitToInt. show)(2 ^ (1000 :: Integer))
+es16 = (sum . fmap digitToInt) $ show (2 ^ (1000 :: Integer) :: Integer)
 
 -- Es 17 ------------------------------------------------------
 oneDigitNumMap :: [(Int, String)]
@@ -384,9 +387,9 @@ calendar =
   in  d_ddmmyyyy
 
 es19 :: Int
-es19 =  (length . filter (\x -> isPrefixOf "Sunday 1/" x && (not . isSuffixOf "1900") x)) calendar
+es19 =  (length . filter (\x -> isPrefixOf "Sunday 1/" x && not ("1900" `isSuffixOf` x))) calendar
 
 -- Es 20 -----------------------------------------------
 
 es20 :: Int
-es20 = (foldl' (\acc c -> acc + digitToInt c) 0 . show . foldl' (*) 1) [1..100]
+es20 = (foldl' (\acc c -> acc + digitToInt c) 0 . (\x -> show (x :: Integer)) . foldl' (*) 1) [1..100]
