@@ -48,11 +48,11 @@ object ProjectEuler2:
 
   def findFactors(n: Long): List[Int] =
     val divisors1 = (1 to ((sqrt(n.toDouble).round).toInt)).filter(n % _ == 0)
-    (divisors1 ++ divisors1.map(n.toInt / _)).toList
+    (divisors1 ++ divisors1.drop(1).map(n.toInt / _)).toList.distinct
   def es12: Long =
     val triangularNumbers: LazyList[Long] =
       LazyList.iterate(1L)(_ + 1L).scanLeft(0L) { case (sum, x) => sum + x }
-    triangularNumbers.find(findFactors(_).length > 500).get
+    triangularNumbers.find(findFactors(_).length + 1 > 500).get
 
   def es13: String =
     val input: String =
