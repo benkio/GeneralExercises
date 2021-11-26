@@ -2,7 +2,7 @@
 
 module ProjectEuler3 where
 
-import Data.List (find, sort, (\\))
+import Data.List (find, sort, nub)
 import Data.Maybe (fromJust, isJust)
 import qualified Data.Text as T (pack, replace, splitOn, unpack)
 import ProjectEuler2 (findDivisors)
@@ -52,8 +52,17 @@ isAbundant x = ((> x) . sum . filter (/= x). findDivisors) x
 abundantNumbers :: [Int]
 abundantNumbers = [x | x <- [12..limitComposedAbundantNumbers], isAbundant x]
 
-composedAbundantNumbers :: [Int]
-composedAbundantNumbers = undefined
-
+isNotAbundantComposable :: Int -> Bool
+isNotAbundantComposable x = go x $ filter (<= x) abundantNumbers
+  where go :: Int -> [Int] -> Bool
+        go _ [] = True
+        go a (b:bs)
+          | (a - b) `elem` (b:bs) = False
+          | otherwise = go a bs
+  
 es23 :: Int
-es23 = (sum . filter (`notElem` composedAbundantNumbers)) [1..limitComposedAbundantNumbers]
+es23 = go [1..7000] 0 --(sum . filter isNotAbundantComposable) [1..limitComposedAbundantNumbers]
+  where go [] acc = acc
+        go (x:xs) acc
+          | isNotAbundantComposable x = go xs (acc + x)
+          | otherwise = go xs acc
