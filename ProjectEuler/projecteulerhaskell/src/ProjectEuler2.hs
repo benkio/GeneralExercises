@@ -1,11 +1,12 @@
 {-# LANGUAGE TupleSections #-}
 module ProjectEuler2 where
 
-import Data.List (transpose, foldr, foldl', find, cycle, isPrefixOf, isSuffixOf)
-import Data.Maybe (Maybe(..), fromJust)
+import Data.List (transpose, union, foldl', find, isPrefixOf, isSuffixOf)
+import Data.Maybe (fromJust)
 import Data.Char (digitToInt)
-import Control.Monad ((>>=))
-import Control.Applicative ((<$>))
+--import qualified Data.Set as S (Set, fromList)
+-- import Control.Monad ((>>=))
+-- import Control.Applicative ((<$>))
 
 
 -- Es 11 ----------------------------------------------------------------------
@@ -33,7 +34,7 @@ inputGrid =
  \ 01 70 54 71 83 51 54 69 16 92 33 48 61 43 52 01 89 19 67 48"
 
 readIntLines :: String -> [[Int]]
-readIntLines = (fmap (fmap (\x -> read x :: Int) . words) . lines)
+readIntLines = fmap (fmap (\x -> read x :: Int) . words) . lines
 
 horizontal :: [[Int]]
 horizontal = readIntLines inputGrid
@@ -76,8 +77,8 @@ maxDiagonalSlash = maxGrid diagonalSlash
 maxDiagonalBackSlash :: Int
 maxDiagonalBackSlash = maxGrid diagonalBackSlash
 
-maxGrid' :: Int
-maxGrid' = maximum [maxVertical, maxHorizontal, maxDiagonalSlash, maxDiagonalBackSlash]
+es11 :: Int
+es11 = maximum [maxVertical, maxHorizontal, maxDiagonalSlash, maxDiagonalBackSlash]
 
 -- Es 12 ------------------------------------------------------------
 
@@ -86,14 +87,17 @@ triangleNumbers = tail $ scanl (+) 0 [1..]
 
 findDivisors :: Int -> [Int]
 findDivisors n =
-  let divisors = filter ((==0) . mod n) [1..((round . sqrt . fromIntegral) n)]
-      divisors' = fmap (div n) divisors
-  in  divisors ++ divisors'
+  let
+    isqrt :: Int -> Int
+    isqrt x = floor . sqrt $ (fromIntegral x :: Float)
+    divisors = filter ((==0) . mod n) [1..isqrt n]
+    divisors' = (fmap (div n) . drop 1) divisors
+  in  divisors `union` divisors'
 
-triangleNumberWith500Divisors :: Int
-triangleNumberWith500Divisors = find' 500 triangleNumbers -- find from Data.List is not very efficient!!!
+es12 :: Int
+es12 = find' 500 triangleNumbers -- find from Data.List is not very efficient!!!
   where find' v xs
-          | (length . findDivisors) (head xs) < v = find' v (tail xs)
+          | ((+1) . length . findDivisors) (head xs) < v = find' v (tail xs)
           | otherwise = head xs
 
 -- Es 13 -----------------------------------------------
@@ -201,14 +205,14 @@ inputGrid' =
   \20849603980134001723930671666823555245252804609722\n\
   \53503534226472524250874054075591789781264330331690"
 
-first10DigitSum :: String
-first10DigitSum = (take 10 . show . sum . fmap (\x -> read x :: Integer) . lines) inputGrid'
+es13 :: String
+es13 = (take 10 . show . sum . fmap (\x -> read x :: Integer) . lines) inputGrid'
 
 -- Es 14 ----------------------------------------------------
 
 generator :: Int -> Int
 generator n
-  | n `mod` 2 == 0 = n `div` 2
+  | even n = n `div` 2
   | otherwise = 3 * n + 1
 
 collatzSequence :: Int -> Int
@@ -218,8 +222,8 @@ collatzSequence n = countSequence n 0
     countSequence 1 acc = acc + 1
     countSequence x acc = countSequence (generator x) (acc + 1)
 
-largestCollatzSequence :: Int
-largestCollatzSequence = fst $ foldr (\x acc -> let currentCollatz = collatzSequence x in
+es14 :: Int
+es14 = fst $ foldr (\x acc -> let currentCollatz = collatzSequence x in
                                     if currentCollatz > snd acc
                                     then (x, currentCollatz) else acc
                                ) (1, 1) [1..1000000]
@@ -228,19 +232,18 @@ largestCollatzSequence = fst $ foldr (\x acc -> let currentCollatz = collatzSequ
 
 -- https://mathworld.wolfram.com/LatticePath.html
 -- Solution is the binomial coefficient (40 20) -> (40!/ 20!*20!)
-latticePaths :: Integer
-latticePaths =
+es15 :: Integer
+es15 =
   let numerator = foldl' (*) 1 [1..40]
       twentyFact = foldl' (*) 1 [1..20]
   in numerator `div` (twentyFact ^ (2 :: Integer))
 
 -- Es 16 -----------------------------------------------------------------
 
-powerDigitSum :: Int
-powerDigitSum = (sum . fmap digitToInt. show)(2 ^ (1000 :: Integer))
+es16 :: Int
+es16 = (sum . fmap digitToInt) $ show (2 ^ (1000 :: Integer) :: Integer)
 
 -- Es 17 ------------------------------------------------------
-
 oneDigitNumMap :: [(Int, String)]
 oneDigitNumMap = [
   (0, ""), -- not used: eg ten, twenty...
@@ -317,8 +320,8 @@ fourDigitStringCount n =
 oneThousandNumbersToChar :: IO ()--[String]
 oneThousandNumbersToChar = mapM_ (putStrLn . fourDigitStringCount) [1..1000]
 
-oneThousandNumbersToCharCount :: Int
-oneThousandNumbersToCharCount = sum $ fmap (length . filter (not . (`elem` " -")) . fourDigitStringCount) [1..1000]
+es17 :: Int
+es17 = sum $ fmap (length . filter (not . (`elem` " -")) . fourDigitStringCount) [1..1000]
 
 -- Es 18 --------------------------------------
 
@@ -342,8 +345,8 @@ inputTriangle = "75                                           \n\
 triangle :: [[Int]]
 triangle = readIntLines inputTriangle
 
-maxPath :: Int
-maxPath = sum $ foldr collapseTriangle (replicate 16 0) triangle
+es18 :: Int
+es18 = sum $ foldr collapseTriangle (replicate 16 0) triangle
   where
     collapseTriangle :: [Int] -> [Int] -> [Int]
     collapseTriangle ts acc =
@@ -383,10 +386,10 @@ calendar =
                            x ++ " " ++ show a ++ "/" ++ show b ++ "/" ++ show c) $ d `zip` ddmmyyyy
   in  d_ddmmyyyy
 
-firstOfMonthSundays :: Int
-firstOfMonthSundays =  (length . filter (\x -> isPrefixOf "Sunday 1/" x && (not . isSuffixOf "1900") x)) calendar
+es19 :: Int
+es19 =  (length . filter (\x -> isPrefixOf "Sunday 1/" x && not ("1900" `isSuffixOf` x))) calendar
 
 -- Es 20 -----------------------------------------------
 
-factorialDigitSum :: Int
-factorialDigitSum = (foldl' (\acc c -> acc + digitToInt c) 0 . show . foldl' (*) 1) [1..100]
+es20 :: Int
+es20 = (foldl' (\acc c -> acc + digitToInt c) 0 . (\x -> show (x :: Integer)) . foldl' (*) 1) [1..100]
