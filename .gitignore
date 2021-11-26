@@ -1,6 +1,9 @@
 dist
 dist-*
 cabal-dev
+**/.bsp
+**/.vscode
+**/.DS_Store
 *.o
 *.hi
 *.chi
