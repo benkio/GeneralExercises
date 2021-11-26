@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.34.5.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6a366fa6d77563b0e066eabaa88706b5d57ba35b1119ed52143ba90842b7ed6c
+-- hash: f1d4c79870f52aa1c5a024af6ba0da7b477252b9f27294f5ab2cbeb57f881794
 
 name:           AdventOfCode
 version:        0.1.0.0
@@ -95,6 +95,31 @@ library
       TwentyTwenty.TwentyFourthDecember
       TwentyTwenty.TwentySecondDecember
       TwentyTwenty.TwentyThirdDecember
+      TwentyTwentyOne.EighteenthDecember
+      TwentyTwentyOne.EighthDecember
+      TwentyTwentyOne.EleventhDecember
+      TwentyTwentyOne.FifteenthDecember
+      TwentyTwentyOne.FifthDecember
+      TwentyTwentyOne.FirstDecember
+      TwentyTwentyOne.FourteenthDecember
+      TwentyTwentyOne.FourthDecember
+      TwentyTwentyOne.NineteenthDecember
+      TwentyTwentyOne.NinthDecember
+      TwentyTwentyOne.SecondDecember
+      TwentyTwentyOne.SeventeenthDecember
+      TwentyTwentyOne.SeventhDecember
+      TwentyTwentyOne.SixteenthDecember
+      TwentyTwentyOne.SixthDecember
+      TwentyTwentyOne.TenthDecember
+      TwentyTwentyOne.ThirdDecember
+      TwentyTwentyOne.ThirteenthDecember
+      TwentyTwentyOne.TwelfthDecember
+      TwentyTwentyOne.TwentiethDecember
+      TwentyTwentyOne.TwentyFifthDecember
+      TwentyTwentyOne.TwentyFirstDecember
+      TwentyTwentyOne.TwentyFourthDecember
+      TwentyTwentyOne.TwentySecondDecember
+      TwentyTwentyOne.TwentyThirdDecember
   other-modules:
       Paths_AdventOfCode
   hs-source-dirs:
