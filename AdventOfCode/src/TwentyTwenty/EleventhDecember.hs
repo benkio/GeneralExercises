@@ -98,7 +98,7 @@ expandCoordinateView (bx, by) (x, y) =
 
 expandView :: Grid -> Coordinate -> Seat -> Maybe Seat
 expandView grid c (c', Floor) =
-  (getSeat grid <$> expandCoordinateView c c') >>= expandView grid c
+  expandCoordinateView c c' >>= expandView grid c . getSeat grid
 expandView _ _ s = Just s
 
 getNeighbors2 :: Grid -> Coordinate -> Grid

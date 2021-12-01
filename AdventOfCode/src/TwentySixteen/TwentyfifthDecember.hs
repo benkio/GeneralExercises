@@ -38,7 +38,7 @@ parseOut s
 
 emitSignal :: Registers -> Int -> Seq BunnyAssembly -> [Int]
 emitSignal regs pointer instructions
-  | isJust mayOutInstructionRegister = regs ! (fromJust mayOutInstructionRegister) : emitSignal regs (pointer + 1) instructions
+  | isJust mayOutInstructionRegister = regs ! fromJust mayOutInstructionRegister : emitSignal regs (pointer + 1) instructions
   | otherwise =
     let (pointer', regs') = T.interpretInstruction ((fromJust . oldInstructionValue) currentInstruction) pointer regs
      in emitSignal regs' pointer' instructions
