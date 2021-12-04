@@ -18,9 +18,9 @@ solution2 mesurements =
   solution1 $ fmap (\(a, b, c) -> a + b + c) (zipTail3 mesurements)
 
 zipTail3 :: [Int] -> [(Int, Int, Int)]
-zipTail3 (z:y:x:xs) = (z,y,x) : zipTail3 (y:x:xs)
-zipTail3 (y:x:xs) = []
-zipTail3 (x:xs) = []
+zipTail3 (z : y : x : xs) = (z, y, x) : zipTail3 (y : x : xs)
+zipTail3 (y : x : xs) = []
+zipTail3 (x : xs) = []
 zipTail3 [] = []
 
 firstDecemberSolution2 :: IO Int
