@@ -28,53 +28,77 @@ module Main where
 -- import qualified TwentyFifteen.FirstDecember as First
 -- import qualified TwentyFifteen.SecondDecember as Second
 -- import qualified TwentyFifteen.ThirdDecember as Third
---import qualified TwentyFifteen.FourthDecember as Four
---import qualified TwentyFifteen.FifthDecember as Five
---import qualified TwentyFifteen.SixthDecember as Six
---import qualified TwentyFifteen.SeventhDecember as Seven
---import qualified TwentyFifteen.EighthDecember as Eight
---import qualified TwentyFifteen.NinthDecember as Nine
---import qualified TwentyFifteen.TenthDecember as Ten
---import qualified TwentyFifteen.EleventhDecember as Eleven
---import qualified TwentyFifteen.TwelfthDecember as Twelve
---import qualified TwentyFifteen.ThirteenthDecember as Thirteen
---import qualified TwentyFifteen.FourteenthDecember as Fourteen
---import qualified TwentyFifteen.FifteenthDecember as Fifteen
---import qualified TwentyFifteen.SixteenthDecember as Sixteen
---import qualified TwentyFifteen.SeventeenthDecember as Seventeen
---import qualified TwentyFifteen.EighteenthDecember as Eighteen
---import qualified TwentyFifteen.NineteenthDecember as Nineteen
---import qualified TwentyFifteen.TwentiethDecember as Twenty
---import qualified TwentyFifteen.TwentyfirstDecember as TwentyFirst
---import qualified TwentyFifteen.TwentysecondDecember as TwentySecond
---import qualified TwentyFifteen.TwentythirdDecember  as TwentyThird
---import qualified TwentyFifteen.TwentyfourthDecember as TwentyFourth
---import qualified TwentyFifteen.TwentyfifthDecember as TwentyFifth
---import qualified TwentySixteen.FirstDecember as First
---import qualified TwentySixteen.SecondDecember as Second
---import qualified TwentySixteen.ThirdDecember as Third
---import qualified TwentySixteen.FourthDecember as Four
---import qualified TwentySixteen.FifthDecember as Five
---import qualified TwentySixteen.SixthDecember as Six
---import qualified TwentySixteen.SeventhDecember as Seven
---import qualified TwentySixteen.EighthDecember as Eight
---import qualified TwentySixteen.NinthDecember as Nine
---import qualified TwentySixteen.TenthDecember as Ten
---import qualified TwentySixteen.TwelfthDecember as Twelve
---import qualified TwentySixteen.ThirteenthDecember as Thirteen
---import qualified TwentySixteen.FourteenthDecember as Fourteen
---import qualified TwentySixteen.FifteenthDecember as Fifteen
---import qualified TwentySixteen.SixteenthDecember as Sixteen
---import qualified TwentySixteen.SeventeenthDecember as Seventeen
---import qualified TwentySixteen.EighteenthDecember as Eighteen
---import qualified TwentySixteen.NineteenthDecember as Nineteen
---import qualified TwentySixteen.TwentiethDecember as Twenty
---import qualified TwentySixteen.TwentyfirstDecember as TwentyFirst
---import qualified TwentySixteen.TwentysecondDecember as TwentySecond
---import qualified TwentySixteen.TwentythirdDecember  as TwentyThird
---import qualified TwentySixteen.TwentyfourthDecember as TwentyFourth
-
-import qualified TwentySixteen.TwentyfifthDecember as TwentyFifth
+-- import qualified TwentyFifteen.FourthDecember as Four
+-- import qualified TwentyFifteen.FifthDecember as Five
+-- import qualified TwentyFifteen.SixthDecember as Six
+-- import qualified TwentyFifteen.SeventhDecember as Seven
+-- import qualified TwentyFifteen.EighthDecember as Eight
+-- import qualified TwentyFifteen.NinthDecember as Nine
+-- import qualified TwentyFifteen.TenthDecember as Ten
+-- import qualified TwentyFifteen.EleventhDecember as Eleven
+-- import qualified TwentyFifteen.TwelfthDecember as Twelve
+-- import qualified TwentyFifteen.ThirteenthDecember as Thirteen
+-- import qualified TwentyFifteen.FourteenthDecember as Fourteen
+-- import qualified TwentyFifteen.FifteenthDecember as Fifteen
+-- import qualified TwentyFifteen.SixteenthDecember as Sixteen
+-- import qualified TwentyFifteen.SeventeenthDecember as Seventeen
+-- import qualified TwentyFifteen.EighteenthDecember as Eighteen
+-- import qualified TwentyFifteen.NineteenthDecember as Nineteen
+-- import qualified TwentyFifteen.TwentiethDecember as Twenty
+-- import qualified TwentyFifteen.TwentyfirstDecember as TwentyFirst
+-- import qualified TwentyFifteen.TwentysecondDecember as TwentySecond
+-- import qualified TwentyFifteen.TwentythirdDecember  as TwentyThird
+-- import qualified TwentyFifteen.TwentyfourthDecember as TwentyFourth
+-- import qualified TwentyFifteen.TwentyfifthDecember as TwentyFifth
+-- import qualified TwentySixteen.TwentyfifthDecember as TwentyFifth
+-- import qualified TwentySixteen.FirstDecember as First
+-- import qualified TwentySixteen.SecondDecember as Second
+-- import qualified TwentySixteen.ThirdDecember as Third
+-- import qualified TwentySixteen.FourthDecember as Four
+-- import qualified TwentySixteen.FifthDecember as Five
+-- import qualified TwentySixteen.SixthDecember as Six
+-- import qualified TwentySixteen.SeventhDecember as Seven
+-- import qualified TwentySixteen.EighthDecember as Eight
+-- import qualified TwentySixteen.NinthDecember as Nine
+-- import qualified TwentySixteen.TenthDecember as Ten
+-- import qualified TwentySixteen.TwelfthDecember as Twelve
+-- import qualified TwentySixteen.ThirteenthDecember as Thirteen
+-- import qualified TwentySixteen.FourteenthDecember as Fourteen
+-- import qualified TwentySixteen.FifteenthDecember as Fifteen
+-- import qualified TwentySixteen.SixteenthDecember as Sixteen
+-- import qualified TwentySixteen.SeventeenthDecember as Seventeen
+-- import qualified TwentySixteen.EighteenthDecember as Eighteen
+-- import qualified TwentySixteen.NineteenthDecember as Nineteen
+-- import qualified TwentySixteen.TwentiethDecember as Twenty
+-- import qualified TwentySixteen.TwentyfirstDecember as TwentyFirst
+-- import qualified TwentySixteen.TwentysecondDecember as TwentySecond
+-- import qualified TwentySixteen.TwentythirdDecember  as TwentyThird
+-- import qualified TwentySixteen.TwentyfourthDecember as TwentyFourth
+-- import qualified TwentyTwentyOne.EighteenthDecember   as Eighteen
+-- import qualified TwentyTwentyOne.EighthDecember       as Eight
+-- import qualified TwentyTwentyOne.EleventhDecember     as Eleven
+-- import qualified TwentyTwentyOne.FifteenthDecember    as Fifteen
+-- import qualified TwentyTwentyOne.FifthDecember        as Five
+-- import qualified TwentyTwentyOne.FirstDecember        as First
+-- import qualified TwentyTwentyOne.FourteenthDecember   as Fourteen
+-- import qualified TwentyTwentyOne.FourthDecember       as Four
+-- import qualified TwentyTwentyOne.NineteenthDecember   as Nineteen
+-- import qualified TwentyTwentyOne.NinthDecember        as Nine
+-- import qualified TwentyTwentyOne.SecondDecember       as Two
+-- import qualified TwentyTwentyOne.SeventeenthDecember  as Seventeen
+-- import qualified TwentyTwentyOne.SeventhDecember      as Seven
+-- import qualified TwentyTwentyOne.SixteenthDecember    as Sixteen
+import qualified TwentyTwentyOne.SixthDecember        as Six
+-- import qualified TwentyTwentyOne.TenthDecember        as Ten
+-- import qualified TwentyTwentyOne.ThirdDecember        as Three
+-- import qualified TwentyTwentyOne.ThirteenthDecember   as Thirteen
+-- import qualified TwentyTwentyOne.TwelfthDecember      as Twelve
+-- import qualified TwentyTwentyOne.TwentiethDecember    as Twenty
+-- import qualified TwentyTwentyOne.TwentyFifthDecember  as TwentyFifth
+-- import qualified TwentyTwentyOne.TwentyFirstDecember  as TwentyFirst
+-- import qualified TwentyTwentyOne.TwentyFourthDecember as TwentyFourth
+-- import qualified TwentyTwentyOne.TwentySecondDecember as TwentySecond
+-- import qualified TwentyTwentyOne.TwentyThirdDecember  as TwentyThird
 
 main :: IO ()
-main = TwentyFifth.twentyfifthDecemberSolution >>= print
+main = Six.sixthDecemberSolution2 >>= print
