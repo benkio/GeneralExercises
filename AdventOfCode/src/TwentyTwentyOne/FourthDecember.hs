@@ -1,9 +1,8 @@
 module TwentyTwentyOne.FourthDecember where
 
-import Data.List (find, groupBy, transpose, (\\))
+import Data.List (find, groupBy, transpose)
 import Data.Maybe (fromJust, isJust)
 import qualified Data.Text as T
-import Debug.Trace
 
 type Grid = [[(Int, Bool)]]
 
