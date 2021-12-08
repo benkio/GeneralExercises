@@ -3,8 +3,6 @@ cabal-version: 1.12
 -- This file has been generated from package.yaml by hpack version 0.34.5.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: f1d4c79870f52aa1c5a024af6ba0da7b477252b9f27294f5ab2cbeb57f881794
 
 name:           AdventOfCode
 version:        0.1.0.0
@@ -144,7 +142,7 @@ executable AdventOfCode-exe
       Paths_AdventOfCode
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       AdventOfCode
     , aeson
@@ -167,7 +165,7 @@ test-suite AdventOfCode-test
       Paths_AdventOfCode
   hs-source-dirs:
       test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       AdventOfCode
     , aeson

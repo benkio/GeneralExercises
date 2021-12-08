@@ -86,9 +86,9 @@ module Main where
 -- import qualified TwentyTwentyOne.NinthDecember        as Nine
 -- import qualified TwentyTwentyOne.SecondDecember       as Two
 -- import qualified TwentyTwentyOne.SeventeenthDecember  as Seventeen
--- import qualified TwentyTwentyOne.SeventhDecember      as Seven
+import qualified TwentyTwentyOne.SeventhDecember      as Seven
 -- import qualified TwentyTwentyOne.SixteenthDecember    as Sixteen
-import qualified TwentyTwentyOne.SixthDecember        as Six
+-- import qualified TwentyTwentyOne.SixthDecember        as Six
 -- import qualified TwentyTwentyOne.TenthDecember        as Ten
 -- import qualified TwentyTwentyOne.ThirdDecember        as Three
 -- import qualified TwentyTwentyOne.ThirteenthDecember   as Thirteen
@@ -101,4 +101,4 @@ import qualified TwentyTwentyOne.SixthDecember        as Six
 -- import qualified TwentyTwentyOne.TwentyThirdDecember  as TwentyThird
 
 main :: IO ()
-main = Six.sixthDecemberSolution2 >>= print
+main = Seven.seventhDecemberSolution2 >>= print

@@ -23,7 +23,15 @@ inputTest =
   \5,5 -> 8,2"
 
 parseInput :: String -> [Line]
-parseInput s = ((\l -> (head l, last l)) . fmap (\(x, y) -> ((read x :: Int), (read (tail y) :: Int))) . fmap (break (== ',')) . (\l -> [head l, last l]) . words) <$> lines s
+parseInput s =
+  (\l -> (head l, last l))
+    . fmap
+      ( (\(x, y) -> (read x :: Int, read (tail y) :: Int))
+          . break (== ',')
+      )
+    . (\l -> [head l, last l])
+    . words
+    <$> lines s
 
 expandLineCoords :: Coord -> Coord -> [Coord]
 expandLineCoords (x, y) (x', y')
@@ -44,7 +52,7 @@ isVertical ((_, y), (_, y')) = y == y'
 computeAllCoordinates :: [Line] -> [Coord]
 computeAllCoordinates [] = []
 computeAllCoordinates (l : ls)
-  | isHorizontal l || isVertical l = (fst l : expandLineCoords (fst l) (snd l)) ++ computeAllCoordinates ls
+  | isHorizontal l || isVertical l = (fst l : uncurry expandLineCoords l) ++ computeAllCoordinates ls
   -- TODO: Add diagonals
   | otherwise = computeAllCoordinates ls
 
@@ -67,8 +75,7 @@ expandLineCoords' (x, y) (x', y')
   | x > x' && y < y' = (x - 1, y + 1) : expandLineCoords' (x - 1, y + 1) (x', y')
 
 computeAllCoordinates' :: [Line] -> [Coord]
-computeAllCoordinates' [] = []
-computeAllCoordinates' (l : ls) = (fst l : expandLineCoords' (fst l) (snd l)) ++ computeAllCoordinates' ls
+computeAllCoordinates' = foldr (\l -> (++) (fst l : uncurry expandLineCoords' l)) []
 
 fifthDecemberSolution2 :: IO Int
 fifthDecemberSolution2 = countOverlapCoordinates . computeAllCoordinates' . parseInput <$> input
