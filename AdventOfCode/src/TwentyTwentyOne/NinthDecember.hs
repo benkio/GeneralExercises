@@ -6,8 +6,7 @@ import qualified Data.Map as M (fromList, keys, lookup)
 import Data.Maybe (fromJust, fromMaybe, mapMaybe)
 import Data.Ord
 import Data.Set (Set, (\\))
-import qualified Data.Set as S (empty, foldr, fromList, toList, union)
-import Debug.Trace
+import qualified Data.Set as S (empty, fromList, toList, union)
 
 data Coord = Coord
   { x :: Int,
@@ -30,7 +29,7 @@ inputTest =
 parseInput :: String -> Map Coord Int
 parseInput =
   M.fromList
-    . concatMap (\(y, r) -> (fmap (\(x, v) -> (Coord {x = x, y = y}, read [v] :: Int)) . zip [0 ..]) r)
+    . concatMap (\(a, r) -> (fmap (\(b, v) -> (Coord {x = b, y = a}, read [v] :: Int)) . zip [0 ..]) r)
     . zip [0 ..]
     . lines
 

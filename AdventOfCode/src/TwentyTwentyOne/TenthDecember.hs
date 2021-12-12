@@ -44,7 +44,7 @@ lineToString (Line cs) = foldl (\v c -> v ++ chunkToString c) "" cs
 lineToString l = show l
 
 chunkToString :: Chunk -> String
-chunkToString (Chunk {open = o, content = cs, close = c}) = o : (foldl (\v c -> v ++ chunkToString c) "" cs) ++ [c]
+chunkToString Chunk {open = o, content = cs, close = c} = o : foldl (\v c -> v ++ chunkToString c) "" cs ++ [c]
 
 parseLine :: Line -> String -> Line
 parseLine l [] = l
