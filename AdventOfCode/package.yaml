@@ -31,6 +31,7 @@ dependencies:
 - scientific
 - text
 - random
+- split
 
 library:
   source-dirs: src

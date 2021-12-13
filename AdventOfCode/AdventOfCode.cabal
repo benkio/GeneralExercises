@@ -132,6 +132,7 @@ library
     , random
     , regex-tdfa
     , scientific
+    , split
     , text
     , vector
   default-language: Haskell2010
@@ -154,6 +155,7 @@ executable AdventOfCode-exe
     , random
     , regex-tdfa
     , scientific
+    , split
     , text
     , vector
   default-language: Haskell2010
@@ -177,6 +179,7 @@ test-suite AdventOfCode-test
     , random
     , regex-tdfa
     , scientific
+    , split
     , text
     , vector
   default-language: Haskell2010
