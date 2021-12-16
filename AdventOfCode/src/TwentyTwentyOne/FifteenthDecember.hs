@@ -10,7 +10,11 @@ import Debug.Trace
 type Coord = (Int, Int)
 
 parseInput :: String -> Map Coord Int
-parseInput = M.fromList . concatMap (\(y, l) -> (fmap (\(x, c) -> ((x, y), read [c] :: Int)) . zip [0 ..]) l) . zip [0 ..] . lines
+parseInput =
+  M.fromList
+    . concatMap (\(y, l) -> (fmap (\(x, c) -> ((x, y), read [c] :: Int)) . zip [0 ..]) l)
+    . zip [0 ..]
+    . lines
 
 neighboorsCoords :: Coord -> [Coord]
 neighboorsCoords (x, y) =
@@ -29,16 +33,15 @@ buildWeightedMap v es m =
       ns' = (fmap (minimumBy (\(_, y) (_, y') -> y `compare` y')) . groupBy (\(c, _) (c', _) -> c == c') . sort) ns
       -- add them to v
       v' = foldl (\acc (c, y) -> M.insert c y acc) v ns'
-      -- recurse with the new edge and v'
-   in buildWeightedMap v' ns' m
+   in -- recurse with the new edge and v'
+      buildWeightedMap v' ns' m
 
 --step v ns m = iterate (\(x, y) -> buildWeightedMap x y m) (v,ns)
 
-solution1 :: String -> Int
-solution1 =
+solution :: Map Coord Int -> Int
+solution =
   (\x -> min (x ! (0, 1)) (x ! (1, 0)))
     . (\m -> buildWeightedMap (M.fromList [M.findMax m]) [M.findMax m] m)
-    . parseInput
 
 inputTest :: String
 inputTest =
@@ -53,19 +56,38 @@ inputTest =
   \1293138521\n\
   \2311944581\n"
 
-printMatrix :: Map (Int, Int) Int -> IO ()
-printMatrix m =
-  let maxX = (maximum . fmap fst . M.keys) m
-      maxY = (maximum . fmap snd . M.keys) m
-      grid = [v | y <- [0 .. maxY], x <- [0 .. maxX], v <- " " ++ show (m ! (x, y))]
-      gridByLine = chunksOf (maxX + 1) grid
-   in mapM_ putStrLn gridByLine
-
 input :: IO String
 input = readFile "input/2021/15December.txt"
 
 fifteenthDecemberSolution1 :: IO Int
-fifteenthDecemberSolution1 = solution1 <$> input
+fifteenthDecemberSolution1 = solution . parseInput <$> input
+
+extendMap :: [[Int]] -> [[Int]]
+extendMap m =
+  let infinitem =
+        ( \(i, x) ->
+            (fmap . fmap)
+              ( \a ->
+                  let r = rem (a + i) 9
+                   in if r == 0 then 9 else r
+              )
+              x
+        )
+          <$> zip [0 ..] (repeat m)
+      newGridRows = (\(i, x) -> (take 5 . drop i) x) <$> zip [0 .. 4] (repeat infinitem)
+   in concatMap (foldl1 concatGrid) newGridRows
+
+concatGrid :: [[Int]] -> [[Int]] -> [[Int]]
+concatGrid m m' = uncurry (++) <$> zip m m'
+
+parseInput' :: String -> Map Coord Int
+parseInput' =
+  M.fromList
+    . concatMap (\(y, l) -> (fmap (\(x, c) -> ((x, y), c)) . zip [0 ..]) l)
+    . zip [0 ..]
+    . extendMap
+    . (fmap . fmap) (\x -> read [x] :: Int)
+    . lines
 
 fifteenthDecemberSolution2 :: IO Int
-fifteenthDecemberSolution2 = undefined
+fifteenthDecemberSolution2 = solution . parseInput' <$> input
