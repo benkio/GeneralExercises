@@ -23,7 +23,6 @@ changePerspective bs =
     `zip` transpose
       ( fmap
           ( \(bx, by, bz) ->
-              nub
                 [ v
                   | x <- [bx, - bx],
                     y <- [by, - by],
