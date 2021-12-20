@@ -87,6 +87,14 @@ searchInScanner [] sbs = Nothing
 searchInScanner ((k, bs) : bs') sbs =
   if matchBacon sbs bs then Just k else searchInScanner bs' sbs
 
+-- TODO: find the position of the scanner that match by:
+-- - Taking the list of matching bacon
+-- - unzip and apply all the possible trasformations to one of them until the result of each operation (x+x, y+y, z+z) is the same
+-- That's the position of the new scanner
+-- Sum the position of the new scanner to its beacons to get the position of those points relative to the initial scanner
+-- Add the beacons amended to the initial scanner, remove duplicates
+-- fold every scanner until none is left apart from the initial one. Its beacons are the total number of beacons.
+
 inputTest :: String
 inputTest =
   "--- scanner 0 ---\n\
