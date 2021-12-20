@@ -1,45 +1,39 @@
 module TwentyTwentyOne.NineteenthDecember where
 
-import Data.List (groupBy, transpose)
+import Data.Bifunctor (second)
+import Data.List (find, groupBy, nub, transpose)
 import Data.Map (Map)
-import qualified Data.Map as M (filter, fromList, map, size, toList)
+import qualified Data.Map as M (filter, fromList, map, toList)
 import Data.Maybe (fromJust, isJust)
+import Debug.Trace
 
-data Scanner = Scanner Int [(Int, Int, Int)] deriving (Show)
+type Coord = (Int, Int, Int)
 
-bacons :: Scanner -> [(Int, Int, Int)]
+data Scanner = Scanner Int [Coord] deriving (Show, Eq, Ord)
+
+bacons :: Scanner -> [Coord]
 bacons (Scanner _ bs) = bs
 
-coordinateTransformation :: [(Int, Int, Int) -> (Int, Int, Int)]
-coordinateTransformation =
-  [ \(bx, by, bz) -> (bx, by, bz),
-    \(bx, by, bz) -> (by, bz, bx),
-    \(bx, by, bz) -> (bz, bx, by),
-    \(bx, by, bz) -> (bx, by, - bz),
-    \(bx, by, bz) -> (by, - bz, bx),
-    \(bx, by, bz) -> (- bz, bx, by),
-    \(bx, by, bz) -> (bx, - by, bz),
-    \(bx, by, bz) -> (- by, bz, bx),
-    \(bx, by, bz) -> (bz, bx, - by),
-    \(bx, by, bz) -> (bx, - by, - bz),
-    \(bx, by, bz) -> (- by, - bz, bx),
-    \(bx, by, bz) -> (- bz, bx, - by),
-    \(bx, by, bz) -> (- bx, by, bz),
-    \(bx, by, bz) -> (by, bz, - bx),
-    \(bx, by, bz) -> (bz, - bx, by),
-    \(bx, by, bz) -> (- bx, by, - bz),
-    \(bx, by, bz) -> (by, - bz, - bx),
-    \(bx, by, bz) -> (- bz, - bx, by),
-    \(bx, by, bz) -> (- bx, - by, bz),
-    \(bx, by, bz) -> (- by, bz, - bx),
-    \(bx, by, bz) -> (bz, - bx, - by),
-    \(bx, by, bz) -> (- bx, - by, - bz),
-    \(bx, by, bz) -> (- by, - bz, - bx),
-    \(bx, by, bz) -> (- bz, - bx, - by)
-  ]
+scannerId :: Scanner -> Int
+scannerId (Scanner x _) = x
 
-changePerspective :: [(Int, Int, Int)] -> [[(Int, Int, Int)]]
-changePerspective bs = transpose $ fmap (\(bx, by, bz) -> [v | x <- [bx, - bx], y <- [by, - by], z <- [bz, - bz], v <- [(x, y, z), (y, z, x), (z, x, y)]]) bs
+changePerspective :: [Coord] -> [(Int, [Coord])]
+changePerspective bs =
+  [0 ..]
+    `zip` transpose
+      ( fmap
+          ( \(bx, by, bz) ->
+              nub
+                [ v
+                  | x <- [bx, - bx],
+                    y <- [by, - by],
+                    z <- [bz, - bz],
+                    -- definitely too much
+                    v <- [(x, y, z), (y, x, z), (z, y, x), (y, z, x), (z, x, y), (x, z, y)] --[(x, y, z), (y, z, x), (z, x, y), ]
+                ]
+          )
+          bs
+      )
 
 parseInput :: String -> [Scanner]
 parseInput =
@@ -52,21 +46,21 @@ parseInput =
     . groupBy (\_ s' -> s' /= "")
     . lines
 
-parseCoordinate :: String -> (Int, Int, Int)
+parseCoordinate :: String -> Coord
 parseCoordinate s =
   let c1 = takeWhile (/= ',') s
       c2 = (takeWhile (/= ',') . tail . dropWhile (/= ',')) s
       c3 = (tail . dropWhile (/= ',') . tail . dropWhile (/= ',')) s
    in (read c1 :: Int, read c2 :: Int, read c3 :: Int)
 
-baconPov :: [(Int, Int, Int)] -> Map (Int, Int, Int) [(Int, Int, Int)]
+baconPov :: [Coord] -> Map Coord [Coord]
 baconPov bs = M.fromList $ buildPov bs bs
   where
     buildPov [] _ = []
     buildPov (b@(bx, by, bz) : bs') bs = (b, filter (/= (0, 0, 0)) $ [(bx - bx', by - by', bz - bz') | (bx', by', bz') <- bs]) : buildPov bs' bs
 
 matchBacon :: [(Int, Int, Int)] -> [(Int, Int, Int)] -> Bool
-matchBacon b b' = any (checkBaconPerspective 0 b) $ changePerspective b'
+matchBacon b b' = any (\(_, xs) -> checkBaconPerspective 0 b xs) $ changePerspective b'
 
 checkBaconPerspective :: Int -> [(Int, Int, Int)] -> [(Int, Int, Int)] -> Bool
 checkBaconPerspective c [] _ = c >= 11
@@ -75,25 +69,62 @@ checkBaconPerspective c (y : ys) zs
   | y `elem` zs = checkBaconPerspective (c + 1) ys zs
   | otherwise = checkBaconPerspective c ys zs
 
-matchScanner :: Scanner -> Scanner -> (Bool, [((Int, Int, Int), (Int, Int, Int))])
+matchScanner :: Scanner -> Scanner -> Maybe (Coord, Int, [(Coord, Coord)])
 matchScanner (Scanner _ bs) (Scanner _ bs') =
   let bsr = baconPov bs
       bsr' = baconPov bs'
-      searchMap = M.filter isJust $ M.map (searchInScanner (M.toList bsr')) bsr
-   in (M.size searchMap >= 12, M.toList (M.map fromJust searchMap))
+      searchList = M.toList $ M.map fromJust $ M.filter isJust $ M.map (searchInScanner (M.toList bsr')) bsr
+      (indexTransformation, scannerPosition) = calculateScannerPosition searchList
+   in if length searchList >= 12
+        then Just (scannerPosition, indexTransformation, searchList)
+        else Nothing
+
+mergeScanners :: Scanner -> Scanner -> Coord -> Int -> Scanner
+mergeScanners (Scanner i bs) (Scanner _ bs') (x', y', z') transformationIndex =
+  Scanner i (nub (bs ++ fmap (\(x, y, z) -> (x' - x, y' - y, z' - z)) (snd (changePerspective bs' !! transformationIndex))))
+
+relativeScannerPositions :: [Coord] -> Scanner -> [Scanner] -> [Coord]
+relativeScannerPositions cs _ [] = (0, 0, 0) : cs
+relativeScannerPositions cs s (x : xs) = case traceShow (scannerId s, (length . bacons) s, fmap scannerId (x : xs)) matchScanner s x of
+  Just (scannerRelativePos, transformationIndex, _) -> relativeScannerPositions (cs ++ [scannerRelativePos]) (mergeScanners s x scannerRelativePos transformationIndex) xs
+  Nothing -> relativeScannerPositions cs s (xs ++ [x])
+
+mergeAllScanners :: Scanner -> [Scanner] -> Scanner
+mergeAllScanners s [] = s
+mergeAllScanners s (x : xs) = case traceShow (scannerId s, (length . bacons) s, fmap scannerId (x : xs)) matchScanner s x of
+  Just (scannerRelativePos, transformationIndex, _) -> mergeAllScanners (mergeScanners s x scannerRelativePos transformationIndex) xs
+  Nothing -> mergeAllScanners s (xs ++ [x])
+
+buildPairs [] = []
+buildPairs (s : ss) = [(s, x) | x <- ss] ++ buildPairs ss
+
+calculateScannerPosition :: [(Coord, Coord)] -> (Int, Coord)
+calculateScannerPosition =
+  second head . fromJust
+    . find (\(i, xs) -> and (uncurry (==) <$> xs `zip` tail xs))
+    . ( \(b, b') ->
+          ( \(i, xs) ->
+              ( i,
+                (\((x, y, z), (x', y', z')) -> (x + x', y + y', z + z'))
+                  <$> b `zip` xs
+              )
+          )
+            <$> changePerspective b'
+      )
+    . unzip
 
 searchInScanner :: [((Int, Int, Int), [(Int, Int, Int)])] -> [(Int, Int, Int)] -> Maybe (Int, Int, Int)
 searchInScanner [] sbs = Nothing
 searchInScanner ((k, bs) : bs') sbs =
   if matchBacon sbs bs then Just k else searchInScanner bs' sbs
 
--- TODO: find the position of the scanner that match by:
--- - Taking the list of matching bacon
--- - unzip and apply all the possible trasformations to one of them until the result of each operation (x+x, y+y, z+z) is the same
--- That's the position of the new scanner
--- Sum the position of the new scanner to its beacons to get the position of those points relative to the initial scanner
--- Add the beacons amended to the initial scanner, remove duplicates
--- fold every scanner until none is left apart from the initial one. Its beacons are the total number of beacons.
+manhattanDistance :: Coord -> Coord -> Int
+manhattanDistance (x, y, z) (x', y', z') = abs (x - x') + abs (y - y') + abs (z - z')
+
+solution2 :: [Scanner] -> Int
+solution2 ss =
+  let cs = relativeScannerPositions [] (head ss) (tail ss)
+   in maximum $ uncurry manhattanDistance <$> buildPairs cs
 
 inputTest :: String
 inputTest =
@@ -149,13 +180,96 @@ inputTest =
   \-364,-763,-893\n\
   \807,-499,-711\n\
   \755,-354,-619\n\
-  \553,889,-390"
+  \553,889,-390\n\
+  \\n\
+  \--- scanner 2 ---\n\
+  \649,640,665\n\
+  \682,-795,504\n\
+  \-784,533,-524\n\
+  \-644,584,-595\n\
+  \-588,-843,648\n\
+  \-30,6,44\n\
+  \-674,560,763\n\
+  \500,723,-460\n\
+  \609,671,-379\n\
+  \-555,-800,653\n\
+  \-675,-892,-343\n\
+  \697,-426,-610\n\
+  \578,704,681\n\
+  \493,664,-388\n\
+  \-671,-858,530\n\
+  \-667,343,800\n\
+  \571,-461,-707\n\
+  \-138,-166,112\n\
+  \-889,563,-600\n\
+  \646,-828,498\n\
+  \640,759,510\n\
+  \-630,509,768\n\
+  \-681,-892,-333\n\
+  \673,-379,-804\n\
+  \-742,-814,-386\n\
+  \577,-820,562\n\
+  \\n\
+  \--- scanner 3 ---\n\
+  \-589,542,597\n\
+  \605,-692,669\n\
+  \-500,565,-823\n\
+  \-660,373,557\n\
+  \-458,-679,-417\n\
+  \-488,449,543\n\
+  \-626,468,-788\n\
+  \338,-750,-386\n\
+  \528,-832,-391\n\
+  \562,-778,733\n\
+  \-938,-730,414\n\
+  \543,643,-506\n\
+  \-524,371,-870\n\
+  \407,773,750\n\
+  \-104,29,83\n\
+  \378,-903,-323\n\
+  \-778,-728,485\n\
+  \426,699,580\n\
+  \-438,-605,-362\n\
+  \-469,-447,-387\n\
+  \509,732,623\n\
+  \647,635,-688\n\
+  \-868,-804,481\n\
+  \614,-800,639\n\
+  \595,780,-596\n\
+  \\n\
+  \--- scanner 4 ---\n\
+  \727,592,562\n\
+  \-293,-554,779\n\
+  \441,611,-461\n\
+  \-714,465,-776\n\
+  \-743,427,-804\n\
+  \-660,-479,-426\n\
+  \832,-632,460\n\
+  \927,-485,-438\n\
+  \408,393,-506\n\
+  \466,436,-512\n\
+  \110,16,151\n\
+  \-258,-428,682\n\
+  \-393,719,612\n\
+  \-211,-452,876\n\
+  \808,-476,-593\n\
+  \-575,615,604\n\
+  \-485,667,467\n\
+  \-680,325,-822\n\
+  \-627,-443,-432\n\
+  \872,-547,-609\n\
+  \833,512,582\n\
+  \807,604,487\n\
+  \839,-516,451\n\
+  \891,-625,532\n\
+  \-652,-548,-490\n\
+  \30,-46,-14"
 
 input :: IO String
 input = readFile "input/2021/19December.txt"
 
 nineteenthDecemberSolution1 :: IO Int
-nineteenthDecemberSolution1 = undefined
+nineteenthDecemberSolution1 = (length . bacons . (\xs -> mergeAllScanners (head xs) (tail xs))) . parseInput <$> input
 
 nineteenthDecemberSolution2 :: IO Int
-nineteenthDecemberSolution2 = undefined
+nineteenthDecemberSolution2 = solution2 . parseInput <$> input
