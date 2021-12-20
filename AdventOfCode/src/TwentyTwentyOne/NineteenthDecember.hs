@@ -23,13 +23,13 @@ changePerspective bs =
     `zip` transpose
       ( fmap
           ( \(bx, by, bz) ->
-                [ v
-                  | x <- [bx, - bx],
-                    y <- [by, - by],
-                    z <- [bz, - bz],
-                    -- definitely too much
-                    v <- [(x, y, z), (y, x, z), (z, y, x), (y, z, x), (z, x, y), (x, z, y)] --[(x, y, z), (y, z, x), (z, x, y), ]
-                ]
+              [ v
+                | x <- [bx, - bx],
+                  y <- [by, - by],
+                  z <- [bz, - bz],
+                  -- definitely too much
+                  v <- [(x, y, z), (y, x, z), (z, y, x), (y, z, x), (z, x, y), (x, z, y)] --[(x, y, z), (y, z, x), (z, x, y), ]
+              ]
           )
           bs
       )
