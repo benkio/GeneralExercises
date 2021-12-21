@@ -1,8 +1,8 @@
+{-# LANGUAGE TupleSections #-}
 module TwentyTwentyOne.TwentiethDecember where
 
-import Control.Monad (mapM_)
 import Data.Bifunctor (second)
-import Data.List (intersperse, sortBy)
+import Data.List (intercalate, sortBy)
 import Data.List.Split (chunksOf)
 import Data.Map (Map)
 import qualified Data.Map as M (empty, foldrWithKey, fromList, insert, keys, lookup)
@@ -35,7 +35,7 @@ convertImage m f =
 
 printImage m = convertImage m (mapM_ putStrLn)
 
-mapToString m = convertImage m (concat . intersperse "\n")
+mapToString m = convertImage m (intercalate "\n")
 
 neighboorsCoords :: Coord -> [Coord]
 neighboorsCoords (x, y) =
@@ -47,7 +47,7 @@ computeInfiniteDefault '#' mapping = last mapping
 
 imageAlgorithm :: Char -> String -> [String] -> (String, Char)
 imageAlgorithm def mapping =
-  (\s -> (s, computeInfiniteDefault def mapping))
+  (, computeInfiniteDefault def mapping)
     . ( \m ->
           mapToString
             ( M.foldrWithKey
