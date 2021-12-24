@@ -92,7 +92,7 @@ addCuboid c' (c : cs)
   | otherwise = c : addCuboid c' cs
 
 solution :: (Cuboid -> Bool) -> String -> Int
-solution f = foldl (\acc x -> acc + cubesInCuboid x) 0 . (foldl (flip addCuboid) []) . filter f . parseInput
+solution f = foldl (\acc x -> acc + cubesInCuboid x) 0 . foldl (flip addCuboid) [] . filter f . parseInput
 
 solution1 :: String -> Int
 solution1 = solution (not . isBig)

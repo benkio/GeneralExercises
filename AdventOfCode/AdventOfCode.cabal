@@ -117,7 +117,8 @@ library
       TwentyTwentyOne.TwentyFirstDecember
       TwentyTwentyOne.TwentyFourthDecember
       TwentyTwentyOne.TwentySecondDecember
-      TwentyTwentyOne.TwentyThirdDecember
+      TwentyTwentyOne.TwentyThirdDecemberP1
+      TwentyTwentyOne.TwentyThirdDecemberP2
   other-modules:
       Paths_AdventOfCode
   hs-source-dirs:
