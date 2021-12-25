@@ -1,15 +1,16 @@
 module TwentyTwentyOne.TwentyThirdDecemberP2 where
 
 import Data.Bifunctor (second)
+import Data.List (dropWhileEnd, transpose)
 import Data.Map (Map)
-import qualified Data.Map as M (elems, empty, filterWithKey, insert, lookup, size, insertWith, fromList, difference, findMin, delete, (!), toList, fromListWith)
+import qualified Data.Map as M (delete, difference, elems, empty, filterWithKey, findMin, fromList, fromListWith, insert, insertWith, lookup, size, toList, (!))
 import Data.Maybe (maybe, maybeToList)
 import Data.Set (Set)
-import qualified Data.Set as S (empty, foldl, fromList, insert, map, null, singleton, toList, union, unions, member, intersection, difference)
+import qualified Data.Set as S (difference, empty, foldl, fromList, insert, intersection, map, member, null, singleton, toList, union, unions)
+import qualified Data.Text as T (pack, splitOn, unpack)
 import Data.Vector (Vector, (!), (//))
 import qualified Data.Vector as V (findIndices, fromList, head, last, null, reverse, slice, tail, toList)
 import Debug.Trace
-import Data.List (dropWhileEnd, transpose)
 
 data Anphipod = Amber | Bronze | Copper | Desert deriving (Eq, Ord)
 
@@ -28,7 +29,7 @@ energy Desert = 1000
 -- Moves ------------------------------------------------------
 
 -- TODO:
--- create a file (or do it at the end of this) that has all the steps of the optimal test case solution
+-- DONE create a file (or do it at the end of this) that has all the steps of the optimal test case solution
 -- parse it to get all the valid Hallways
 -- Implement a single entry and exit strategy
 -- hardcode a test that: chains those steps, at each step search for the expected hallway, select it, run the next step. till the end
@@ -122,14 +123,15 @@ hallwayValidatePathExitRoom room = hallwayValidatePath (pathValidatioConditionEx
 hallwayValidatePathEnterRoom anphi room = hallwayValidatePath (pathValidatioConditionEnterRoom anphi room)
 
 pathValidatioConditionExitRoom :: Room -> Vector Space -> Bool
-pathValidatioConditionExitRoom  room path =
+pathValidatioConditionExitRoom room path =
   isEmpty (V.last path)
     && isRoom (V.head path)
     && room' == room
     && not (isRoomDone room')
     && not (isGoodRoom room')
     && all (\s -> isEmpty s || isRoom s) path
-  where room' = unsafeGetRoom (V.head path)
+  where
+    room' = unsafeGetRoom (V.head path)
 
 pathValidatioConditionEnterRoom :: Anphipod -> Room -> Vector Space -> Bool
 pathValidatioConditionEnterRoom anphipod room path =
@@ -211,22 +213,35 @@ parseInput :: String -> Hallway
 parseInput = (\l -> (//) ((V.fromList . fmap (const Empty)) (head l)) ((zip roomIndices . parseRooms) (tail l))) . filter (not . null) . fmap removeSpacesAndHash . lines
   where
     removeSpacesAndHash [] = []
-    removeSpacesAndHash (x:xs) = if x=='#' || x == ' ' then removeSpacesAndHash xs else x:removeSpacesAndHash xs
-    parseRooms = fmap (\(room, [a, a']) -> RoomEntry (setRoom room a a') ) .
-      zip [A Empty (Occupied Desert) (Occupied Desert) Empty, B Empty (Occupied Copper) (Occupied Bronze) Empty,C Empty (Occupied Bronze) (Occupied Amber) Empty ,D Empty (Occupied Amber) (Occupied Copper) Empty] . fmap (fmap (\x -> read [x] :: Anphipod)) . transpose
+    removeSpacesAndHash (x : xs) = if x == '#' || x == ' ' then removeSpacesAndHash xs else x : removeSpacesAndHash xs
+    parseRooms =
+      fmap (\(room, as) -> if length as == 2 then RoomEntry (setRoom room (as !! 0) (as !! 1)) else RoomEntry (setRoom' room (as !! 0) (as !! 1) (as !! 2) (as !! 3)))
+        . zip [A Empty (Occupied Desert) (Occupied Desert) Empty, B Empty (Occupied Copper) (Occupied Bronze) Empty, C Empty (Occupied Bronze) (Occupied Amber) Empty, D Empty (Occupied Amber) (Occupied Copper) Empty]
+        . fmap (fmap (\x -> read [x] :: Anphipod))
+        . transpose
 
 setRoom :: Room -> Anphipod -> Anphipod -> Room
-setRoom (A _ b c _ ) a d = A (Occupied a) b c (Occupied d)
-setRoom (B _ b c _ ) a d = B (Occupied a) b c (Occupied d)
-setRoom (C _ b c _ ) a d = C (Occupied a) b c (Occupied d)
-setRoom (D _ b c _ ) a d = D (Occupied a) b c (Occupied d)
+setRoom (A _ b c _) a d = A (Occupied a) b c (Occupied d)
+setRoom (B _ b c _) a d = B (Occupied a) b c (Occupied d)
+setRoom (C _ b c _) a d = C (Occupied a) b c (Occupied d)
+setRoom (D _ b c _) a d = D (Occupied a) b c (Occupied d)
 
-testInput :: String
-testInput = "#############\n\
-\#...........#\n\
-\###B#C#B#D###\n\
-\  #A#D#C#A#\n\
-\  #########"
+setRoom' :: Room -> Anphipod -> Anphipod -> Anphipod -> Anphipod -> Room
+setRoom' (A _ _ _ _) a b c d = A (Occupied a) (Occupied b) (Occupied c) (Occupied d)
+setRoom' (B _ _ _ _) a b c d = B (Occupied a) (Occupied b) (Occupied c) (Occupied d)
+setRoom' (C _ _ _ _) a b c d = C (Occupied a) (Occupied b) (Occupied c) (Occupied d)
+setRoom' (D _ _ _ _) a b c d = D (Occupied a) (Occupied b) (Occupied c) (Occupied d)
+
+inputTest :: String
+inputTest =
+  "#############\n\
+  \#...........#\n\
+  \###B#C#B#D###\n\
+  \  #A#D#C#A#\n\
+  \  #########"
+
+--inputTest' :: IO [Hallway]
+inputTest' = (fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack) <$> readFile "input/2021/21DecemberTest.txt"
 
 instance Show Space where
   show Empty = "."
@@ -249,8 +264,8 @@ instance Read Anphipod where
   readsPrec _ = readsAnphipod
 
 readsAnphipod :: ReadS Anphipod
-readsAnphipod ('A':xs) = [(Amber, xs)]
-readsAnphipod ('B':xs) = [(Bronze, xs)]
-readsAnphipod ('C':xs) = [(Copper, xs)]
-readsAnphipod ('D':xs) = [(Desert, xs)]
+readsAnphipod ('A' : xs) = [(Amber, xs)]
+readsAnphipod ('B' : xs) = [(Bronze, xs)]
+readsAnphipod ('C' : xs) = [(Copper, xs)]
+readsAnphipod ('D' : xs) = [(Desert, xs)]
 readsAnphipod _ = []
