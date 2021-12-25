@@ -8,6 +8,7 @@ import Data.Set (Set)
 import qualified Data.Set as S (empty, foldl, fromList, insert, union, toList, unions, map, singleton, null)
 import Data.Vector (Vector, (!), (//))
 import qualified Data.Vector as V (findIndices, fromList, head, last, null, reverse, slice, tail, toList)
+import Debug.Trace
 
 data Anphipod = Amber | Bronze | Copper | Desert deriving (Eq, Ord)
 
@@ -69,7 +70,7 @@ removeUpdateVisitedStates cache =
     (cache, S.empty)
 
 allPossibleMovesStep :: Map Hallway Int -> Set (Hallway, Int) -> (Map Hallway Int, Set (Hallway, Int))
-allPossibleMovesStep cache states = removeUpdateVisitedStates cache nextMoves
+allPossibleMovesStep cache states = traceShow (length states, M.size cache) $ removeUpdateVisitedStates cache nextMoves
   where nextMoves = (S.unions . S.map (\(h, e) -> S.map (second (+e)) (enterRoomMoves h `S.union` exitRoomMoves h)) ) states
 
 allPossibleMoves :: Hallway -> (Map Hallway Int, Set (Hallway, Int))
