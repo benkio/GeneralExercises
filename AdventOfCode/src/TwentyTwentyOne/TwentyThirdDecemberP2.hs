@@ -9,6 +9,7 @@ import qualified Data.Set as S (empty, foldl, fromList, insert, map, null, singl
 import Data.Vector (Vector, (!), (//))
 import qualified Data.Vector as V (findIndices, fromList, head, last, null, reverse, slice, tail, toList)
 import Debug.Trace
+import Data.List (dropWhileEnd, transpose)
 
 data Anphipod = Amber | Bronze | Copper | Desert deriving (Eq, Ord)
 
@@ -26,12 +27,8 @@ energy Desert = 1000
 
 -- Moves ------------------------------------------------------
 
-input :: IO String
-input = readFile "input/2021/23December.txt"
-
 -- TODO:
--- parseInput
--- create a file that has all the steps of the optimal test case solution
+-- create a file (or do it at the end of this) that has all the steps of the optimal test case solution
 -- parse it to get all the valid Hallways
 -- Implement a single entry and exit strategy
 -- hardcode a test that: chains those steps, at each step search for the expected hallway, select it, run the next step. till the end
@@ -207,37 +204,29 @@ isRoomDone _ = False
 allRoomsDone :: Hallway -> Bool
 allRoomsDone h = isRoomDone (getRoomA h) && isRoomDone (getRoomB h) && isRoomDone (getRoomC h) && isRoomDone (getRoomD h)
 
-inputHallway :: Hallway
-inputHallway =
-  V.fromList
-    [ Empty,
-      Empty,
-      RoomEntry (A (Occupied Amber) (Occupied Desert) (Occupied Desert) (Occupied Copper)),
-      Empty,
-      RoomEntry (B (Occupied Desert) (Occupied Copper) (Occupied Bronze) (Occupied Desert)),
-      Empty,
-      RoomEntry (C (Occupied Copper) (Occupied Bronze) (Occupied Amber) (Occupied Bronze)),
-      Empty,
-      RoomEntry (D (Occupied Amber) (Occupied Amber) (Occupied Copper) (Occupied Bronze)),
-      Empty,
-      Empty
-    ]
+input :: IO String
+input = readFile "input/2021/23December.txt"
 
-testHallway :: Hallway
-testHallway =
-  V.fromList
-    [ Empty,
-      Empty,
-      RoomEntry (A (Occupied Bronze) (Occupied Desert) (Occupied Desert) (Occupied Amber)),
-      Empty,
-      RoomEntry (B (Occupied Copper) (Occupied Copper) (Occupied Bronze) (Occupied Desert)),
-      Empty,
-      RoomEntry (C (Occupied Bronze) (Occupied Bronze) (Occupied Amber) (Occupied Copper)),
-      Empty,
-      RoomEntry (D (Occupied Desert) (Occupied Amber) (Occupied Copper) (Occupied Amber)),
-      Empty,
-      Empty
-    ]
+parseInput :: String -> Hallway
+parseInput = (\l -> (//) ((V.fromList . fmap (const Empty)) (head l)) ((zip roomIndices . parseRooms) (tail l))) . filter (not . null) . fmap removeSpacesAndHash . lines
+  where
+    removeSpacesAndHash [] = []
+    removeSpacesAndHash (x:xs) = if x=='#' || x == ' ' then removeSpacesAndHash xs else x:removeSpacesAndHash xs
+    parseRooms = fmap (\(room, [a, a']) -> RoomEntry (setRoom room a a') ) .
+      zip [A Empty (Occupied Desert) (Occupied Desert) Empty, B Empty (Occupied Copper) (Occupied Bronze) Empty,C Empty (Occupied Bronze) (Occupied Amber) Empty ,D Empty (Occupied Amber) (Occupied Copper) Empty] . fmap (fmap (\x -> read [x] :: Anphipod)) . transpose
+
+setRoom :: Room -> Anphipod -> Anphipod -> Room
+setRoom (A _ b c _ ) a d = A (Occupied a) b c (Occupied d)
+setRoom (B _ b c _ ) a d = B (Occupied a) b c (Occupied d)
+setRoom (C _ b c _ ) a d = C (Occupied a) b c (Occupied d)
+setRoom (D _ b c _ ) a d = D (Occupied a) b c (Occupied d)
+
+testInput :: String
+testInput = "#############\n\
+\#...........#\n\
+\###B#C#B#D###\n\
+\  #A#D#C#A#\n\
+\  #########"
 
 instance Show Space where
   show Empty = "."
@@ -251,7 +240,17 @@ instance Show Anphipod where
   show Desert = "D"
 
 instance Show Room where
-  show (A s s' s'' s''') = show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
-  show (B s s' s'' s''') = show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
-  show (C s s' s'' s''') = show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
-  show (D s s' s'' s''') = show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
+  show (A s s' s'' s''') = "A>" ++ show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
+  show (B s s' s'' s''') = "B>" ++ show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
+  show (C s s' s'' s''') = "C>" ++ show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
+  show (D s s' s'' s''') = "D>" ++ show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
+
+instance Read Anphipod where
+  readsPrec _ = readsAnphipod
+
+readsAnphipod :: ReadS Anphipod
+readsAnphipod ('A':xs) = [(Amber, xs)]
+readsAnphipod ('B':xs) = [(Bronze, xs)]
+readsAnphipod ('C':xs) = [(Copper, xs)]
+readsAnphipod ('D':xs) = [(Desert, xs)]
+readsAnphipod _ = []
