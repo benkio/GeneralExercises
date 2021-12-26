@@ -1,6 +1,6 @@
 module TwentyTwentyOne.TwentyThirdDecemberP2 where
 
-import Data.Bifunctor (second)
+import Data.Bifunctor (first, second)
 import Data.List (dropWhileEnd, transpose)
 import Data.Map (Map)
 import qualified Data.Map as M (delete, difference, elems, empty, filterWithKey, findMin, fromList, fromListWith, insert, insertWith, lookup, size, toList, (!))
@@ -39,7 +39,48 @@ energy Desert = 1000
 twentyThirdDecemberSolution2 :: Int
 twentyThirdDecemberSolution2 = undefined -- solution inputHallway
 
-test = undefined -- solution testHallway
+test=  undefined -- solution testHallway
+
+distanceFromGoal :: Hallway -> Int
+distanceFromGoal h =
+  sum (fmap (distanceFromGoal' . getRoom h) roomIndices)
+    + sum (fmap (\i -> distanceFromGoal'' (unsafeGetOccupied (h ! i), i)) (occupiedIndices h))
+
+distanceFromGoal' :: Room -> Int
+distanceFromGoal' (A as) =
+  foldl
+    ( \acc (a, i) ->
+        acc + (if unsafeGetOccupied a == Amber then 0 else energy (unsafeGetOccupied a) * (i + distanceFromGoal'' (unsafeGetOccupied a, roomAIndex)))
+    )
+    0
+    (filter (/= Empty) as `zip` [1 ..])
+distanceFromGoal' (B as) =
+  foldl
+    ( \acc (a, i) ->
+        acc + (if unsafeGetOccupied a == Bronze then 0 else energy (unsafeGetOccupied a) * (i + distanceFromGoal'' (unsafeGetOccupied a, roomBIndex)))
+    )
+    0
+    (filter (/= Empty) as `zip` [1 ..])
+distanceFromGoal' (C as) =
+  foldl
+    ( \acc (a, i) ->
+        acc + (if unsafeGetOccupied a == Copper then 0 else energy (unsafeGetOccupied a) * (i + distanceFromGoal'' (unsafeGetOccupied a, roomCIndex)))
+    )
+    0
+    (filter (/= Empty) as `zip` [1 ..])
+distanceFromGoal' (D as) =
+  foldl
+    ( \acc (a, i) ->
+        acc + (if unsafeGetOccupied a == Desert then 0 else energy (unsafeGetOccupied a) * (i + distanceFromGoal'' (unsafeGetOccupied a, roomDIndex)))
+    )
+    0
+    (filter (/= Empty) as `zip` [1 ..])
+
+distanceFromGoal'' :: (Anphipod, Int) -> Int
+distanceFromGoal'' (Amber, i) = energy Amber * abs (roomAIndex - i)
+distanceFromGoal'' (Bronze, i) = energy Bronze * abs (roomBIndex - i)
+distanceFromGoal'' (Copper, i) = energy Copper * abs (roomCIndex - i)
+distanceFromGoal'' (Desert, i) = energy Desert * abs (roomDIndex - i)
 
 -- Utilities -----------------------------------
 getRoom h i = unsafeGetRoom $ h ! i
@@ -171,10 +212,10 @@ hasRoomSpace (C as) = length as < 4
 hasRoomSpace (D as) = length as < 4
 
 isRoomDone :: Room -> Bool
-isRoomDone (A as) = length as == 4 && all (== (Occupied Amber)) as
-isRoomDone (B as) = length as == 4 && all (== (Occupied Bronze)) as
-isRoomDone (C as) = length as == 4 && all (== (Occupied Copper)) as
-isRoomDone (D as) = length as == 4 && all (== (Occupied Desert)) as
+isRoomDone (A as) = length as == 4 && all (== Occupied Amber) as
+isRoomDone (B as) = length as == 4 && all (== Occupied Bronze) as
+isRoomDone (C as) = length as == 4 && all (== Occupied Copper) as
+isRoomDone (D as) = length as == 4 && all (== Occupied Desert) as
 
 allRoomsDone :: Hallway -> Bool
 allRoomsDone h = isRoomDone (getRoomA h) && isRoomDone (getRoomB h) && isRoomDone (getRoomC h) && isRoomDone (getRoomD h)
@@ -183,7 +224,11 @@ input :: IO String
 input = readFile "input/2021/23December.txt"
 
 parseInput :: String -> Hallway
-parseInput = (\l -> (//) ((V.fromList . fmap (const Empty)) (head l)) ((zip roomIndices . parseRooms) (tail l))) . filter (not . null) . fmap removeSpacesAndHash . lines
+parseInput =
+  (\l -> (//) ((V.fromList . fmap (\x -> read [x] :: Space)) (head l)) ((zip roomIndices . parseRooms) (tail l)))
+    . filter (not . null)
+    . fmap removeSpacesAndHash
+    . lines
   where
     removeSpacesAndHash [] = []
     removeSpacesAndHash (x : xs) = if x == '#' || x == ' ' then removeSpacesAndHash xs else x : removeSpacesAndHash xs
@@ -195,25 +240,25 @@ parseInput = (\l -> (//) ((V.fromList . fmap (const Empty)) (head l)) ((zip room
               else RoomEntry (setRoom' room as)
         )
         . zip
-          [ setRoom' (A []) [Desert, Desert],
-            setRoom' (B []) [Copper, Bronze],
-            setRoom' (C []) [Bronze, Amber],
-            setRoom' (D []) [Amber, Copper]
+          [ setRoom' (A []) (fmap Occupied [Desert, Desert]),
+            setRoom' (B []) (fmap Occupied [Copper, Bronze]),
+            setRoom' (C []) (fmap Occupied [Bronze, Amber]),
+            setRoom' (D []) (fmap Occupied [Amber, Copper])
           ]
-        . fmap (fmap (\x -> read [x] :: Anphipod))
+        . fmap (fmap (\x -> read [x] :: Space))
         . transpose
 
-setRoom :: Room -> Anphipod -> Anphipod -> Room
-setRoom (A as) a d = A (Occupied a : as ++ [Occupied d])
-setRoom (B as) a d = B (Occupied a : as ++ [Occupied d])
-setRoom (C as) a d = C (Occupied a : as ++ [Occupied d])
-setRoom (D as) a d = D (Occupied a : as ++ [Occupied d])
+setRoom :: Room -> Space -> Space -> Room
+setRoom (A as) a d = A (a : as ++ [d])
+setRoom (B as) a d = B (a : as ++ [d])
+setRoom (C as) a d = C (a : as ++ [d])
+setRoom (D as) a d = D (a : as ++ [d])
 
-setRoom' :: Room -> [Anphipod] -> Room
-setRoom' (A _) as = A (fmap Occupied as)
-setRoom' (B _) as = B (fmap Occupied as)
-setRoom' (C _) as = C (fmap Occupied as)
-setRoom' (D _) as = D (fmap Occupied as)
+setRoom' :: Room -> [Space] -> Room
+setRoom' (A _) as = A as
+setRoom' (B _) as = B as
+setRoom' (C _) as = C as
+setRoom' (D _) as = D as
 
 inputTest :: String
 inputTest =
@@ -223,8 +268,8 @@ inputTest =
   \  #A#D#C#A#\n\
   \  #########"
 
---inputTest' :: IO [Hallway]
-inputTest' = (fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack) <$> readFile "input/2021/21DecemberTest.txt"
+inputTest' :: IO [Hallway]
+inputTest' = fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack <$> readFile "input/2021/21DecemberTest.txt"
 
 instance Show Space where
   show Empty = "."
@@ -245,6 +290,13 @@ instance Show Room where
 
 instance Read Anphipod where
   readsPrec _ = readsAnphipod
+
+instance Read Space where
+  readsPrec _ = readsSpace
+
+readsSpace :: ReadS Space
+readsSpace ('.' : xs) = [(Empty, xs)]
+readsSpace xs = first Occupied <$> readsAnphipod xs
 
 readsAnphipod :: ReadS Anphipod
 readsAnphipod ('A' : xs) = [(Amber, xs)]
