@@ -14,7 +14,7 @@ import Debug.Trace
 
 data Anphipod = Amber | Bronze | Copper | Desert deriving (Eq, Ord)
 
-data Room = A Space Space Space Space | B Space Space Space Space | C Space Space Space Space | D Space Space Space Space deriving (Eq, Ord)
+data Room = A [Space] | B [Space] | C [Space] | D [Space] deriving (Eq, Ord)
 
 data Space = Empty | Occupied Anphipod | RoomEntry Room deriving (Eq, Ord)
 
@@ -31,7 +31,7 @@ energy Desert = 1000
 -- TODO:
 -- DONE create a file (or do it at the end of this) that has all the steps of the optimal test case solution
 -- parse it to get all the valid Hallways
--- Implement a single entry and exit strategy
+-- Implement this https://en.wikipedia.org/wiki/A*_search_algorithm - the heuristic should be the difference with the full house, counting the type of anphipod
 -- hardcode a test that: chains those steps, at each step search for the expected hallway, select it, run the next step. till the end
 -- once the test works, extract the algorithm for the real input
 -- Check the right answer on AoC
@@ -67,48 +67,32 @@ roomDIndex = 8
 roomIndices = [roomAIndex, roomBIndex, roomCIndex, roomDIndex]
 
 extractAnphipodFromRoom :: Room -> Maybe (Anphipod, Room, Int)
-extractAnphipodFromRoom (A (Occupied a) b c d) = Just (a, A Empty b c d, 1)
-extractAnphipodFromRoom (A Empty (Occupied a) c d) = Just (a, A Empty Empty c d, 2)
-extractAnphipodFromRoom (A Empty Empty (Occupied a) d) = Just (a, A Empty Empty Empty d, 3)
-extractAnphipodFromRoom (A Empty Empty Empty (Occupied a)) = Just (a, A Empty Empty Empty Empty, 4)
-extractAnphipodFromRoom A {} = Nothing
-extractAnphipodFromRoom (B (Occupied a) b c d) = Just (a, B Empty b c d, 1)
-extractAnphipodFromRoom (B Empty (Occupied a) c d) = Just (a, B Empty Empty c d, 2)
-extractAnphipodFromRoom (B Empty Empty (Occupied a) d) = Just (a, B Empty Empty Empty d, 3)
-extractAnphipodFromRoom (B Empty Empty Empty (Occupied a)) = Just (a, B Empty Empty Empty Empty, 4)
-extractAnphipodFromRoom B {} = Nothing
-extractAnphipodFromRoom (C (Occupied a) b c d) = Just (a, C Empty b c d, 1)
-extractAnphipodFromRoom (C Empty (Occupied a) c d) = Just (a, C Empty Empty c d, 2)
-extractAnphipodFromRoom (C Empty Empty (Occupied a) d) = Just (a, C Empty Empty Empty d, 3)
-extractAnphipodFromRoom (C Empty Empty Empty (Occupied a)) = Just (a, C Empty Empty Empty Empty, 4)
-extractAnphipodFromRoom C {} = Nothing
-extractAnphipodFromRoom (D (Occupied a) b c d) = Just (a, D Empty b c d, 1)
-extractAnphipodFromRoom (D Empty (Occupied a) c d) = Just (a, D Empty Empty c d, 2)
-extractAnphipodFromRoom (D Empty Empty (Occupied a) d) = Just (a, D Empty Empty Empty d, 3)
-extractAnphipodFromRoom (D Empty Empty Empty (Occupied a)) = Just (a, D Empty Empty Empty Empty, 4)
-extractAnphipodFromRoom D {} = Nothing
+extractAnphipodFromRoom (A as)
+  | (not . null) as = Just ((unsafeGetOccupied . head) as, A (tail as), [4, 3 .. 1] !! (length as - 1))
+  | otherwise = Nothing
+extractAnphipodFromRoom (B as)
+  | (not . null) as = Just ((unsafeGetOccupied . head) as, B (tail as), [4, 3 .. 1] !! (length as - 1))
+  | otherwise = Nothing
+extractAnphipodFromRoom (C as)
+  | (not . null) as = Just ((unsafeGetOccupied . head) as, C (tail as), [4, 3 .. 1] !! (length as - 1))
+  | otherwise = Nothing
+extractAnphipodFromRoom (D as)
+  | (not . null) as = Just ((unsafeGetOccupied . head) as, D (tail as), [4, 3 .. 1] !! (length as - 1))
+  | otherwise = Nothing
 
 insertAnphipodInRoom :: Anphipod -> Room -> Maybe (Room, Int)
-insertAnphipodInRoom a (A Empty Empty Empty Empty) = Just (A Empty Empty Empty (Occupied a), 4)
-insertAnphipodInRoom a (A Empty Empty Empty d) = Just (A Empty Empty (Occupied a) d, 3)
-insertAnphipodInRoom a (A Empty Empty c d) = Just (A Empty (Occupied a) c d, 2)
-insertAnphipodInRoom a (A Empty b c d) = Just (A (Occupied a) b c d, 1)
-insertAnphipodInRoom a A {} = Nothing
-insertAnphipodInRoom a (B Empty Empty Empty Empty) = Just (B Empty Empty Empty (Occupied a), 4)
-insertAnphipodInRoom a (B Empty Empty Empty d) = Just (B Empty Empty (Occupied a) d, 3)
-insertAnphipodInRoom a (B Empty Empty c d) = Just (B Empty (Occupied a) c d, 2)
-insertAnphipodInRoom a (B Empty b c d) = Just (B (Occupied a) b c d, 1)
-insertAnphipodInRoom a B {} = Nothing
-insertAnphipodInRoom a (C Empty Empty Empty Empty) = Just (C Empty Empty Empty (Occupied a), 4)
-insertAnphipodInRoom a (C Empty Empty Empty d) = Just (C Empty Empty (Occupied a) d, 3)
-insertAnphipodInRoom a (C Empty Empty c d) = Just (C Empty (Occupied a) c d, 2)
-insertAnphipodInRoom a (C Empty b c d) = Just (C (Occupied a) b c d, 1)
-insertAnphipodInRoom a C {} = Nothing
-insertAnphipodInRoom a (D Empty Empty Empty Empty) = Just (D Empty Empty Empty (Occupied a), 4)
-insertAnphipodInRoom a (D Empty Empty Empty d) = Just (D Empty Empty (Occupied a) d, 3)
-insertAnphipodInRoom a (D Empty Empty c d) = Just (D Empty (Occupied a) c d, 2)
-insertAnphipodInRoom a (D Empty b c d) = Just (D (Occupied a) b c d, 1)
-insertAnphipodInRoom a D {} = Nothing
+insertAnphipodInRoom a (A as)
+  | length as < 4 = Just (A (Occupied a : as), [4, 3 .. 1] !! length as)
+  | otherwise = Nothing
+insertAnphipodInRoom a (B as)
+  | length as < 4 = Just (B (Occupied a : as), [4, 3 .. 1] !! length as)
+  | otherwise = Nothing
+insertAnphipodInRoom a (C as)
+  | length as < 4 = Just (C (Occupied a : as), [4, 3 .. 1] !! length as)
+  | otherwise = Nothing
+insertAnphipodInRoom a (D as)
+  | length as < 4 = Just (D (Occupied a : as), [4, 3 .. 1] !! length as)
+  | otherwise = Nothing
 
 hallwayTakePath :: Hallway -> Int -> Int -> Vector Space
 hallwayTakePath h start end = if start > end then V.reverse path else path
@@ -168,40 +152,29 @@ isRoom (RoomEntry _) = True
 isRoom _ = False
 
 isGoodRoom :: Room -> Bool
-isGoodRoom (A Empty (Occupied Amber) (Occupied Amber) (Occupied Amber)) = True
-isGoodRoom (A Empty Empty (Occupied Amber) (Occupied Amber)) = True
-isGoodRoom (A Empty Empty Empty (Occupied Amber)) = True
-isGoodRoom (B Empty (Occupied Bronze) (Occupied Bronze) (Occupied Bronze)) = True
-isGoodRoom (B Empty Empty (Occupied Bronze) (Occupied Bronze)) = True
-isGoodRoom (B Empty Empty Empty (Occupied Bronze)) = True
-isGoodRoom (C Empty (Occupied Copper) (Occupied Copper) (Occupied Copper)) = True
-isGoodRoom (C Empty Empty (Occupied Copper) (Occupied Copper)) = True
-isGoodRoom (C Empty Empty Empty (Occupied Copper)) = True
-isGoodRoom (D Empty (Occupied Desert) (Occupied Desert) (Occupied Desert)) = True
-isGoodRoom (D Empty Empty (Occupied Desert) (Occupied Desert)) = True
-isGoodRoom (D Empty Empty Empty (Occupied Desert)) = True
-isGoodRoom _ = False
+isGoodRoom (A as) = length as < 4 && length as > 0 && all (== (Occupied Amber)) as
+isGoodRoom (B as) = length as < 4 && length as > 0 && all (== (Occupied Bronze)) as
+isGoodRoom (C as) = length as < 4 && length as > 0 && all (== (Occupied Copper)) as
+isGoodRoom (D as) = length as < 4 && length as > 0 && all (== (Occupied Desert)) as
 
 anphipodOwnRoom :: Anphipod -> Room -> Bool
-anphipodOwnRoom Amber A {} = True
-anphipodOwnRoom Bronze B {} = True
-anphipodOwnRoom Copper C {} = True
-anphipodOwnRoom Desert D {} = True
+anphipodOwnRoom Amber (A _) = True
+anphipodOwnRoom Bronze (B _) = True
+anphipodOwnRoom Copper (C _) = True
+anphipodOwnRoom Desert (D _) = True
 anphipodOwnRoom _ _ = False
 
 hasRoomSpace :: Room -> Bool
-hasRoomSpace (A Empty _ _ _) = True
-hasRoomSpace (B Empty _ _ _) = True
-hasRoomSpace (C Empty _ _ _) = True
-hasRoomSpace (D Empty _ _ _) = True
-hasRoomSpace _ = False
+hasRoomSpace (A as) = length as < 4
+hasRoomSpace (B as) = length as < 4
+hasRoomSpace (C as) = length as < 4
+hasRoomSpace (D as) = length as < 4
 
 isRoomDone :: Room -> Bool
-isRoomDone (A (Occupied Amber) (Occupied Amber) (Occupied Amber) (Occupied Amber)) = True
-isRoomDone (B (Occupied Bronze) (Occupied Bronze) (Occupied Bronze) (Occupied Bronze)) = True
-isRoomDone (C (Occupied Copper) (Occupied Copper) (Occupied Copper) (Occupied Copper)) = True
-isRoomDone (D (Occupied Desert) (Occupied Desert) (Occupied Desert) (Occupied Desert)) = True
-isRoomDone _ = False
+isRoomDone (A as) = length as == 4 && all (== (Occupied Amber)) as
+isRoomDone (B as) = length as == 4 && all (== (Occupied Bronze)) as
+isRoomDone (C as) = length as == 4 && all (== (Occupied Copper)) as
+isRoomDone (D as) = length as == 4 && all (== (Occupied Desert)) as
 
 allRoomsDone :: Hallway -> Bool
 allRoomsDone h = isRoomDone (getRoomA h) && isRoomDone (getRoomB h) && isRoomDone (getRoomC h) && isRoomDone (getRoomD h)
@@ -215,22 +188,32 @@ parseInput = (\l -> (//) ((V.fromList . fmap (const Empty)) (head l)) ((zip room
     removeSpacesAndHash [] = []
     removeSpacesAndHash (x : xs) = if x == '#' || x == ' ' then removeSpacesAndHash xs else x : removeSpacesAndHash xs
     parseRooms =
-      fmap (\(room, as) -> if length as == 2 then RoomEntry (setRoom room (as !! 0) (as !! 1)) else RoomEntry (setRoom' room (as !! 0) (as !! 1) (as !! 2) (as !! 3)))
-        . zip [A Empty (Occupied Desert) (Occupied Desert) Empty, B Empty (Occupied Copper) (Occupied Bronze) Empty, C Empty (Occupied Bronze) (Occupied Amber) Empty, D Empty (Occupied Amber) (Occupied Copper) Empty]
+      fmap
+        ( \(room, as) ->
+            if length as == 2
+              then RoomEntry (setRoom room (head as) (as !! 1))
+              else RoomEntry (setRoom' room as)
+        )
+        . zip
+          [ setRoom' (A []) [Desert, Desert],
+            setRoom' (B []) [Copper, Bronze],
+            setRoom' (C []) [Bronze, Amber],
+            setRoom' (D []) [Amber, Copper]
+          ]
         . fmap (fmap (\x -> read [x] :: Anphipod))
         . transpose
 
 setRoom :: Room -> Anphipod -> Anphipod -> Room
-setRoom (A _ b c _) a d = A (Occupied a) b c (Occupied d)
-setRoom (B _ b c _) a d = B (Occupied a) b c (Occupied d)
-setRoom (C _ b c _) a d = C (Occupied a) b c (Occupied d)
-setRoom (D _ b c _) a d = D (Occupied a) b c (Occupied d)
+setRoom (A as) a d = A (Occupied a : as ++ [Occupied d])
+setRoom (B as) a d = B (Occupied a : as ++ [Occupied d])
+setRoom (C as) a d = C (Occupied a : as ++ [Occupied d])
+setRoom (D as) a d = D (Occupied a : as ++ [Occupied d])
 
-setRoom' :: Room -> Anphipod -> Anphipod -> Anphipod -> Anphipod -> Room
-setRoom' (A _ _ _ _) a b c d = A (Occupied a) (Occupied b) (Occupied c) (Occupied d)
-setRoom' (B _ _ _ _) a b c d = B (Occupied a) (Occupied b) (Occupied c) (Occupied d)
-setRoom' (C _ _ _ _) a b c d = C (Occupied a) (Occupied b) (Occupied c) (Occupied d)
-setRoom' (D _ _ _ _) a b c d = D (Occupied a) (Occupied b) (Occupied c) (Occupied d)
+setRoom' :: Room -> [Anphipod] -> Room
+setRoom' (A _) as = A (fmap Occupied as)
+setRoom' (B _) as = B (fmap Occupied as)
+setRoom' (C _) as = C (fmap Occupied as)
+setRoom' (D _) as = D (fmap Occupied as)
 
 inputTest :: String
 inputTest =
@@ -246,7 +229,7 @@ inputTest' = (fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack)
 instance Show Space where
   show Empty = "."
   show (Occupied a) = "<" ++ show a ++ ">"
-  show (RoomEntry r) = "[" ++ show r ++ "]"
+  show (RoomEntry r) = show r
 
 instance Show Anphipod where
   show Amber = "A"
@@ -255,10 +238,10 @@ instance Show Anphipod where
   show Desert = "D"
 
 instance Show Room where
-  show (A s s' s'' s''') = "A>" ++ show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
-  show (B s s' s'' s''') = "B>" ++ show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
-  show (C s s' s'' s''') = "C>" ++ show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
-  show (D s s' s'' s''') = "D>" ++ show s ++ "," ++ show s' ++ "," ++ show s'' ++ "," ++ show s'''
+  show (A as) = "A>" ++ show as
+  show (B as) = "B>" ++ show as
+  show (C as) = "C>" ++ show as
+  show (D as) = "D>" ++ show as
 
 instance Read Anphipod where
   readsPrec _ = readsAnphipod
