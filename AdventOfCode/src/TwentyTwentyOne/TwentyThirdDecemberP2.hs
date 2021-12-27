@@ -3,8 +3,8 @@ module TwentyTwentyOne.TwentyThirdDecemberP2 where
 import Data.Bifunctor (first, second)
 import Data.List (dropWhileEnd, transpose)
 import Data.Map (Map)
-import qualified Data.Map as M (delete, difference, elems, empty, filterWithKey, findMin, fromList, fromListWith, insert, insertWith, lookup, size, toList, (!))
-import Data.Maybe (maybe, maybeToList)
+import qualified Data.Map as M (delete, deleteMin, difference, elems, empty, filterWithKey, findMin, fromList, fromListWith, insert, insertWith, lookup, singleton, size, toList)
+import Data.Maybe (fromJust, maybe, maybeToList)
 import Data.Set (Set)
 import qualified Data.Set as S (difference, empty, foldl, fromList, insert, intersection, map, member, null, singleton, toList, union, unions)
 import qualified Data.Text as T (pack, splitOn, unpack)
@@ -18,6 +18,12 @@ data Room = A [Space] | B [Space] | C [Space] | D [Space] deriving (Eq, Ord)
 
 data Space = Empty | Occupied Anphipod | RoomEntry Room deriving (Eq, Ord)
 
+data State = State
+  { openSet :: Map Int Hallway, -- The int is the Fscore: gScore(n) + h(n)
+    cameFrom :: Map Hallway Hallway,
+    gScore :: Map Hallway Int
+  }
+
 type Hallway = Vector Space
 
 energy :: Anphipod -> Int
@@ -26,20 +32,49 @@ energy Bronze = 10
 energy Copper = 100
 energy Desert = 1000
 
--- Moves ------------------------------------------------------
+initialState :: Hallway -> State
+initialState h = State {openSet = M.singleton (distanceFromGoal h) h, cameFrom = M.empty, gScore = M.singleton h 0}
 
 -- TODO:
 -- DONE create a file (or do it at the end of this) that has all the steps of the optimal test case solution
--- parse it to get all the valid Hallways
+-- DONE parse it to get all the valid Hallways
 -- Implement this https://en.wikipedia.org/wiki/A*_search_algorithm - the heuristic should be the difference with the full house, counting the type of anphipod
 -- hardcode a test that: chains those steps, at each step search for the expected hallway, select it, run the next step. till the end
 -- once the test works, extract the algorithm for the real input
 -- Check the right answer on AoC
 
+aStar :: State -> State
+aStar s@(State {openSet = op})
+  | null op = s
+  | allRoomsDone (snd nextHallway) = aStar $ s {openSet = M.deleteMin op}
+  | otherwise =
+    let nextHallwayNeighboors = nextStates nextHallway
+        s' = computeNeighboors nextHallwayNeighboors (snd nextHallway) s
+     in aStar s'
+  where
+    nextHallway = M.findMin op
+
+-- Given the set of neighboors and their distance from current, the current hallway and the state, update the state accordingly to A*
+computeNeighboors :: Set (Int, Hallway) -> Hallway -> State -> State
+computeNeighboors neighboors current s@(State {openSet = op, cameFrom = cf, gScore = gs}) =
+  S.foldl
+    ( \state (dn, n) ->
+        let g = fromJust (M.lookup current gs) + dn
+         in if maybe True (g <) $ M.lookup n gs
+              then State {openSet = M.insert (g + distanceFromGoal n) n op, cameFrom = M.insert n current cf, gScore = M.insert n g gs}
+              else state
+    )
+    s
+    neighboors
+
+-- Given the current state and it's distance from start, returns the neighboors of it with the distance from current
+nextStates :: (Int, Hallway) -> Set (Int, Hallway)
+nextStates (gScore, h) = undefined
+
 twentyThirdDecemberSolution2 :: Int
 twentyThirdDecemberSolution2 = undefined -- solution inputHallway
 
-test=  undefined -- solution testHallway
+test = undefined -- solution testHallway
 
 distanceFromGoal :: Hallway -> Int
 distanceFromGoal h =
