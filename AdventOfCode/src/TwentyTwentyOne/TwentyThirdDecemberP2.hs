@@ -46,13 +46,13 @@ initialState h = State {openSet = M.singleton (distanceFromGoal h) h, cameFrom =
 aStar :: State -> State
 aStar s@(State {openSet = op})
   | null op = s
-  | allRoomsDone (snd nextHallway) = aStar $ s {openSet = M.deleteMin op}
+  | allRoomsDone nextHallway = aStar $ s {openSet = M.deleteMin op}
   | otherwise =
     let nextHallwayNeighboors = nextStates nextHallway
-        s' = computeNeighboors nextHallwayNeighboors (snd nextHallway) s
+        s' = computeNeighboors nextHallwayNeighboors nextHallway s
      in aStar s'
   where
-    nextHallway = M.findMin op
+    nextHallway = (snd . M.findMin) op
 
 -- Given the set of neighboors and their distance from current, the current hallway and the state, update the state accordingly to A*
 computeNeighboors :: Set (Int, Hallway) -> Hallway -> State -> State
@@ -68,13 +68,58 @@ computeNeighboors neighboors current s@(State {openSet = op, cameFrom = cf, gSco
     neighboors
 
 -- Given the current state and it's distance from start, returns the neighboors of it with the distance from current
-nextStates :: (Int, Hallway) -> Set (Int, Hallway)
-nextStates (gScore, h) = undefined
+nextStates :: Hallway -> Set (Int, Hallway)
+nextStates  = allMoves
+
+
+
+exitRoom :: Int -> Hallway -> Set (Int, Hallway)
+exitRoom roomIndex h = S.fromList $ do
+  (anphi, room, outOfRoomSteps) <- (maybeToList . extractAnphipodFromRoom . getRoom h) roomIndex
+  destinationIndex <- [end | end <- ( V.toList . emptyIndices) h, hallwayValidatePathExitRoom room h roomIndex end]
+  let h' = h // [(roomIndex, RoomEntry room), (destinationIndex, Occupied anphi)]
+      energySpent = energy anphi * (outOfRoomSteps + abs (destinationIndex - roomIndex))
+  return (energySpent, h')
+
+exitRoomA :: Hallway -> Set (Int, Hallway)
+exitRoomA = exitRoom roomAIndex
+
+exitRoomB :: Hallway -> Set (Int, Hallway)
+exitRoomB = exitRoom roomBIndex
+
+exitRoomC :: Hallway -> Set (Int, Hallway)
+exitRoomC = exitRoom roomCIndex
+
+exitRoomD :: Hallway -> Set (Int, Hallway)
+exitRoomD = exitRoom roomDIndex
+
+allMoves :: Hallway -> Set (Int, Hallway)
+allMoves h = foldl (\acc f -> acc `S.union` f h) S.empty [exitRoomA, exitRoomB, exitRoomC, exitRoomD, enterRoomMoves]
+
+enterRoomMoves :: Hallway -> Set (Int, Hallway)
+enterRoomMoves h = S.fromList $ do
+  occupiedHallwaySpot <- V.toList $ occupiedIndices h
+  let anphipod = unsafeGetOccupied (h ! occupiedHallwaySpot)
+  destinationIndex <- [end | end <- roomIndices, hallwayValidatePathEnterRoom anphipod (unsafeGetRoom (h ! end)) h occupiedHallwaySpot end]
+  (room', intoRoomSteps) <- maybeToList $ insertAnphipodInRoom anphipod (unsafeGetRoom (h ! destinationIndex))
+  let h' = h // [(occupiedHallwaySpot, Empty), (destinationIndex, RoomEntry room')]
+      energySpent = energy anphipod * (intoRoomSteps + abs (destinationIndex - occupiedHallwaySpot))
+  return (energySpent, h)
+
+
+
+
+
+
+
+
+
+
+
+
 
 twentyThirdDecemberSolution2 :: Int
 twentyThirdDecemberSolution2 = undefined -- solution inputHallway
-
-test = undefined -- solution testHallway
 
 distanceFromGoal :: Hallway -> Int
 distanceFromGoal h =
@@ -144,30 +189,38 @@ roomIndices = [roomAIndex, roomBIndex, roomCIndex, roomDIndex]
 
 extractAnphipodFromRoom :: Room -> Maybe (Anphipod, Room, Int)
 extractAnphipodFromRoom (A as)
-  | (not . null) as = Just ((unsafeGetOccupied . head) as, A (tail as), [4, 3 .. 1] !! (length as - 1))
+  | any (not . isEmpty) as =
+    Just ((unsafeGetOccupied . head . dropWhile isEmpty) as, A ((takeWhile isEmpty as) ++ [Empty] ++ ((tail . dropWhile isEmpty) as)) , ((+1) . length . takeWhile isEmpty) as)
   | otherwise = Nothing
 extractAnphipodFromRoom (B as)
-  | (not . null) as = Just ((unsafeGetOccupied . head) as, B (tail as), [4, 3 .. 1] !! (length as - 1))
+  | any (not . isEmpty) as =
+    Just ((unsafeGetOccupied . head . dropWhile isEmpty) as, B ((takeWhile isEmpty as) ++ [Empty] ++ ((tail . dropWhile isEmpty) as)) , ((+1) . length . takeWhile isEmpty) as)
   | otherwise = Nothing
 extractAnphipodFromRoom (C as)
-  | (not . null) as = Just ((unsafeGetOccupied . head) as, C (tail as), [4, 3 .. 1] !! (length as - 1))
+  | any (not . isEmpty) as =
+    Just ((unsafeGetOccupied . head . dropWhile isEmpty) as, C ((takeWhile isEmpty as) ++ [Empty] ++ ((tail . dropWhile isEmpty) as)) , ((+1) . length . takeWhile isEmpty) as)
   | otherwise = Nothing
 extractAnphipodFromRoom (D as)
-  | (not . null) as = Just ((unsafeGetOccupied . head) as, D (tail as), [4, 3 .. 1] !! (length as - 1))
+  | any (not . isEmpty) as =
+    Just ((unsafeGetOccupied . head . dropWhile isEmpty) as, D ((takeWhile isEmpty as) ++ [Empty] ++ ((tail . dropWhile isEmpty) as)) , ((+1) . length . takeWhile isEmpty) as)
   | otherwise = Nothing
 
 insertAnphipodInRoom :: Anphipod -> Room -> Maybe (Room, Int)
 insertAnphipodInRoom a (A as)
-  | length as < 4 = Just (A (Occupied a : as), [4, 3 .. 1] !! length as)
+  | any (isEmpty) as =
+    Just (A ((tail . takeWhile isEmpty) as ++ (Occupied a):(dropWhile isEmpty as)), (length . takeWhile isEmpty) as)
   | otherwise = Nothing
 insertAnphipodInRoom a (B as)
-  | length as < 4 = Just (B (Occupied a : as), [4, 3 .. 1] !! length as)
+  | any (isEmpty) as =
+    Just (B ((tail . takeWhile isEmpty) as ++ (Occupied a):(dropWhile isEmpty as)), (length . takeWhile isEmpty) as)
   | otherwise = Nothing
 insertAnphipodInRoom a (C as)
-  | length as < 4 = Just (C (Occupied a : as), [4, 3 .. 1] !! length as)
+  | any (isEmpty) as =
+    Just (C ((tail . takeWhile isEmpty) as ++ (Occupied a):(dropWhile isEmpty as)), (length . takeWhile isEmpty) as)
   | otherwise = Nothing
 insertAnphipodInRoom a (D as)
-  | length as < 4 = Just (D (Occupied a : as), [4, 3 .. 1] !! length as)
+  | any (isEmpty) as =
+    Just (D ((tail . takeWhile isEmpty) as ++ (Occupied a):(dropWhile isEmpty as)), (length . takeWhile isEmpty) as)
   | otherwise = Nothing
 
 hallwayTakePath :: Hallway -> Int -> Int -> Vector Space
@@ -186,7 +239,6 @@ pathValidatioConditionExitRoom :: Room -> Vector Space -> Bool
 pathValidatioConditionExitRoom room path =
   isEmpty (V.last path)
     && isRoom (V.head path)
-    && room' == room
     && not (isRoomDone room')
     && not (isGoodRoom room')
     && all (\s -> isEmpty s || isRoom s) path
@@ -228,10 +280,10 @@ isRoom (RoomEntry _) = True
 isRoom _ = False
 
 isGoodRoom :: Room -> Bool
-isGoodRoom (A as) = length as < 4 && length as > 0 && all (== (Occupied Amber)) as
-isGoodRoom (B as) = length as < 4 && length as > 0 && all (== (Occupied Bronze)) as
-isGoodRoom (C as) = length as < 4 && length as > 0 && all (== (Occupied Copper)) as
-isGoodRoom (D as) = length as < 4 && length as > 0 && all (== (Occupied Desert)) as
+isGoodRoom (A as) = any (isEmpty) as && length as > 0 && all (== (Occupied Amber)) as
+isGoodRoom (B as) = any (isEmpty) as && length as > 0 && all (== (Occupied Bronze)) as
+isGoodRoom (C as) = any (isEmpty) as && length as > 0 && all (== (Occupied Copper)) as
+isGoodRoom (D as) = any (isEmpty) as && length as > 0 && all (== (Occupied Desert)) as
 
 anphipodOwnRoom :: Anphipod -> Room -> Bool
 anphipodOwnRoom Amber (A _) = True
@@ -241,10 +293,10 @@ anphipodOwnRoom Desert (D _) = True
 anphipodOwnRoom _ _ = False
 
 hasRoomSpace :: Room -> Bool
-hasRoomSpace (A as) = length as < 4
-hasRoomSpace (B as) = length as < 4
-hasRoomSpace (C as) = length as < 4
-hasRoomSpace (D as) = length as < 4
+hasRoomSpace (A as) = any (isEmpty) as
+hasRoomSpace (B as) = any (isEmpty) as
+hasRoomSpace (C as) = any (isEmpty) as
+hasRoomSpace (D as) = any (isEmpty) as
 
 isRoomDone :: Room -> Bool
 isRoomDone (A as) = length as == 4 && all (== Occupied Amber) as
@@ -305,6 +357,8 @@ inputTest =
 
 inputTest' :: IO [Hallway]
 inputTest' = fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack <$> readFile "input/2021/21DecemberTest.txt"
+
+test h (h':hs) = let nextMoves = allMoves h in S.member h' $ S.map snd nextMoves
 
 instance Show Space where
   show Empty = "."
