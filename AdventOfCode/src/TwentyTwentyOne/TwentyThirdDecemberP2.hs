@@ -358,6 +358,7 @@ inputTest =
 inputTest' :: IO [Hallway]
 inputTest' = fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack <$> readFile "input/2021/21DecemberTest.txt"
 
+-- TODO: failed (\l -> test (head l) (tail l)) . drop 5
 test h (h':hs) = let nextMoves = allMoves h in S.member h' $ S.map snd nextMoves
 
 instance Show Space where
