@@ -3,10 +3,10 @@ module TwentyTwentyOne.TwentyThirdDecemberP2 where
 import Data.Bifunctor (first, second)
 import Data.List (dropWhileEnd, transpose, (\\))
 import Data.Map (Map)
-import qualified Data.Map as M (keys, delete, deleteMin, difference, elems, empty, filterWithKey, findMin, fromList, fromListWith, insert, insertWith, lookup, singleton, size, toList)
+import qualified Data.Map as M (delete, deleteMin, difference, elems, empty, filterWithKey, findMin, fromList, fromListWith, insert, insertWith, keys, lookup, singleton, size, toList)
 import Data.Maybe (fromJust, maybe, maybeToList)
 import Data.Set (Set)
-import qualified Data.Set as S (difference, empty, foldl, fromList, insert, intersection, map, member, null, singleton, toList, union, unions, size)
+import qualified Data.Set as S (difference, empty, foldl, fromList, insert, intersection, map, member, null, singleton, size, toList, union, unions)
 import qualified Data.Text as T (pack, splitOn, unpack)
 import Data.Vector (Vector, (!), (//))
 import qualified Data.Vector as V (findIndices, fromList, head, last, null, reverse, slice, tail, toList)
@@ -31,10 +31,11 @@ data Space = Empty | Occupied Anphipod | RoomEntry Room
     )
 
 data State = State
-  { openSet  :: Map Int Hallway, -- The int is the Fscore: gScore(n) + h(n)
+  { openSet :: Map Int Hallway, -- The int is the Fscore: gScore(n) + h(n)
     cameFrom :: Map Hallway Hallway,
-    gScore   :: Map Hallway Int
-  } deriving Show
+    gScore :: Map Hallway Int
+  }
+  deriving (Show)
 
 type Hallway = Vector Space
 
@@ -73,7 +74,7 @@ computeNeighboors neighboors current (State {openSet = op, cameFrom = cf, gScore
     ( \(op', cf', gs') (dn, n) ->
         let g = fromJust (M.lookup current gs') + dn
             r = (M.insert (g + distanceFromGoal n) n op', M.insert n current cf', M.insert n g gs')
-        in maybe r (\g' -> if g < g' then r  else (op', cf', gs')) $ M.lookup n gs
+         in maybe r (\g' -> if g < g' then r else (op', cf', gs')) $ M.lookup n gs
     )
     (op, cf, gs)
     neighboors
@@ -355,7 +356,7 @@ inputTest =
 inputTest' :: IO [Hallway]
 inputTest' = fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack <$> readFile "input/2021/21DecemberTest.txt"
 
-test (h:hs)= (length . (hs \\) . M.keys . gScore . aStar) $ initialState h
+test (h : hs) = (length . (hs \\) . M.keys . gScore . aStar) $ initialState h
 
 instance Show Space where
   show Empty = "."
