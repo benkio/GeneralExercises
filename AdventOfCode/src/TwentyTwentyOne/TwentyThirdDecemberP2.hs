@@ -1,9 +1,9 @@
 module TwentyTwentyOne.TwentyThirdDecemberP2 where
 
 import Data.Bifunctor (first, second)
-import Data.List (dropWhileEnd, transpose, (\\))
+import Data.List (dropWhileEnd, find, transpose, (\\))
 import Data.Map (Map)
-import qualified Data.Map as M (delete, deleteMin, difference, elems, empty, filterWithKey, findMin, fromList, fromListWith, insert, insertWith, keys, lookup, singleton, size, toList)
+import qualified Data.Map as M (delete, deleteMin, difference, elems, empty, filterWithKey, findMin, fromList, fromListWith, insert, insertWith, keys, lookup, member, singleton, size, toList)
 import Data.Maybe (fromJust, maybe, maybeToList)
 import Data.Set (Set)
 import qualified Data.Set as S (difference, empty, foldl, fromList, insert, intersection, map, member, null, singleton, size, toList, union, unions)
@@ -51,18 +51,32 @@ initialState h = State {openSet = M.singleton (distanceFromGoal h) h, cameFrom =
 -- TODO:
 -- DONE create a file (or do it at the end of this) that has all the steps of the optimal test case solution
 -- DONE parse it to get all the valid Hallways
--- Implement this https://en.wikipedia.org/wiki/A*_search_algorithm - the heuristic should be the difference with the full house, counting the type of anphipod
--- hardcode a test that: chains those steps, at each step search for the expected hallway, select it, run the next step. till the end
--- once the test works, extract the algorithm for the real input
+-- DONE Implement this https://en.wikipedia.org/wiki/A*_search_algorithm - the heuristic should be the difference with the full house, counting the type of anphipod
+-- DONE hardcode a test that: chains those steps, at each step search for the expected hallway, select it, run the next step. till the end
+-- DONE once the test works, extract the algorithm for the real input
+-- Debug why the algorithm stops instead of reaching the end
 -- Check the right answer on AoC
 
+reconstructPath :: Map Hallway Hallway -> [Hallway] -> [Hallway]
+reconstructPath comeFrom ps@(p:_) = foldl (\ps' prev -> reconstructPath comeFrom (prev:ps') ) ps $ M.lookup p comeFrom
+
 aStar :: State -> State
-aStar s@(State {openSet = op})
-  | null op || allRoomsDone nextHallway = s
-  | otherwise =
+aStar =
+  until
+    (\s -> let emptyOpenset = (null . openSet) s
+               goalReached = (allRoomsDone . snd . M.findMin . openSet) s
+           in traceShow ("emptyOpenSet " ++ (show emptyOpenset) ++ " - goalReached " ++ (show goalReached)) (emptyOpenset || goalReached)
+    )
+    ( \s ->
+        -- traceShow (((show . length . openSet) s) ++ " - " ++ (show . null . openSet) s  ++ " - " ++  (show . allRoomsDone . snd . M.findMin . openSet) s)
+        (aStarStep s)
+    )
+
+aStarStep :: State -> State
+aStarStep s@(State {openSet = op}) =
     let nextHallwayNeighboors = nextStates nextHallway
         (op', cf, gs) = computeNeighboors nextHallwayNeighboors nextHallway nextState
-     in aStar $ State {openSet = op', cameFrom = cf, gScore = gs}
+     in State {openSet = op', cameFrom = cf, gScore = gs}
   where
     nextHallway = (snd . M.findMin) op
     nextState = s {openSet = M.deleteMin op}
@@ -238,7 +252,7 @@ pathValidatioConditionExitRoom room path =
   isEmpty (V.last path)
     && isRoom (V.head path)
     && not (isRoomDone room')
-    && not (isGoodRoom room')
+    && not (noIntruders room')
     && all (\s -> isEmpty s || isRoom s) path
   where
     room' = unsafeGetRoom (V.head path)
@@ -251,6 +265,7 @@ pathValidatioConditionEnterRoom anphipod room path =
     && unsafeGetRoom (V.last path) == room
     && anphipodOwnRoom anphipod room
     && hasRoomSpace room
+    && noIntruders room
     && all (\s -> isEmpty s || isRoom s) (V.tail path)
 
 unsafeGetRoom :: Space -> Room
@@ -277,12 +292,6 @@ isRoom :: Space -> Bool
 isRoom (RoomEntry _) = True
 isRoom _ = False
 
-isGoodRoom :: Room -> Bool
-isGoodRoom (A as) = any (isEmpty) as && length as > 0 && all (== (Occupied Amber)) as
-isGoodRoom (B as) = any (isEmpty) as && length as > 0 && all (== (Occupied Bronze)) as
-isGoodRoom (C as) = any (isEmpty) as && length as > 0 && all (== (Occupied Copper)) as
-isGoodRoom (D as) = any (isEmpty) as && length as > 0 && all (== (Occupied Desert)) as
-
 anphipodOwnRoom :: Anphipod -> Room -> Bool
 anphipodOwnRoom Amber (A _) = True
 anphipodOwnRoom Bronze (B _) = True
@@ -295,6 +304,12 @@ hasRoomSpace (A as) = any (isEmpty) as
 hasRoomSpace (B as) = any (isEmpty) as
 hasRoomSpace (C as) = any (isEmpty) as
 hasRoomSpace (D as) = any (isEmpty) as
+
+noIntruders :: Room -> Bool
+noIntruders (A as) = all (\x -> isEmpty x || x == (Occupied Amber)) as
+noIntruders (B as) = all (\x -> isEmpty x || x == (Occupied Bronze)) as
+noIntruders (C as) = all (\x -> isEmpty x || x == (Occupied Copper)) as
+noIntruders (D as) = all (\x -> isEmpty x || x == (Occupied Desert)) as
 
 isRoomDone :: Room -> Bool
 isRoomDone (A as) = length as == 4 && all (== Occupied Amber) as
@@ -356,7 +371,17 @@ inputTest =
 inputTest' :: IO [Hallway]
 inputTest' = fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack <$> readFile "input/2021/21DecemberTest.txt"
 
-test (h : hs) = (length . (hs \\) . M.keys . gScore . aStar) $ initialState h
+test (h : hs) = let
+  s = aStar $ initialState h
+  goal = (snd . M.findMin . openSet) s
+  in reconstructPath (cameFrom s) [goal]
+
+test' (h : hs) = let
+  s = aStar $ initialState h
+  goal = (snd . M.findMin . openSet) s
+  in M.lookup goal $ gScore s
+
+test'' (h : hs) = (find ((== head hs) . snd . M.findMin . openSet) . iterate aStarStep . initialState) h
 
 instance Show Space where
   show Empty = "."
