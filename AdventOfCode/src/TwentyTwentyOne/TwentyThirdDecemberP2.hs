@@ -1,12 +1,12 @@
 module TwentyTwentyOne.TwentyThirdDecemberP2 where
 
 import Data.Bifunctor (first, second)
-import Data.List (dropWhileEnd, find, transpose, (\\))
+import Data.List (dropWhileEnd, find, transpose, (\\), minimumBy)
 import Data.Map (Map)
 import qualified Data.Map as M (delete, deleteMin, difference, elems, empty, filterWithKey, findMin, fromList, fromListWith, insert, insertWith, keys, lookup, member, singleton, size, toList)
-import Data.Maybe (fromJust, maybe, maybeToList)
+import Data.Maybe (fromJust, maybe, maybeToList, mapMaybe)
 import Data.Set (Set)
-import qualified Data.Set as S (difference, empty, foldl, fromList, insert, intersection, map, member, null, singleton, size, toList, union, unions)
+import qualified Data.Set as S (difference, empty, foldl, fromList, insert, intersection, map, member, null, singleton, size, toList, union, unions, delete, filter)
 import qualified Data.Text as T (pack, splitOn, unpack)
 import Data.Vector (Vector, (!), (//))
 import qualified Data.Vector as V (findIndices, fromList, head, last, null, reverse, slice, tail, toList)
@@ -57,6 +57,15 @@ initialState h = State {openSet = M.singleton (distanceFromGoal h) h, cameFrom =
 -- Debug why the algorithm stops instead of reaching the end
 -- Check the right answer on AoC
 
+selectNextMin :: State -> Hallway
+selectNextMin State {openSet = op, gScore = gs}
+ | S.null op = error "can't find the minimum of an empty set"
+ | otherwise = (
+     snd
+     . minimumBy (\(x, _) (x',_) -> x `compare` x')
+     . mapMaybe (\h -> fmap (\x -> (x,h)) (M.lookup h gs))
+     . S.toList) op
+
 reconstructPath :: Map Hallway Hallway -> [Hallway] -> [Hallway]
 reconstructPath comeFrom ps@(p:_) = foldl (\ps' prev -> reconstructPath comeFrom (prev:ps') ) ps $ M.lookup p comeFrom
 
@@ -92,10 +101,6 @@ computeNeighboors neighboors current (State {openSet = op, cameFrom = cf, gScore
     )
     (op, cf, gs)
     neighboors
-
--- Given the current state and it's distance from start, returns the neighboors of it with the distance from current
-nextStates :: Hallway -> Set (Int, Hallway)
-nextStates = allMoves
 
 exitRoom :: Int -> Hallway -> Set (Int, Hallway)
 exitRoom roomIndex h = S.fromList $ do
@@ -371,17 +376,26 @@ inputTest =
 inputTest' :: IO [Hallway]
 inputTest' = fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack <$> readFile "input/2021/21DecemberTest.txt"
 
-test (h : hs) = let
-  s = aStar $ initialState h
-  goal = (snd . M.findMin . openSet) s
-  in reconstructPath (cameFrom s) [goal]
+-- test (h : hs) = let
+--   s = dijkstra $ initialState h
+--   goal = (snd . M.findMin . openSet) s
+--   in reconstructPath (cameFrom s) [goal]
 
-test' (h : hs) = let
-  s = aStar $ initialState h
-  goal = (snd . M.findMin . openSet) s
-  in M.lookup goal $ gScore s
+-- test' (h : hs) = let
+--   s = until ((== (head hs)) . snd . M.findMin . openSet) (\x ->
+--     let x' = dijkstraStep x
+--     in traceShow ((((head hs) `elem`) . M.elems . openSet) x) x'
+--     ) (initialState h)
+--   op = openSet s
+--   nextHallway = (snd . M.findMin) op
+--   nextState = s {openSet = M.deleteMin op}
+--   nextHallwayNeighboors = allMoves nextHallway
+--   -- (op', cf, gs) = computeNeighboors nextHallwayNeighboors nextHallway nextState
+--   in (find (== (hs !! 1)) . S.toList . S.map snd) nextHallwayNeighboors
 
-test'' (h : hs) = (find ((== head hs) . snd . M.findMin . openSet) . iterate aStarStep . initialState) h
+
+
+-- test'' (h : hs) = (find ((== head hs) . snd . M.findMin . openSet) . iterate dijkstraStep . initialState) h
 
 instance Show Space where
   show Empty = "."
