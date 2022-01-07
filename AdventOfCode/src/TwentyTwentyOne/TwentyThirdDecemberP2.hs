@@ -31,7 +31,7 @@ data Space = Empty | Occupied Anphipod | RoomEntry Room
     )
 
 data State = State
-  { openSet :: Map Int Hallway, -- The int is the Fscore: gScore(n) + h(n)
+  { openSet :: Set (Int, Hallway), -- The int is the Fscore: gScore(n) + h(n)
     cameFrom :: Map Hallway Hallway,
     gScore :: Map Hallway Int
   }
@@ -46,7 +46,7 @@ energy Copper = 100
 energy Desert = 1000
 
 initialState :: Hallway -> State
-initialState h = State {openSet = M.singleton (distanceFromGoal h) h, cameFrom = M.empty, gScore = M.singleton h 0}
+initialState h = State {openSet = S.singleton ((distanceFromGoal h), h), cameFrom = M.empty, gScore = M.singleton h 0}
 
 -- TODO:
 -- DONE create a file (or do it at the end of this) that has all the steps of the optimal test case solution
@@ -57,13 +57,11 @@ initialState h = State {openSet = M.singleton (distanceFromGoal h) h, cameFrom =
 -- Debug why the algorithm stops instead of reaching the end
 -- Check the right answer on AoC
 
-selectNextMin :: State -> Hallway
+selectNextMin :: State -> (Int, Hallway)
 selectNextMin State {openSet = op, gScore = gs}
  | S.null op = error "can't find the minimum of an empty set"
  | otherwise = (
-     snd
-     . minimumBy (\(x, _) (x',_) -> x `compare` x')
-     . mapMaybe (\h -> fmap (\x -> (x,h)) (M.lookup h gs))
+     minimumBy (\(x, _) (x',_) -> x `compare` x')
      . S.toList) op
 
 reconstructPath :: Map Hallway Hallway -> [Hallway] -> [Hallway]
@@ -73,30 +71,31 @@ aStar :: State -> State
 aStar =
   until
     (\s -> let emptyOpenset = (null . openSet) s
-               goalReached = (allRoomsDone . snd . M.findMin . openSet) s
+               goalReached = (allRoomsDone . snd . selectNextMin) s
            in traceShow ("emptyOpenSet " ++ (show emptyOpenset) ++ " - goalReached " ++ (show goalReached)) (emptyOpenset || goalReached)
     )
     ( \s ->
-        -- traceShow (((show . length . openSet) s) ++ " - " ++ (show . null . openSet) s  ++ " - " ++  (show . allRoomsDone . snd . M.findMin . openSet) s)
+        -- traceShow (((show . length . openSet) s) ++ " - " ++ (show . null . openSet) s  ++ " - " ++  (show . allRoomsDone . snd . selectNextMin) s)
         (aStarStep s)
     )
 
 aStarStep :: State -> State
 aStarStep s@(State {openSet = op}) =
-    let nextHallwayNeighboors = nextStates nextHallway
+    let nextHallwayNeighboors = allMoves nextHallway
         (op', cf, gs) = computeNeighboors nextHallwayNeighboors nextHallway nextState
      in State {openSet = op', cameFrom = cf, gScore = gs}
   where
-    nextHallway = (snd . M.findMin) op
-    nextState = s {openSet = M.deleteMin op}
+    minValue = selectNextMin s
+    nextHallway = snd minValue
+    nextState = s {openSet = S.delete minValue op}
 
 -- Given the set of neighboors and their distance from current, the current hallway and the state, update the state accordingly to A*
-computeNeighboors :: Set (Int, Hallway) -> Hallway -> State -> (Map Int Hallway, Map Hallway Hallway, Map Hallway Int)
+computeNeighboors :: Set (Int, Hallway) -> Hallway -> State -> (Set (Int, Hallway), Map Hallway Hallway, Map Hallway Int)
 computeNeighboors neighboors current (State {openSet = op, cameFrom = cf, gScore = gs}) =
   S.foldl
     ( \(op', cf', gs') (dn, n) ->
         let g = fromJust (M.lookup current gs') + dn
-            r = (M.insert (g + distanceFromGoal n) n op', M.insert n current cf', M.insert n g gs')
+            r = (S.insert ((g + distanceFromGoal n), n) op', M.insert n current cf', M.insert n g gs')
          in maybe r (\g' -> if g < g' then r else (op', cf', gs')) $ M.lookup n gs
     )
     (op, cf, gs)
@@ -376,13 +375,13 @@ inputTest =
 inputTest' :: IO [Hallway]
 inputTest' = fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack <$> readFile "input/2021/21DecemberTest.txt"
 
--- test (h : hs) = let
---   s = dijkstra $ initialState h
---   goal = (snd . M.findMin . openSet) s
---   in reconstructPath (cameFrom s) [goal]
+test (h : hs) = let
+  s = aStar $ initialState h
+  goal = (snd . selectNextMin ) s
+  in reconstructPath (cameFrom s) [goal]
 
 -- test' (h : hs) = let
---   s = until ((== (head hs)) . snd . M.findMin . openSet) (\x ->
+--   s = until ((== (head hs)) . selectNextMin) (\x ->
 --     let x' = dijkstraStep x
 --     in traceShow ((((head hs) `elem`) . M.elems . openSet) x) x'
 --     ) (initialState h)
@@ -395,7 +394,7 @@ inputTest' = fmap (parseInput . T.unpack) . T.splitOn (T.pack "\n\n") . T.pack <
 
 
 
--- test'' (h : hs) = (find ((== head hs) . snd . M.findMin . openSet) . iterate dijkstraStep . initialState) h
+-- test'' (h : hs) = (find ((== head hs) . selectNextMin) . iterate dijkstraStep . initialState) h
 
 instance Show Space where
   show Empty = "."
