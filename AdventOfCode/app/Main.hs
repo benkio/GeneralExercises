@@ -102,4 +102,4 @@ import qualified TwentyTwentyOne.TwentyThirdDecemberP2  as TwentyThird2
 import qualified TwentyTwentyOne.TwentyThirdDecemberP1  as TwentyThird1
 
 main :: IO ()
-main = putStrLn $ show TwentyThird2.twentyThirdDecemberSolution2 -- >>= print
+main = TwentyThird2.twentyThirdDecemberSolution2 >>= print
