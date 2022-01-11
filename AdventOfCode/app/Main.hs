@@ -96,10 +96,10 @@ module Main where
 -- import qualified TwentyTwentyOne.TwentiethDecember    as Twenty
 -- import qualified TwentyTwentyOne.TwentyFifthDecember  as TwentyFifth
 -- import qualified TwentyTwentyOne.TwentyFirstDecember  as TwentyFirst
--- import qualified TwentyTwentyOne.TwentyFourthDecember as TwentyFourth
+import qualified TwentyTwentyOne.TwentyFourthDecember as TwentyFourth
 -- import qualified TwentyTwentyOne.TwentySecondDecember as TwentySecond
-import qualified TwentyTwentyOne.TwentyThirdDecemberP2  as TwentyThird2
-import qualified TwentyTwentyOne.TwentyThirdDecemberP1  as TwentyThird1
+-- import qualified TwentyTwentyOne.TwentyThirdDecemberP2  as TwentyThird2
+-- import qualified TwentyTwentyOne.TwentyThirdDecemberP1  as TwentyThird1
 
 main :: IO ()
-main = TwentyThird2.twentyThirdDecemberSolution2 >>= print
+main = return ()-- TwentyFourth.twentyFourthDecemberSolution1 >>= print
