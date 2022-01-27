@@ -1,10 +1,11 @@
 module ConnectFour where
 
 import Data.Bifunctor (first)
-import Data.List.NonEmpty (filter, span, splitAt, tails, take, zip)
+import Data.List.NonEmpty (span, splitAt, tails, take, zip)
+import qualified Data.List.NonEmpty as NL (filter)
 import Data.Maybe (fromJust)
 import Data.Tree
-import Relude hiding (filter, span, splitAt, tails, take, zip)
+import Relude hiding (span, splitAt, tails, take, zip)
 import Text.Printf (printf)
 
 -- Parameters
@@ -38,7 +39,7 @@ initialBoard = fromList $ fromList . (\_ -> fmap (const B) [1 .. cols]) <$> [1 .
 availableMoves :: Board -> [Int]
 availableMoves b =
   ( fmap fst
-      . filter (\(_, c) -> any (== B) c)
+      . NL.filter (\(_, c) -> any (== B) c)
       . zip (fromList [1 ..])
   )
     b
@@ -58,7 +59,7 @@ applyMoveBoard b i p =
    in prependList (init prefix) (newCol :| postfix)
 
 columnWin :: Column -> Bool
-columnWin c = any (all (\x -> x == X || x == O)) $ transpose (take win (tails c))
+columnWin c = (any (\x -> all (== X) x || all (== O) x) . Relude.filter ((== win) . length)) $ transpose (take win (tails c))
 
 calculateGraph :: Board -> Tree Board
 calculateGraph = undefined
