@@ -91,20 +91,25 @@ nextPlayer O = X
 nextPlayer X = O
 nextPlayer B = error "NextPlayer called with B"
 
+-- -- Board, player to play, winner
+-- calculateGraph :: Board -> Tree (Board, Player, Player)
+-- calculateGraph b =
+--   unfoldTree
+--     ( \(x, p, _) ->
+--         ( (x, p, winCondition x),
+--           if winCondition x /= B then [] else fmap (\b -> (b, nextPlayer p, B)) (nextPossibleBoards x p)
+--         )
+--     )
+--     (b, X, B)
+
 -- Board, player to play, winner
 calculateGraph :: Board -> Tree (Board, Player, Player)
-calculateGraph b =
-  unfoldTree
-    ( \(x, p, _) ->
-        ( (x, p, winCondition x),
-          if winCondition x /= B then [] else fmap (\b -> (b, nextPlayer p, B)) (nextPossibleBoards x p)
-        )
-    )
-    (b, X, B)
+calculateGraph b = go b X (depth - 1)
+  where go b' p d = Node (b', p, winCondition b') $ if winCondition b' /= B || d <=0 then [] else fmap (\x -> go x (nextPlayer p) (d-1)) (nextPossibleBoards b' p)
 
--- Better if there's a way to keep the tree structure so it's easier to unfold by label
-getGraphDepth :: Tree (Board, Player, Player) -> [(Board, Player, Player)]
-getGraphDepth = concat . take depth . levels
+-- -- Better if there's a way to keep the tree structure so it's easier to unfold by label
+-- getGraphDepth :: Tree (Board, Player, Player) -> [(Board, Player, Player)]
+-- getGraphDepth = concat . take depth . levels
 
 minimax :: Tree Board -> Board
 minimax = undefined
