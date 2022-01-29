@@ -1,23 +1,24 @@
 module ConnectFour where
 
 import Data.Bifunctor (first)
-import Data.List.NonEmpty (span, splitAt, tails, take, zip)
-import qualified Data.List.NonEmpty as NL (filter, reverse)
-import Data.Maybe (fromJust)
+import Data.List.NonEmpty (span, splitAt, tails, zip)
+import qualified Data.List.NonEmpty as NL (filter, reverse, take)
+import Data.Maybe (fromJust, isJust)
 import Data.Tree
-import Relude hiding (span, splitAt, tails, take, zip)
+import Relude hiding (span, splitAt, tails, zip)
 import Text.Printf (printf)
+import qualified Text.Show
 
 -- Parameters
 
 rows :: Int
-rows = 6
+rows = 3
 
 cols :: Int
-cols = 7
+cols = 3
 
 win :: Int
-win = 4
+win = 3
 
 depth :: Int
 depth = 6
@@ -29,7 +30,12 @@ type Board = NonEmpty Column
 type Column = NonEmpty Player
 
 data Player = O | B | X
-  deriving (Ord, Eq, Show)
+  deriving (Ord, Eq)
+
+instance Show Player where
+  show X = "X"
+  show O = "O"
+  show B = "."
 
 -- Logic
 
@@ -61,35 +67,44 @@ applyMoveBoard b i p =
 nextPossibleBoards :: Board -> Player -> [Board]
 nextPossibleBoards b p = (fmap (\i -> applyMoveBoard b i p) . availableMoves) b
 
-columnWin :: Column -> Bool
-columnWin c = (any (\x -> all (== X) x || all (== O) x) . Relude.filter ((== win) . length)) $ transpose (take win (tails c))
-
-winCondition :: Board -> Bool
-winCondition b = columnsWinCondition || rowsWinCondition || leftDiagonalWinCondition || rightDiagonalWinCondition
+columnWin :: Column -> First Player
+columnWin c = (fold . fmap winner . Relude.filter ((== win) . length)) $ transpose (NL.take win (tails c))
   where
-    b' = toList b
-    columnsWinCondition = any (columnWin) b'
-    rowsWinCondition = (any (columnWin . fromList) . transpose . fmap toList) b'
-    leftDiagonalWinCondition = (any (columnWin . fromList) . transpose . zipWith (\i xs -> replicate i B ++ xs) [0 .. rows - 1] . fmap toList) b'
-    rightDiagonalWinCondition = (any (columnWin . fromList) . transpose . zipWith (\i xs -> replicate i B ++ xs) [0 .. rows - 1] . reverse . fmap toList) b'
+    winner :: [Player] -> First Player
+    winner xs
+      | all (== X) xs = First $ Just X
+      | all (== O) xs = First $ Just O
+      | otherwise = First $ Just B
+
+winCondition :: Board -> Player
+winCondition b = (fromJust . getFirst) $ columnsWinCondition <> rowsWinCondition <> leftDiagonalWinCondition <> rightDiagonalWinCondition
+  where
+    b' = toList <$> toList b
+    findWinner = fold . fmap (columnWin . fromList)
+    columnsWinCondition = findWinner b'
+    rowsWinCondition = (findWinner . transpose) b'
+    leftDiagonalWinCondition = (findWinner . transpose . zipWith (\i xs -> replicate i B ++ xs) [0 .. rows - 1]) b'
+    rightDiagonalWinCondition = (findWinner . transpose . zipWith (\i xs -> replicate i B ++ xs) [0 .. rows - 1] . reverse) b'
 
 nextPlayer :: Player -> Player
 nextPlayer O = X
 nextPlayer X = O
 nextPlayer B = error "NextPlayer called with B"
 
-calculateGraph :: Board -> Tree (Board, Player)
+-- Board, player to play, winner
+calculateGraph :: Board -> Tree (Board, Player, Player)
 calculateGraph b =
   unfoldTree
-    ( \(x, p) ->
-        ( (x, p),
-          fmap (\b -> (b, nextPlayer p)) (nextPossibleBoards x p)
+    ( \(x, p, _) ->
+        ( (x, p, winCondition x),
+          if winCondition x /= B then [] else fmap (\b -> (b, nextPlayer p, B)) (nextPossibleBoards x p)
         )
     )
-    (b, X)
+    (b, X, B)
 
-getGraphDepth :: Tree (Board, Player) -> [Board]
-getGraphDepth = undefined --flatten . take depth . levels
+-- Better if there's a way to keep the tree structure so it's easier to unfold by label
+getGraphDepth :: Tree (Board, Player, Player) -> [(Board, Player, Player)]
+getGraphDepth = concat . take depth . levels
 
 minimax :: Tree Board -> Board
 minimax = undefined
