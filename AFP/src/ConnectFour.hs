@@ -6,6 +6,7 @@ import qualified Data.List.NonEmpty as NL (filter, reverse, take)
 import Data.Maybe (fromJust, isJust)
 import Data.Tree
 import Relude hiding (span, splitAt, tails, zip)
+import Relude.Extra.Foldable1
 import Text.Printf (printf)
 import qualified Text.Show
 
@@ -74,10 +75,10 @@ columnWin c = (fold . fmap winner . Relude.filter ((== win) . length)) $ transpo
     winner xs
       | all (== X) xs = First $ Just X
       | all (== O) xs = First $ Just O
-      | otherwise = First $ Just B
+      | otherwise = First $ Nothing
 
 winCondition :: Board -> Player
-winCondition b = (fromJust . getFirst) $ columnsWinCondition <> rowsWinCondition <> leftDiagonalWinCondition <> rightDiagonalWinCondition
+winCondition b = (fromMaybe B . getFirst) $ columnsWinCondition <> rowsWinCondition <> leftDiagonalWinCondition <> rightDiagonalWinCondition
   where
     b' = toList <$> toList b
     findWinner = fold . fmap (columnWin . fromList)
@@ -91,28 +92,19 @@ nextPlayer O = X
 nextPlayer X = O
 nextPlayer B = error "NextPlayer called with B"
 
--- -- Board, player to play, winner
--- calculateGraph :: Board -> Tree (Board, Player, Player)
--- calculateGraph b =
---   unfoldTree
---     ( \(x, p, _) ->
---         ( (x, p, winCondition x),
---           if winCondition x /= B then [] else fmap (\b -> (b, nextPlayer p, B)) (nextPossibleBoards x p)
---         )
---     )
---     (b, X, B)
-
 -- Board, player to play, winner
 calculateGraph :: Board -> Tree (Board, Player, Player)
-calculateGraph b = go b X (depth - 1)
-  where go b' p d = Node (b', p, winCondition b') $ if winCondition b' /= B || d <=0 then [] else fmap (\x -> go x (nextPlayer p) (d-1)) (nextPossibleBoards b' p)
+calculateGraph b = go b X depth
+  where
+    go b' p d = Node (b', p, winCondition b') $ if winCondition b' /= B || d <= 0 then [] else fmap (\x -> go x (nextPlayer p) (d -1)) (nextPossibleBoards b' p)
 
--- -- Better if there's a way to keep the tree structure so it's easier to unfold by label
--- getGraphDepth :: Tree (Board, Player, Player) -> [(Board, Player, Player)]
--- getGraphDepth = concat . take depth . levels
+labelPropagation :: Board -> (Board, Player, Player) -> [(Board, Player)] -> (Board, Player)
+labelPropagation _ (b, _, w) [] = (b, w)
+labelPropagation rb (b, X, _) bs = first (\b' -> if b == rb then b' else b) $ maximumOn1 snd (fromList bs :: NonEmpty (Board, Player))
+labelPropagation rb (b, O, _) bs = first (\b' -> if b == rb then b' else b) $ minimumOn1 snd (fromList bs :: NonEmpty (Board, Player))
 
-minimax :: Tree Board -> Board
-minimax = undefined
+minimax :: Tree (Board, Player, Player) -> Board
+minimax t@(Node (b, _, _) _) = (fst . foldTree (labelPropagation b)) t
 
 showGrid :: Board -> String
 showGrid = (foldr (\r acc -> acc ++ "\n" ++ show r) "" . transpose . fmap toList . toList)
