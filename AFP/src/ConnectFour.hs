@@ -97,7 +97,7 @@ nextPlayer B = error "NextPlayer called with B"
 
 -- Board, player to play, winner
 calculateGraph :: Board -> Tree (Board, Player, Player)
-calculateGraph b = go b X depth
+calculateGraph b = go b O depth
   where
     go b' p d = Node (b', p, winCondition b') $ if winCondition b' /= B || d <= 0 then [] else fmap (\x -> go x (nextPlayer p) (d -1)) (nextPossibleBoards b' p)
 
@@ -119,15 +119,15 @@ showGrid =
 
 -- Game IO
 
-askMove :: Board -> IO Board
-askMove b = do
+playerMove :: Board -> IO Board
+playerMove b = do
   putStrLn $ showGrid b
   putStrLn "-----------"
   let moves = availableMoves b
   putStrLn $ "In which Column do you want to play?" ++ show moves
   columnString <- getLine
   let columnE = readEither @Int $ toString columnString
-      retry = putStrLn "value not recognized or out of range, retry" >> askMove b
+      retry = putStrLn "value not recognized or out of range, retry" >> playerMove b
   either
     (const retry)
     ( \column ->
@@ -136,6 +136,23 @@ askMove b = do
           else retry
     )
     columnE
+
+engineMove :: Board -> IO Board
+engineMove b = do
+  putStrLn "Engine is working.."
+  let graph = calculateGraph b
+  return $ minimax graph
+
+gameLoop :: Board -> IO ()
+gameLoop b = do
+  b' <- playerMove b
+  if winCondition b' == X
+    then putStrLn $ showGrid b' ++ "\nThe player Wins!!!"
+    else
+      engineMove b' >>= \b'' ->
+        if winCondition b'' == O
+          then putStrLn (showGrid b'' ++ "\nThe engine Wins!!!")
+          else gameLoop b''
 
 -- Utility Functions
 
