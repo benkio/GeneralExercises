@@ -1,6 +1,9 @@
+{-# LANGUAGE TypeApplications #-}
+
 module ConnectFour where
 
 import Data.Bifunctor (first)
+import Data.List (foldl1)
 import Data.List.NonEmpty (span, splitAt, tails, zip)
 import qualified Data.List.NonEmpty as NL (filter, reverse, take)
 import Data.Maybe (fromJust, isJust)
@@ -107,12 +110,32 @@ minimax :: Tree (Board, Player, Player) -> Board
 minimax t@(Node (b, _, _) _) = (fst . foldTree (labelPropagation b)) t
 
 showGrid :: Board -> String
-showGrid = (foldr (\r acc -> acc ++ "\n" ++ show r) "" . transpose . fmap toList . toList)
+showGrid =
+  ( foldr (\r acc -> acc ++ "\n" ++ ((foldl1 (++) . fmap show) r)) ""
+      . transpose
+      . fmap toList
+      . toList
+  )
 
 -- Game IO
 
-askMove :: IO Int
-askMove = undefined
+askMove :: Board -> IO Board
+askMove b = do
+  putStrLn $ showGrid b
+  putStrLn "-----------"
+  let moves = availableMoves b
+  putStrLn $ "In which Column do you want to play?" ++ show moves
+  columnString <- getLine
+  let columnE = readEither @Int $ toString columnString
+      retry = putStrLn "value not recognized or out of range, retry" >> askMove b
+  either
+    (const retry)
+    ( \column ->
+        if column `elem` moves
+          then return $ applyMoveBoard b column X
+          else retry
+    )
+    columnE
 
 -- Utility Functions
 
