@@ -35,7 +35,7 @@ executable MonadicCompiler
 
 library
   exposed-modules: MonadicCompiler
-  other-modules: SourceLanguage
+  other-modules: SourceLanguage, VirtualMachine
   -- build-depends:
   build-depends: base ^>=4.15.1.0
   hs-source-dirs: src
