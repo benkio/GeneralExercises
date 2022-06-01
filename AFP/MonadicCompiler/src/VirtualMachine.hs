@@ -3,17 +3,21 @@ module VirtualMachine where
 import SourceLanguage
 
 type Stack = [Int]
+
 type Mem = [(Name, Int)]
+
 type Code = [Inst]
+
 type Label = Int
 
-data Inst = PUSH Int
-          | PUSHV Name
-          | POP Name
-          | DO Op
-          | Jump Label
-          | JumpZ Label
-          | LABEL Label
+data Inst
+  = PUSH Int
+  | PUSHV Name
+  | POP Name
+  | DO Op
+  | JUMP Label
+  | JUMPZ Label
+  | LABEL Label
 
 comp :: Prog -> Code
 comp = undefined
