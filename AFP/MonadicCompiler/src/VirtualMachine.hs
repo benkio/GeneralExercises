@@ -18,6 +18,7 @@ data Inst
   | JUMP Label
   | JUMPZ Label
   | LABEL Label
+  deriving (Show, Eq)
 
 comp :: Prog -> Code
 comp = undefined

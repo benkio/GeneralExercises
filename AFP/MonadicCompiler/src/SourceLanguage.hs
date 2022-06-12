@@ -14,3 +14,4 @@ data Expr
 type Name = Char
 
 data Op = Add | Sub | Div | Mul
+  deriving (Show, Eq)

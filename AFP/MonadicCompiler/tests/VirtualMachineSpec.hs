@@ -1,9 +1,14 @@
 module VirtualMachineSpec (spec) where
 
 import Test.Hspec
+import TestData (factorialCode, factorialFinalMem, factorialProg)
+import VirtualMachine (comp, exec)
 
 spec :: Spec
 spec = do
-  describe "strip" $ do
-    it "removes leading and trailing whitespace" $ do
-      1 `shouldBe` 1
+  describe "comp" $ do
+    it "produce the expected code starting from the input program" $ do
+      fmap (comp . factorialProg) [1 .. 10] `shouldBe` fmap factorialCode [1 .. 10]
+  describe "exec" $ do
+    it "produce the expected Mem from the input code" $ do
+      fmap factorialFinalMem [1 .. 10] `shouldBe` fmap (exec . factorialCode) [1 .. 10]
