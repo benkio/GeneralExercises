@@ -5,11 +5,13 @@ data Prog
   | If Expr Prog Prog
   | While Expr Prog
   | Seqn [Prog]
+  deriving (Show)
 
 data Expr
   = Val Int
   | Var Name
   | App Op Expr Expr
+  deriving (Show)
 
 type Name = Char
 
