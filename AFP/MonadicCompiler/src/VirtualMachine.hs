@@ -1,7 +1,9 @@
 module VirtualMachine where
 
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.Writer.Lazy
 import SourceLanguage
-import Data.Foldable (foldl')
 
 type Stack = [Int]
 
@@ -24,38 +26,33 @@ data Inst
 -- compilation ----------------------------------------------------------------
 
 comp :: Prog -> Code
-comp = fst . comp' 0
+comp prog = execWriter $ evalStateT (comp' prog) 0
 
-comp' :: Int -> Prog -> (Code, Int)
-comp' labelCount (Assign name expr) = (compExpr expr ++ [POP name], labelCount)
-comp' labelCount (If expr prog1 prog2) =
-  let (prog1Code, labelCount1) = comp' (labelCount + 2) prog1
-      (prog2Code, labelCount2) = comp' labelCount1 prog2
-   in ( compExpr expr
-          ++ [JUMPZ labelCount]
-          ++ prog1Code
-          ++ [JUMP (labelCount + 1), LABEL labelCount]
-          ++ prog2Code
-          ++ [LABEL (labelCount + 1)],
-        labelCount2
-      )
-comp' labelCount (While expr prog) =
-  let (innerWhileCode, innerLabelCount) = comp' (labelCount + 2) prog
-   in ( [LABEL labelCount]
-          ++ compExpr expr
-          ++ [JUMPZ (labelCount + 1)]
-          ++ innerWhileCode
-          ++ [JUMP labelCount, LABEL (labelCount + 1)],
-        innerLabelCount
-      )
-comp' labelCount (Seqn prog) =
-  foldl'
-    ( \(c, l) p ->
-        let (c', l') = comp' l p
-         in (c ++ c', l')
-    )
-    ([], labelCount)
-    prog
+comp' :: Prog -> StateT Label (Writer Code) ()
+comp' (Assign name expr) = (lift . tell) $ compExpr expr ++ [POP name]
+comp' (Seqn []) = return ()
+comp' (Seqn (p : ps)) = comp' p >> comp' (Seqn ps)
+
+-- comp' (If expr prog1 prog2) =
+--   -- let (prog1Code, labelCount1) = comp' (labelCount + 2) prog1
+--   --     (prog2Code, labelCount2) = comp' labelCount1 prog2
+--   --  in ( compExpr expr
+--   --         ++ [JUMPZ labelCount]
+--   --         ++ prog1Code
+--   --         ++ [JUMP (labelCount + 1), LABEL labelCount]
+--   --         ++ prog2Code
+--   --         ++ [LABEL (labelCount + 1)],
+--   --       labelCount2
+--   --     )
+-- comp' labelCount (While expr prog) =
+--   let (innerWhileCode, innerLabelCount) = comp' (labelCount + 2) prog
+--    in ( [LABEL labelCount]
+--           ++ compExpr expr
+--           ++ [JUMPZ (labelCount + 1)]
+--           ++ innerWhileCode
+--           ++ [JUMP labelCount, LABEL (labelCount + 1)],
+--         innerLabelCount
+--       )
 
 compExpr :: Expr -> Code
 compExpr (Val val) = [PUSH val]
