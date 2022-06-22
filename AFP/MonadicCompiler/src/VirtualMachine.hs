@@ -3,8 +3,8 @@ module VirtualMachine where
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Writer.Lazy
-import Data.Foldable (foldl')
-import Data.List (find)
+import Data.List (find, findIndex)
+import Data.Maybe (fromMaybe)
 import SourceLanguage
 
 type Stack = [Int]
@@ -64,38 +64,51 @@ emptyStack = []
 
 exec :: Code -> Mem
 exec code =
-  snd $ execState (foldl' (\s i -> s >> exec' i) (return ()) code) (emptyStack, emptyMem)
+  (\(_, m, _) -> m) $ execState (compilerStateMachine (head code) 0) (emptyStack, emptyMem, code)
+  where compilerStateMachine :: Inst -> Int -> State (Stack, Mem, Code) ()
+        compilerStateMachine i p = do
+          p' <- exec' i p
+          (_, _, cs) <- get
+          if length cs == p'
+            then return ()
+            else compilerStateMachine (cs !! p') p'
 
-exec' :: Inst -> State (Stack, Mem) ()
-exec' (PUSH value) = withState (\(st, mem) -> (value : st, mem)) (return ())
-exec' (PUSHV varName) =
+exec' :: Inst -> Int -> State (Stack, Mem, Code) Int
+exec' (PUSH value) p = withState (\(st, mem, cs) -> (value : st, mem, cs)) (return (p+1))
+exec' (PUSHV varName) p =
   withState
-    ( \(st, mem) ->
+    ( \(st, mem, cs) ->
         let newStack = (maybe st (\v -> v : st) . fmap snd . find (\(n, _) -> n == varName)) mem
-         in (newStack, mem)
+         in (newStack, mem, cs)
     )
-    (return ())
-exec' (POP varName) =
+    (return (p+1))
+exec' (POP varName) p =
   withState
-  ( \(st, mem) ->
+  ( \(st, mem, cs) ->
       if null st
-      then (st, mem)
+      then (st, mem, cs)
       else let mem' = (((varName, head st) :) . filter (\(n, _) -> n /= varName) ) mem
-        in (tail st, mem')
+        in (tail st, mem', cs)
       )
-  (return ())
-exec' (DO op) =
+  (return (p+1))
+exec' (DO op) p =
   withState
-  (\(st, mem) ->
+  (\(st, mem, cs) ->
      if length st < 2
-       then (st, mem)
+       then (st, mem, cs)
        else let v = execOp ((head . tail) st) (head st) op
-       in (v : (drop 2 st), mem)
+       in (v : (drop 2 st), mem, cs)
      )
-  (return ())
-exec' (JUMP label) = undefined
-exec' (JUMPZ label) = undefined
-exec' (LABEL label) = undefined
+  (return (p+1))
+exec' (LABEL _) p = return (p+1)
+exec' (JUMP label) p = do
+  (_, _, cs) <- get
+  return $ fromMaybe (p+1) $ findIndex (\i -> i == (LABEL label)) cs
+exec' (JUMPZ label) p = do
+  (st, _, _) <- get
+  if (not . null) st && head st == 0
+    then exec' (JUMP label) p
+    else return (p+1)
 
 execOp :: Int -> Int -> Op -> Int
 execOp v1 v2 Add = v1 + v2

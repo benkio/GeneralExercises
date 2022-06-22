@@ -39,4 +39,4 @@ factorialCode n =
   ]
 
 factorialFinalMem :: Int -> Mem
-factorialFinalMem n = [('A', product [1 .. n]), ('B', 0)]
+factorialFinalMem n = [('B', 0), ('A', product [1 .. n])]

@@ -11,4 +11,4 @@ spec = do
       fmap (comp . factorialProg) [1 .. 10] `shouldBe` fmap factorialCode [1 .. 10]
   describe "exec" $ do
     it "produce the expected Mem from the input code" $ do
-      fmap factorialFinalMem [1 .. 10] `shouldBe` fmap (exec . factorialCode) [1 .. 10]
+      fmap (exec . factorialCode) [1 .. 10] `shouldBe` fmap factorialFinalMem [1 .. 10]
