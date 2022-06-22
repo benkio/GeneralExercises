@@ -75,8 +75,30 @@ exec' (PUSHV varName) =
          in (newStack, mem)
     )
     (return ())
-exec' (POP varName) = undefined
-exec' (DO op) = undefined
+exec' (POP varName) =
+  withState
+  ( \(st, mem) ->
+      if null st
+      then (st, mem)
+      else let mem' = (((varName, head st) :) . filter (\(n, _) -> n /= varName) ) mem
+        in (tail st, mem')
+      )
+  (return ())
+exec' (DO op) =
+  withState
+  (\(st, mem) ->
+     if length st < 2
+       then (st, mem)
+       else let v = execOp ((head . tail) st) (head st) op
+       in (v : (drop 2 st), mem)
+     )
+  (return ())
 exec' (JUMP label) = undefined
 exec' (JUMPZ label) = undefined
 exec' (LABEL label) = undefined
+
+execOp :: Int -> Int -> Op -> Int
+execOp v1 v2 Add = v1 + v2
+execOp v1 v2 Sub = v1 - v2
+execOp v1 v2 Div = v1 * v2
+execOp v1 v2 Mul = v1 `div` v2
