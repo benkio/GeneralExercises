@@ -1,0 +1,5 @@
+* General Exercises
+
+Here is where I put all the kata's, online course assignments, AoC, and whatever small exercises I do here and there.
+
+No need for a single repository foreach of those.
