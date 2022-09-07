@@ -1,4 +1,3 @@
-use rand::Rng;
 use std::collections::HashMap;
 
 static URL_PREFIX: &str = "short.ly/";
@@ -11,20 +10,22 @@ static ASCII_LOWER: [char; 26] = [
     'z',
 ];
 
-fn random_lowercase(max_length: usize) -> String {
-    let mut rng = rand::thread_rng();
-    let mut result: String = String::new();
-    for _ in 0..max_length {
-        let random_index: usize = rng.gen_range(0..26);
-        let selected_char: char = ASCII_LOWER[random_index];
-        result.push(selected_char);
-    }
-    result
+fn generate_short_link_postfix(generated_links: usize) -> String {
+    (0..4).rev().fold((String::new(), generated_links), |acc, x| {
+        let (mut result, reminder): (String, usize) = acc;
+        let index_base: usize = 26_usize.pow(x);
+        let current_index: usize =  reminder / index_base;
+        let mut result_str: String = String::new();
+        if current_index > 0 {
+            result_str.push(ASCII_LOWER[current_index - 1]);
+            result.insert_str(x as usize, &result_str);
+            (result, reminder % index_base)
+        } else { (result, reminder) }
+    }).0
 }
-
 struct UrlShortener {
     url_database: HashMap<String, String>,
-    generated_links: u32,
+    generated_links: usize,
 }
 
 
@@ -42,15 +43,12 @@ impl UrlShortener {
         match self.url_database.iter().find(|&(_, v)| v == long_url) {
             Some((short_url, _)) => short_url.to_string(),
             None => {
-            let max_length = 13 - URL_PREFIX.len();
-            if max_length <= 0 {
-                panic!("max_length is: {} and cannot be <= 0", max_length);
-            }
-            let prefix: String = URL_PREFIX.to_string().clone();
-            let postfix: String = random_lowercase(max_length);
-            let short_url: String = prefix + &postfix;
-            self.url_database.insert(short_url.clone(), long_url.to_string());
-            short_url
+                let prefix: String = URL_PREFIX.to_string().clone();
+                let postfix: String = generate_short_link_postfix(self.generated_links);
+                let short_url: String = prefix + &postfix;
+                self.generated_links = self.generated_links + 1;
+                self.url_database.insert(short_url.clone(), long_url.to_string());
+                short_url
             }
         }
     }
