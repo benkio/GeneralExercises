@@ -11,23 +11,22 @@ static ASCII_LOWER: [char; 26] = [
 ];
 
 fn generate_short_link_postfix(generated_links: usize) -> String {
-    (0..4).rev().fold((String::new(), generated_links), |acc, x| {
+    [3, 2, 1, 0].iter().fold((String::new(), generated_links), |acc, x| {
         let (mut result, reminder): (String, usize) = acc;
-        let index_base: usize = 26_usize.pow(x);
+        let index_base: usize = 26_usize.pow(*x);
         let current_index: usize =  reminder / index_base;
         let mut result_str: String = String::new();
         if current_index > 0 {
             result_str.push(ASCII_LOWER[current_index - 1]);
-            result.insert_str(x as usize, &result_str);
+            result.push_str(&result_str);
             (result, reminder % index_base)
         } else { (result, reminder) }
-    }).0
+    }).0.chars().rev().collect::<String>()
 }
 struct UrlShortener {
     url_database: HashMap<String, String>,
     generated_links: usize,
 }
-
 
 impl UrlShortener {
 
@@ -44,9 +43,9 @@ impl UrlShortener {
             Some((short_url, _)) => short_url.to_string(),
             None => {
                 let prefix: String = URL_PREFIX.to_string().clone();
+                self.generated_links = self.generated_links + 1;
                 let postfix: String = generate_short_link_postfix(self.generated_links);
                 let short_url: String = prefix + &postfix;
-                self.generated_links = self.generated_links + 1;
                 self.url_database.insert(short_url.clone(), long_url.to_string());
                 short_url
             }
@@ -61,7 +60,9 @@ impl UrlShortener {
 fn main() {
     let mut url_shortener = UrlShortener::new();
     let test = url_shortener.shorten("www.benkio.github.io/");
-    println!("{}", test);
+    println!("simple test: {}", test);
+    let result: String = generate_short_link_postfix(0);
+    println!("big number test: {}", result);
 }
 
 #[cfg(test)]
