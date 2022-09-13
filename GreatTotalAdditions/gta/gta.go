@@ -1,47 +1,11 @@
 package gta
 
-//import ("fmt")
+import (
+	base "benkio/greattotaladditions/base"
+)
 
 func gta(limit int, nums ...int) int {
 	return 0
-}
-
-func Map[T, U any](s []T, f func(T) U) []U {
-	r := make([]U, len(s))
-	for i, v := range s {
-		r[i] = f(v)
-	}
-	return r
-}
-
-func contains(s []int, e int) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
-
-func findMinAndMax(a []int) (min int, max int) {
-	min = a[0]
-	max = a[0]
-	for _, value := range a {
-		if value < min {
-			min = value
-		}
-		if value > max {
-			max = value
-		}
-	}
-	return min, max
-}
-
-func prependInt(x []int, y int) []int {
-	x = append(x, 0)
-	copy(x[1:], x)
-	x[0] = y
-	return x
 }
 
 func splitNumber(num int) []int {
@@ -50,7 +14,7 @@ func splitNumber(num int) []int {
 	div := num / 10
 	for div != 0 {
 		mod = div % 10
-		result = prependInt(result, mod)
+		result = base.PrependInt(result, mod)
 		div = div / 10
 	}
 	return result
@@ -60,9 +24,9 @@ func splitNumber(num int) []int {
 func CreateBaseArray(limit int, nums ...int) []int {
 	result := make([]int, limit)
 	inserted := 0
-	numsSplitted := Map[int, []int](nums, splitNumber)
-	_, maxLength := findMinAndMax(
-		Map[[]int, int](
+	numsSplitted := base.Map[int, []int](nums, splitNumber)
+	_, maxLength := base.FindMinAndMax(
+		base.Map[[]int, int](
 			numsSplitted,
 			func(x []int) int {
 				return len(x)
@@ -75,7 +39,7 @@ func CreateBaseArray(limit int, nums ...int) []int {
 				if i < len(numSplit) {
 					val := numSplit[i]
 
-					if !contains(result, val) {
+					if !base.Contains(result, val) {
 
 						result[inserted] = val
 						inserted++
