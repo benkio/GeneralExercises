@@ -4,11 +4,20 @@ import (
 	base "benkio/greattotaladditions/base"
 )
 
-func gta(limit int, nums ...int) int {
-	return 0
+func Gta(limit int, nums ...int) int {
+	baseArray := CreateBaseArray(limit, nums...)
+	combinations := base.Combinations(baseArray)
+	sums := base.Map[[]int, int](combinations, func(arr []int) int {
+		r := 0
+		for _, elem := range arr { r += elem }
+		return r
+	})
+	result := 0
+	for _, sum := range sums { result += sum }
+	return result
 }
 
-func splitNumber(num int) []int {
+func SplitNumber(num int) []int {
 	mod := num % 10
 	result := []int{mod}
 	div := num / 10
@@ -23,8 +32,11 @@ func splitNumber(num int) []int {
 // // createBaseArray ...
 func CreateBaseArray(limit int, nums ...int) []int {
 	result := make([]int, limit)
+	for i, _ := range result {
+		result[i] = -1
+	}
 	inserted := 0
-	numsSplitted := base.Map[int, []int](nums, splitNumber)
+	numsSplitted := base.Map[int, []int](nums, SplitNumber)
 	_, maxLength := base.FindMinAndMax(
 		base.Map[[]int, int](
 			numsSplitted,
