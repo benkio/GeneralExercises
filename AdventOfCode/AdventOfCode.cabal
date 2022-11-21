@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.5.
+-- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
 
@@ -119,13 +119,38 @@ library
       TwentyTwentyOne.TwentySecondDecember
       TwentyTwentyOne.TwentyThirdDecemberP1
       TwentyTwentyOne.TwentyThirdDecemberP2
+      TwentyTwentyTwo.EighteenthDecember
+      TwentyTwentyTwo.EighthDecember
+      TwentyTwentyTwo.EleventhDecember
+      TwentyTwentyTwo.FifteenthDecember
+      TwentyTwentyTwo.FifthDecember
+      TwentyTwentyTwo.FirstDecember
+      TwentyTwentyTwo.FourteenthDecember
+      TwentyTwentyTwo.FourthDecember
+      TwentyTwentyTwo.NineteenthDecember
+      TwentyTwentyTwo.NinthDecember
+      TwentyTwentyTwo.SecondDecember
+      TwentyTwentyTwo.SeventeenthDecember
+      TwentyTwentyTwo.SeventhDecember
+      TwentyTwentyTwo.SixteenthDecember
+      TwentyTwentyTwo.SixthDecember
+      TwentyTwentyTwo.TenthDecember
+      TwentyTwentyTwo.ThirdDecember
+      TwentyTwentyTwo.ThirteenthDecember
+      TwentyTwentyTwo.TwelfthDecember
+      TwentyTwentyTwo.TwentiethDecember
+      TwentyTwentyTwo.TwentyFifthDecember
+      TwentyTwentyTwo.TwentyFirstDecember
+      TwentyTwentyTwo.TwentyFourthDecember
+      TwentyTwentyTwo.TwentySecondDecember
+      TwentyTwentyTwo.TwentyThirdDecember
   other-modules:
       Paths_AdventOfCode
   hs-source-dirs:
       src
   build-depends:
       aeson
-    , base >=4.7 && <5
+    , base >=4.15 && <5
     , bytestring
     , containers
     , mtl
@@ -148,7 +173,7 @@ executable AdventOfCode-exe
   build-depends:
       AdventOfCode
     , aeson
-    , base >=4.7 && <5
+    , base >=4.15 && <5
     , bytestring
     , containers
     , mtl
@@ -172,7 +197,7 @@ test-suite AdventOfCode-test
   build-depends:
       AdventOfCode
     , aeson
-    , base >=4.7 && <5
+    , base >=4.15 && <5
     , bytestring
     , containers
     , mtl

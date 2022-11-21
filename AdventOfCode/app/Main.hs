@@ -102,4 +102,4 @@ import qualified TwentyTwentyOne.TwentyFourthDecember as TwentyFourth
 -- import qualified TwentyTwentyOne.TwentyThirdDecemberP1  as TwentyThird1
 
 main :: IO ()
-main = return ()-- TwentyFourth.twentyFourthDecemberSolution1 >>= print
+main = TwentyFourth.twentyFourthDecemberSolution1 >>= print
