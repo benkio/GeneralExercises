@@ -50,7 +50,7 @@ elfsBadges = fmap compareRucksacks
   where
     compareRucksacks :: [Rucksack] -> Char
     compareRucksacks [] = error "unexpected empty list"
-    compareRucksacks xs = head $ foldl1 (intersect) $ fmap (\r -> first r ++ second r) xs
+    compareRucksacks xs = head $ foldl1 intersect $ fmap (\r -> first r ++ second r) xs
 
 solution2 :: [Rucksack] -> Int
 solution2 = sum . fmap itemPriority . elfsBadges . groupElfs

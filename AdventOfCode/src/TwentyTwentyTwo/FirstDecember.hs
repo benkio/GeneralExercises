@@ -28,7 +28,7 @@ inputParse :: [String] -> [[Int]]
 inputParse = (\(acc, last) -> acc ++ [last]) . foldl (\(acc, lacc) sv -> (maybe (acc ++ [lacc], []) (\v -> (acc, lacc ++ [v])) . readMaybe) sv) ([], [])
 
 firstDecemberSolution1 :: IO Int
-firstDecemberSolution1 = (maximum . fmap sum . inputParse) <$> input
+firstDecemberSolution1 = maximum . fmap sum . inputParse <$> input
 
 firstDecemberSolution2 :: IO Int
-firstDecemberSolution2 = (sum . take 3 . sortBy (flip compare) . fmap sum . inputParse) <$> input
+firstDecemberSolution2 = sum . take 3 . sortBy (flip compare) . fmap sum . inputParse <$> input

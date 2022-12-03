@@ -41,7 +41,7 @@ input :: IO [String]
 input = lines <$> readFile "input/2022/2December.txt"
 
 parseInput :: [String] -> [(RPS, RPS)]
-parseInput = fmap (bimap stringToRPS stringToRPS . second tail . break (\s -> s == ' '))
+parseInput = fmap (bimap stringToRPS stringToRPS . second tail . break (== ' '))
 
 testInput :: String
 testInput =
@@ -53,7 +53,7 @@ solution1 :: [(RPS, RPS)] -> Int
 solution1 = foldl (\score (rps, rps') -> score + playScoreRPS rps rps') 0
 
 secondDecemberSolution1 :: IO Int
-secondDecemberSolution1 = (solution1 . parseInput) <$> input
+secondDecemberSolution1 = solution1 . parseInput <$> input
 
 stringToGameOutcome :: String -> GameOutcome
 stringToGameOutcome "X" = Lose
@@ -61,7 +61,7 @@ stringToGameOutcome "Y" = Draw
 stringToGameOutcome "Z" = Win
 
 parseInput' :: [String] -> [(RPS, GameOutcome)]
-parseInput' = fmap (bimap stringToRPS stringToGameOutcome . second tail . break (\s -> s == ' '))
+parseInput' = fmap (bimap stringToRPS (stringToGameOutcome . tail) . break (== ' '))
 
 whatToPlay :: RPS -> GameOutcome -> RPS
 whatToPlay Rock Win = Paper
@@ -76,4 +76,4 @@ solution2 :: [(RPS, GameOutcome)] -> Int
 solution2 = foldl (\score (rps, go) -> score + outcomeToScore go + rpsToScore (whatToPlay rps go)) 0
 
 secondDecemberSolution2 :: IO Int
-secondDecemberSolution2 = (solution2 . parseInput') <$> input
+secondDecemberSolution2 = solution2 . parseInput' <$> input
