@@ -18,7 +18,7 @@ parseInput = fmap parseAssignemnt
     parseAssignemnt :: String -> Assignment
     parseAssignemnt = (\(r1, r2) -> Assignment {first = r1, second = r2}) . bimap stringToRange (stringToRange . tail) . break (== ',')
     stringToRange :: String -> [Int]
-    stringToRange = (\(lb, hb) -> enumFromTo lb hb) . bimap (\x -> read x :: Int) (\x -> read (tail x) :: Int) . break (== '-')
+    stringToRange = uncurry enumFromTo . bimap (\x -> read x :: Int) (\x -> read (tail x) :: Int) . break (== '-')
 
 testInput :: [Assignment]
 testInput =

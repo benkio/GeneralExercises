@@ -6,7 +6,7 @@ import Text.Printf
 
 type Stack = String
 
-data Cargo = Cargo (Map Int Stack) deriving (Show)
+newtype Cargo = Cargo (Map Int Stack) deriving (Show)
 
 data Move = Move
   { amount :: Int,
@@ -47,8 +47,7 @@ applyMove9000 (Cargo c) m@Move {amount = a, from = f, to = t}
   | a == 0 = Cargo c
   | otherwise =
     let (crate, from') =
-          (\xs -> (head xs, tail xs)) $ -- trace (printf "Move: %d, %d, %d, %s" a f t (show c))
-            c ! f
+          (\xs -> (head xs, tail xs)) $ c ! f
         to' = (crate :) $ c ! t
         c' = adjust (const to') t $ adjust (const from') f c
      in applyMove9000 (Cargo c') $ m {amount = a - 1}
@@ -57,7 +56,7 @@ solution1 :: Cargo -> [Move] -> String
 solution1 c = extractTopStack . foldl applyMove9000 c
   where
     extractTopStack :: Cargo -> String
-    extractTopStack (Cargo m) = fmap (\(_, s) -> head s) $ toList m
+    extractTopStack (Cargo m) = (\(_, s) -> head s) <$> toList m
 
 -- [M] [S] [S]
 --         [M] [N] [L] [T] [Q]
@@ -89,8 +88,7 @@ applyMove9001 (Cargo c) m@Move {amount = a, from = f, to = t}
   | a == 0 = Cargo c
   | otherwise =
     let (crate, from') =
-          (\xs -> (take a xs, drop a xs)) $ -- trace (printf "Move: %d, %d, %d, %s" a f t (show c))
-            c ! f
+          splitAt a $ c ! f
         to' = (crate ++) $ c ! t
         c' = adjust (const to') t $ adjust (const from') f c
      in Cargo c'
@@ -99,7 +97,7 @@ solution2 :: Cargo -> [Move] -> String
 solution2 c = extractTopStack . foldl applyMove9001 c
   where
     extractTopStack :: Cargo -> String
-    extractTopStack (Cargo m) = fmap (\(_, s) -> head s) $ toList m
+    extractTopStack (Cargo m) = (\(_, s) -> head s) <$> toList m
 
 fifthDecemberSolution1 :: IO String
 fifthDecemberSolution1 = solution1 initialCargo <$> input

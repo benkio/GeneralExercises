@@ -41,7 +41,7 @@ input :: IO [String]
 input = lines <$> readFile "input/2022/2December.txt"
 
 parseInput :: [String] -> [(RPS, RPS)]
-parseInput = fmap (bimap stringToRPS stringToRPS . second tail . break (== ' '))
+parseInput = fmap (bimap stringToRPS (stringToRPS . tail) . break (== ' '))
 
 testInput :: String
 testInput =
