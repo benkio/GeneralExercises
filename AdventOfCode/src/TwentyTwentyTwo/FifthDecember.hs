@@ -1,12 +1,11 @@
 module TwentyTwentyTwo.FifthDecember where
 
+import Data.List (transpose)
 import Data.Map (Map, adjust, fromList, toList, (!))
-import Debug.Trace
-import Text.Printf
 
 type Stack = String
 
-newtype Cargo = Cargo (Map Int Stack) deriving (Show)
+newtype Cargo = Cargo (Map Int Stack) deriving (Show, Eq)
 
 data Move = Move
   { amount :: Int,
@@ -15,27 +14,34 @@ data Move = Move
   }
   deriving (Show)
 
-input :: IO [Move]
-input = fmap parseInput . tail . dropWhile (/= "") . lines <$> readFile "input/2022/5December.txt"
-
---     [D]
--- [N] [C]
--- [Z] [M] [P]
---  1   2   3
+input :: IO (Cargo, [Move])
+input = (\xs -> (parseCargo xs, (fmap parseMoves . tail . dropWhile (/= "")) xs)) . lines <$> readFile "input/2022/5December.txt"
 
 testInitialCargo :: Cargo
-testInitialCargo = Cargo $ fromList [(1, "NZ"), (2, "DCM"), (3, "P")]
+testInitialCargo = parseCargo testInput
+
+parseCargo :: [String] -> Cargo
+parseCargo = Cargo . fromList . ([1 ..] `zip`) . fmap (foldl1 (<>)) . transpose . fmap parseLine . init . takeWhile (/= "")
+  where
+    parseLine :: String -> [String]
+    parseLine "" = []
+    parseLine s = ((filter (\x -> not (x == '[' || x == ']' || x == ' ')) . take 3) s) : parseLine (drop 4 s)
 
 testInput :: [String]
 testInput =
   lines
-    "move 1 from 2 to 1\n\
+    "    [D]    \n\
+    \[N] [C]    \n\
+    \[Z] [M] [P]\n\
+    \ 1   2   3 \n\
+    \\n\
+    \move 1 from 2 to 1\n\
     \move 3 from 1 to 3\n\
     \move 2 from 2 to 1\n\
     \move 1 from 1 to 2"
 
-parseInput :: String -> Move
-parseInput s =
+parseMoves :: String -> Move
+parseMoves s =
   let extractor = (\x -> (read (takeWhile (/= ' ') x) :: Int, (drop 2 . dropWhile (/= ' ')) x)) . tail . dropWhile (/= ' ')
       (amount, restAmount) = extractor s
       (from, restFrom) = extractor restAmount
@@ -58,31 +64,6 @@ solution1 c = extractTopStack . foldl applyMove9000 c
     extractTopStack :: Cargo -> String
     extractTopStack (Cargo m) = (\(_, s) -> head s) <$> toList m
 
--- [M] [S] [S]
---         [M] [N] [L] [T] [Q]
--- [G]     [P] [C] [F] [G] [T]
--- [B]     [J] [D] [P] [V] [F] [F]
--- [D]     [D] [G] [C] [Z] [H] [B] [G]
--- [C] [G] [Q] [L] [N] [D] [M] [D] [Q]
--- [P] [V] [S] [S] [B] [B] [Z] [M] [C]
--- [R] [H] [N] [P] [J] [Q] [B] [C] [F]
---  1   2   3   4   5   6   7   8   9
-
-initialCargo :: Cargo
-initialCargo =
-  Cargo $
-    fromList
-      [ (1, "GBDCPR"),
-        (2, "GVH"),
-        (3, "MPJDQSN"),
-        (4, "MNCDGLSP"),
-        (5, "SLFPCNBJ"),
-        (6, "STGVZDBQ"),
-        (7, "QTFHMZB"),
-        (8, "FBDMC"),
-        (9, "GQCF")
-      ]
-
 applyMove9001 :: Cargo -> Move -> Cargo
 applyMove9001 (Cargo c) m@Move {amount = a, from = f, to = t}
   | a == 0 = Cargo c
@@ -100,7 +81,7 @@ solution2 c = extractTopStack . foldl applyMove9001 c
     extractTopStack (Cargo m) = (\(_, s) -> head s) <$> toList m
 
 fifthDecemberSolution1 :: IO String
-fifthDecemberSolution1 = solution1 initialCargo <$> input
+fifthDecemberSolution1 = uncurry solution1 <$> input
 
 fifthDecemberSolution2 :: IO String
-fifthDecemberSolution2 = solution2 initialCargo <$> input
+fifthDecemberSolution2 = uncurry solution2 <$> input
