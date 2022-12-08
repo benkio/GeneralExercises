@@ -1,8 +1,8 @@
 module TwentyTwentyTwo.FirstDecember where
 
+import Data.List
 import Data.Maybe (maybe)
 import Text.Read (readMaybe)
-import Data.List
 
 input :: IO [String]
 input = lines <$> readFile "input/2022/1December.txt"

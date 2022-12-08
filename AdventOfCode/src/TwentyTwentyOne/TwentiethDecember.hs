@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+
 module TwentyTwentyOne.TwentiethDecember where
 
 import Data.Bifunctor (second)
@@ -39,7 +40,7 @@ mapToString m = convertImage m (intercalate "\n")
 
 neighboorsCoords :: Coord -> [Coord]
 neighboorsCoords (x, y) =
-  sortBy (\(_, y) (_, y') -> y `compare` y') $ [(a, b) | a <- [(x -1) .. (x + 1)], b <- [(y -1) .. (y + 1)]]
+  sortBy (\(_, y) (_, y') -> y `compare` y') $ [(a, b) | a <- [(x - 1) .. (x + 1)], b <- [(y - 1) .. (y + 1)]]
 
 computeInfiniteDefault :: Char -> String -> Char
 computeInfiniteDefault '.' mapping = head mapping
@@ -47,7 +48,7 @@ computeInfiniteDefault '#' mapping = last mapping
 
 imageAlgorithm :: Char -> String -> [String] -> (String, Char)
 imageAlgorithm def mapping =
-  (, computeInfiniteDefault def mapping)
+  (,computeInfiniteDefault def mapping)
     . ( \m ->
           mapToString
             ( M.foldrWithKey

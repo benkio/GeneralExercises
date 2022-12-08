@@ -9,7 +9,7 @@ data Position = Position
   }
 
 initialPosition :: Position
-initialPosition = Position {horizontal = 0, depth = 0, aim = 0 }
+initialPosition = Position {horizontal = 0, depth = 0, aim = 0}
 
 parseCommand :: String -> Command
 parseCommand s
@@ -35,23 +35,23 @@ testInput =
       \forward 2"
 
 executeCommand :: Position -> Command -> Position
-executeCommand p (Forward x) = p { horizontal = horizontal p + x }
-executeCommand p (Up x) = p { depth = depth p - x }
-executeCommand p (Down x) = p { depth = depth p + x }
+executeCommand p (Forward x) = p {horizontal = horizontal p + x}
+executeCommand p (Up x) = p {depth = depth p - x}
+executeCommand p (Down x) = p {depth = depth p + x}
 
 executeCommands :: Position -> [Command] -> Position
 executeCommands = foldl executeCommand
 
 solution :: (Position -> [Command] -> Position) -> [Command] -> Int
-solution ec = (\p -> horizontal p * depth p ) . ec initialPosition
+solution ec = (\p -> horizontal p * depth p) . ec initialPosition
 
 secondDecemberSolution1 :: IO Int
 secondDecemberSolution1 = solution executeCommands <$> input
 
 executeCommand' :: Position -> Command -> Position
-executeCommand' p (Forward x) = p { horizontal = horizontal p + x, depth = depth p + aim p * x }
-executeCommand' p (Up x) = p { aim = aim p - x }
-executeCommand' p (Down x) = p { aim = aim p + x }
+executeCommand' p (Forward x) = p {horizontal = horizontal p + x, depth = depth p + aim p * x}
+executeCommand' p (Up x) = p {aim = aim p - x}
+executeCommand' p (Down x) = p {aim = aim p + x}
 
 executeCommands' :: Position -> [Command] -> Position
 executeCommands' = foldl executeCommand'

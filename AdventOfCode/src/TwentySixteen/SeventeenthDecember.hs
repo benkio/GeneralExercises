@@ -52,9 +52,9 @@ openDoors pos moves hash =
     moves
 
 nextCoordinate :: Coordinate -> Door -> Coordinate
-nextCoordinate (x, y) U = (x, y -1)
+nextCoordinate (x, y) U = (x, y - 1)
 nextCoordinate (x, y) D = (x, y + 1)
-nextCoordinate (x, y) L = (x -1, y)
+nextCoordinate (x, y) L = (x - 1, y)
 nextCoordinate (x, y) R = (x + 1, y)
 
 solutionStep :: Coordinate -> [Door] -> String -> IO [(Coordinate, [Door])]

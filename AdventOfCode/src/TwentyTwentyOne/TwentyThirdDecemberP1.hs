@@ -2,10 +2,10 @@ module TwentyTwentyOne.TwentyThirdDecemberP1 where
 
 import Data.Bifunctor (second)
 import Data.Map (Map)
-import qualified Data.Map as M (insertWith, lookup, empty, size, filterWithKey, elems)
+import qualified Data.Map as M (elems, empty, filterWithKey, insertWith, lookup, size)
 import Data.Maybe (maybe, maybeToList)
 import Data.Set (Set)
-import qualified Data.Set as S (empty, foldl, fromList, insert, union, toList, unions, map, singleton, null)
+import qualified Data.Set as S (empty, foldl, fromList, insert, map, null, singleton, toList, union, unions)
 import Data.Vector (Vector, (!), (//))
 import qualified Data.Vector as V (findIndices, fromList, head, last, null, reverse, slice, tail, toList)
 import Debug.Trace
@@ -71,7 +71,8 @@ removeUpdateVisitedStates cache =
 
 allPossibleMovesStep :: Map Hallway Int -> Set (Hallway, Int) -> (Map Hallway Int, Set (Hallway, Int))
 allPossibleMovesStep cache states = traceShow (length states, M.size cache) $ removeUpdateVisitedStates cache nextMoves
-  where nextMoves = (S.unions . S.map (\(h, e) -> S.map (second (+e)) (enterRoomMoves h `S.union` exitRoomMoves h)) ) states
+  where
+    nextMoves = (S.unions . S.map (\(h, e) -> S.map (second (+ e)) (enterRoomMoves h `S.union` exitRoomMoves h))) states
 
 allPossibleMoves :: Hallway -> (Map Hallway Int, Set (Hallway, Int))
 allPossibleMoves h = until (\(_, states) -> S.null states) (uncurry allPossibleMovesStep) (M.empty, S.singleton (h, 0))

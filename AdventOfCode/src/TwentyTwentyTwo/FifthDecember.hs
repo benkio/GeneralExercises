@@ -25,7 +25,7 @@ parseCargo = Cargo . fromList . ([1 ..] `zip`) . fmap (foldl1 (<>)) . transpose 
   where
     parseLine :: String -> [String]
     parseLine "" = []
-    parseLine s = ((filter (\x -> not (x == '[' || x == ']' || x == ' ')) . take 3) s) : parseLine (drop 4 s)
+    parseLine s = (filter (\x -> not (x == '[' || x == ']' || x == ' ')) . take 3) s : parseLine (drop 4 s)
 
 testInput :: [String]
 testInput =

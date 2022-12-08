@@ -47,7 +47,7 @@ board :: [Int]
 board = cycle [1 .. 10]
 
 buildDice :: Int -> [Int]
-buildDice x = cycle $ [x .. 1000] ++ [1 .. (x -1)]
+buildDice x = cycle $ [x .. 1000] ++ [1 .. (x - 1)]
 
 moveOnBoard :: Int -> Int -> Int
 moveOnBoard p x = (head . dropWhile (/= (if (p + x) `mod` 10 == 0 then 10 else rem (p + x) 10))) board

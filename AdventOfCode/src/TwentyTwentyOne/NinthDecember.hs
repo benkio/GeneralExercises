@@ -35,7 +35,7 @@ parseInput =
 
 neighboorsCoords :: Coord -> [Coord]
 neighboorsCoords Coord {x = x', y = y'} =
-  [Coord {x = a, y = b} | a <- [(x' -1) .. (x' + 1)], b <- [(y' -1) .. (y' + 1)], (a == x' || b == y') && (a /= x' || b /= y')]
+  [Coord {x = a, y = b} | a <- [(x' - 1) .. (x' + 1)], b <- [(y' - 1) .. (y' + 1)], (a == x' || b == y') && (a /= x' || b /= y')]
 
 isLowPoint :: Map Coord Int -> Coord -> Bool
 isLowPoint m c = fromMaybe False $ do

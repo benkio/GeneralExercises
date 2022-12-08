@@ -18,7 +18,7 @@ parseInput =
 
 neighboorsCoords :: Coord -> [Coord]
 neighboorsCoords (x, y) =
-  [(a, b) | a <- [(x -1) .. (x + 1)], b <- [(y -1) .. (y + 1)], (a == x || b == y) && not (a == x && b == y)]
+  [(a, b) | a <- [(x - 1) .. (x + 1)], b <- [(y - 1) .. (y + 1)], (a == x || b == y) && not (a == x && b == y)]
 
 neighboorsWeighted :: Map Coord Int -> (Coord, Int) -> [(Coord, Int)]
 neighboorsWeighted m (c, vc) = mapMaybe (\nc -> fmap (\nvc -> (nc, vc + nvc)) (M.lookup nc m)) (neighboorsCoords c)

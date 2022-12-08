@@ -3,7 +3,7 @@
 module TwentyTwentyOne.SeventhDecember where
 
 import Data.Text (Text)
-import qualified Data.Text as Text (splitOn, unpack, pack)
+import qualified Data.Text as Text (pack, splitOn, unpack)
 
 input :: IO [Int]
 input = parseInput <$> readFile "input/2021/7December.txt"
@@ -20,13 +20,13 @@ solution stepCost xs =
       accumulator = replicate (max + 1) 0
       deltas = fmap (stepCost max) xs
       sumDeltas = foldr (zipWith (+)) accumulator deltas
-  in minimum sumDeltas
+   in minimum sumDeltas
 
 solution1StepCost :: Int -> Int -> [Int]
-solution1StepCost max x = fmap (\y -> abs (y - x)) [0.. max]
+solution1StepCost max x = fmap (\y -> abs (y - x)) [0 .. max]
 
 solution2StepCost :: Int -> Int -> [Int]
-solution2StepCost max x = fmap (\y -> let d = abs (y - x) in (d * (d + 1)) `div` 2 ) [0.. max]
+solution2StepCost max x = fmap (\y -> let d = abs (y - x) in (d * (d + 1)) `div` 2) [0 .. max]
 
 seventhDecemberSolution1 :: IO Int
 seventhDecemberSolution1 = solution solution1StepCost <$> input

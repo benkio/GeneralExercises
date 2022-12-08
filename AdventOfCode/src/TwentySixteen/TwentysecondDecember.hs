@@ -86,10 +86,10 @@ possibleTransfers grid =
       ]
 
 isNeighboor :: Coordinate -> Coordinate -> Bool
-isNeighboor (x, y) (x', y') = (x `elem` [x' -1, x' + 1] && y == y') || (y `elem` [y' -1, y' + 1] && x == x')
+isNeighboor (x, y) (x', y') = (x `elem` [x' - 1, x' + 1] && y == y') || (y `elem` [y' - 1, y' + 1] && x == x')
 
 neighboors :: Coordinate -> [Coordinate]
-neighboors (x, y) = [(a, b) | a <- [max 0 (x -1) .. min maxX (x + 1)], b <- [max 0 (y -1) .. min maxY (y + 1)], isNeighboor (a, b) (x, y)]
+neighboors (x, y) = [(a, b) | a <- [max 0 (x - 1) .. min maxX (x + 1)], b <- [max 0 (y - 1) .. min maxY (y + 1)], isNeighboor (a, b) (x, y)]
 
 selectNextMoves :: Set Coordinate -> [(Coordinate, Coordinate)] -> Set Coordinate -> [(Coordinate, Coordinate)]
 selectNextMoves targets availableTransfers visited =

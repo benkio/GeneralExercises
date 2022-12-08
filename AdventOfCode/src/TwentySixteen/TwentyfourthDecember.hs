@@ -52,7 +52,7 @@ isHVAC (HVAC _) = True
 isHVAC _ = False
 
 neighboors :: Coordinate -> Coordinate -> [Coordinate]
-neighboors maxCell (x, y) = [(a, b) | a <- [max 0 (x -1) .. min (fst maxCell) (x + 1)], b <- [max 0 (y -1) .. min (snd maxCell) (y + 1)], (a == x || b == y) && (a /= x || b /= y)]
+neighboors maxCell (x, y) = [(a, b) | a <- [max 0 (x - 1) .. min (fst maxCell) (x + 1)], b <- [max 0 (y - 1) .. min (snd maxCell) (y + 1)], (a == x || b == y) && (a /= x || b /= y)]
 
 robotSearch :: Grid -> Set Coordinate -> [Coordinate] -> [Coordinate] -> Int -> [(Coordinate, Int)]
 robotSearch _ _ _ [] _ = []

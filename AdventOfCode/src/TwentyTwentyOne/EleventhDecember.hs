@@ -38,7 +38,7 @@ parseInput =
 
 neighboorsCoords :: Coord -> [Coord]
 neighboorsCoords Coord {x = x', y = y'} =
-  [Coord {x = a, y = b} | a <- [(x' -1) .. (x' + 1)], b <- [(y' -1) .. (y' + 1)], a /= x' || b /= y']
+  [Coord {x = a, y = b} | a <- [(x' - 1) .. (x' + 1)], b <- [(y' - 1) .. (y' + 1)], a /= x' || b /= y']
 
 increaseEnergy :: Cavern -> Cavern
 increaseEnergy = M.map (+ 1)

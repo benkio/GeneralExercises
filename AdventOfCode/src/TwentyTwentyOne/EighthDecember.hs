@@ -37,7 +37,7 @@ buildDictionary dic (x : xs) =
 
 findMagicNumber :: Map String Int -> [String] -> [Int]
 findMagicNumber _ [] = []
-findMagicNumber dic (x : xs) = foldr const (- 1) (M.lookup x dic) : findMagicNumber dic xs
+findMagicNumber dic (x : xs) = foldr const (-1) (M.lookup x dic) : findMagicNumber dic xs
 
 solution1 :: (Map String Int -> [String] -> Map String Int) -> Input -> Int
 solution1 f (digitsRaw, magicNumberRaw) =
