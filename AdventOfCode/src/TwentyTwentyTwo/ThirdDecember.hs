@@ -4,29 +4,29 @@ import Data.List (find, intersect)
 import Data.Maybe (fromJust)
 
 data Rucksack = Rucksack
-  { first :: String,
-    second :: String
-  }
-  deriving (Show)
+    { first :: String
+    , second :: String
+    }
+    deriving (Show)
 
 parseInput :: [String] -> [Rucksack]
-parseInput = fmap (\x -> Rucksack {first = take (length x `div` 2) x, second = drop (length x `div` 2) x})
+parseInput = fmap (\x -> Rucksack{first = take (length x `div` 2) x, second = drop (length x `div` 2) x})
 
 input :: IO [Rucksack]
 input = parseInput . lines <$> readFile "input/2022/3December.txt"
 
 testInput :: [Rucksack]
 testInput =
-  (parseInput . lines)
-    "vJrwpWtwJgWrhcsFMMfFFhFp\n\
-    \jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\n\
-    \PmmdzqPrVvPwwTWBwg\n\
-    \wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\n\
-    \ttgJtRGJQctTZtZT\n\
-    \CrZsJsPPZsGzwwsLwLmpwMDw"
+    (parseInput . lines)
+        "vJrwpWtwJgWrhcsFMMfFFhFp\n\
+        \jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\n\
+        \PmmdzqPrVvPwwTWBwg\n\
+        \wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\n\
+        \ttgJtRGJQctTZtZT\n\
+        \CrZsJsPPZsGzwwsLwLmpwMDw"
 
 rucksackCompartmentsIntersection :: Rucksack -> Char
-rucksackCompartmentsIntersection Rucksack {first = f, second = s} = head $ intersect f s
+rucksackCompartmentsIntersection Rucksack{first = f, second = s} = head $ intersect f s
 
 priorityMap :: [(Char, Int)]
 priorityMap = (['a' .. 'z'] ++ ['A' .. 'Z']) `zip` [1 .. 52]
@@ -42,8 +42,8 @@ thirdDecemberSolution1 = solution1 <$> input
 
 groupElfs :: [Rucksack] -> [[Rucksack]]
 groupElfs xs =
-  let (groups, lastGroup) = foldl (\(acc, lacc) x -> if length lacc == 3 then (acc ++ [lacc], [x]) else (acc, lacc ++ [x])) ([], []) xs
-   in groups ++ [lastGroup]
+    let (groups, lastGroup) = foldl (\(acc, lacc) x -> if length lacc == 3 then (acc ++ [lacc], [x]) else (acc, lacc ++ [x])) ([], []) xs
+     in groups ++ [lastGroup]
 
 elfsBadges :: [[Rucksack]] -> String
 elfsBadges = fmap compareRucksacks

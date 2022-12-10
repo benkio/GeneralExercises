@@ -26,19 +26,19 @@ input = fmap parseTravel . lines <$> readFile "input/2015/9December.txt"
 
 parseTravel :: String -> Travel
 parseTravel s =
-  let ws = words s
-      source = head ws
-      dest = ws !! 2
-      time = read (last ws) :: Int
-   in Travel source dest time
+    let ws = words s
+        source = head ws
+        dest = ws !! 2
+        time = read (last ws) :: Int
+     in Travel source dest time
 
 travelsToMap :: [Travel] -> Map (String, String) Int
 travelsToMap = foldl insertTravel Map.empty
   where
     insertTravel :: Map (String, String) Int -> Travel -> Map (String, String) Int
     insertTravel m (Travel s d x) =
-      let m' = Map.insert (s, d) x m
-       in Map.insert (d, s) x m'
+        let m' = Map.insert (s, d) x m
+         in Map.insert (d, s) x m'
 
 allDestinations :: Map (String, String) Int -> [String]
 allDestinations = nub . fmap fst . Map.keys
@@ -48,17 +48,17 @@ travelValue m = foldl (\acc x -> acc + fromJust (Map.lookup x m)) 0
 
 findRoute :: (Int -> Int -> Int) -> Map (String, String) Int -> Int
 findRoute compare_ m =
-  let allDestination = allDestinations m
-      allTravels = (fmap (\l -> l `zip` tail l) . permutations) allDestination
-      firstTravel = travelValue m (head allTravels)
-   in foldl' (\x t -> compare_ (travelValue m t) x) firstTravel (tail allTravels)
+    let allDestination = allDestinations m
+        allTravels = (fmap (\l -> l `zip` tail l) . permutations) allDestination
+        firstTravel = travelValue m (head allTravels)
+     in foldl' (\x t -> compare_ (travelValue m t) x) firstTravel (tail allTravels)
 
 inputTest :: [Travel]
 inputTest =
-  (fmap parseTravel . lines)
-    "London to Dublin = 464\n\
-    \London to Belfast = 518\n\
-    \Dublin to Belfast = 141"
+    (fmap parseTravel . lines)
+        "London to Dublin = 464\n\
+        \London to Belfast = 518\n\
+        \Dublin to Belfast = 141"
 
 solution1Test :: Bool
 solution1Test = ((== 605) . findRoute min . travelsToMap) inputTest

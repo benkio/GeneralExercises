@@ -1,16 +1,16 @@
 module TwentySixteen.FirstDecember where
 
 data Instruction
-  = R Int
-  | L Int
-  deriving (Show)
+    = R Int
+    | L Int
+    deriving (Show)
 
 data Face
-  = N
-  | S
-  | E
-  | W
-  deriving (Show)
+    = N
+    | S
+    | E
+    | W
+    deriving (Show)
 
 input :: IO [Instruction]
 input = parseInput <$> readFile "input/2016/1December.txt"
@@ -47,30 +47,30 @@ moveNTrack = fmap fst . scanl step ((0, 0), N)
 
 generateMiddlePoints :: (Int, Int) -> (Int, Int) -> [(Int, Int)]
 generateMiddlePoints (x, y) (a, b) = do
-  c <-
-    if x <= a
-      then [x .. a]
-      else [x, x - 1 .. a]
-  d <-
-    if y <= b
-      then [y .. b]
-      else [y, y - 1 .. b]
-  return (c, d)
+    c <-
+        if x <= a
+            then [x .. a]
+            else [x, x - 1 .. a]
+    d <-
+        if y <= b
+            then [y .. b]
+            else [y, y - 1 .. b]
+    return (c, d)
 
 solution2 :: [Instruction] -> Int
 solution2 =
-  uncurry (+)
-    . findDuplicate
-    . foldl1 (\l l' -> init l ++ generateMiddlePoints (last l) (head l'))
-    . fmap (: [])
-    . moveNTrack
+    uncurry (+)
+        . findDuplicate
+        . foldl1 (\l l' -> init l ++ generateMiddlePoints (last l) (head l'))
+        . fmap (: [])
+        . moveNTrack
 
 findDuplicate :: [(Int, Int)] -> (Int, Int)
 findDuplicate [] = (0, 0)
 findDuplicate (x : xs) =
-  if x `elem` xs
-    then x
-    else findDuplicate xs
+    if x `elem` xs
+        then x
+        else findDuplicate xs
 
 firstDecemberSolution2 :: IO Int
 firstDecemberSolution2 = solution2 <$> input

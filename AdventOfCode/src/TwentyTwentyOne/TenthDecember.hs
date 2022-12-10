@@ -11,30 +11,30 @@ input = readFile "input/2021/10December.txt"
 
 inputTest :: String
 inputTest =
-  "[({(<(())[]>[[{[]{<()<>>\n\
-  \[(()[<>])]({[<{<<[]>>(\n\
-  \{([(<{}[<>[]}>{[]{[(<()>\n\
-  \(((({<>}<{<{<>}{[]{[]{}\n\
-  \[[<[([]))<([[{}[[()]]]\n\
-  \[{[{({}]{}}([{[{{{}}([]\n\
-  \{<[[]]>}<{[{[{[]{()[[[]\n\
-  \[<(<(<(<{}))><([]([]()\n\
-  \<{([([[(<>()){}]>(<<{{\n\
-  \<{([{{}}[<[[[<>{}]]]>[]]"
+    "[({(<(())[]>[[{[]{<()<>>\n\
+    \[(()[<>])]({[<{<<[]>>(\n\
+    \{([(<{}[<>[]}>{[]{[(<()>\n\
+    \(((({<>}<{<{<>}{[]{[]{}\n\
+    \[[<[([]))<([[{}[[()]]]\n\
+    \[{[{({}]{}}([{[{{{}}([]\n\
+    \{<[[]]>}<{[{[{[]{()[[[]\n\
+    \[<(<(<(<{}))><([]([]()\n\
+    \<{([([[(<>()){}]>(<<{{\n\
+    \<{([{{}}[<[[[<>{}]]]>[]]"
 
 data Line = Line [Chunk] | ErrorLine ErrorType deriving (Show)
 
 data ErrorType = Miss Char | Corrupted Char deriving (Show)
 
 data Chunk = Chunk
-  { open :: Char,
-    content :: [Chunk],
-    close :: Char
-  }
-  deriving (Show)
+    { open :: Char
+    , content :: [Chunk]
+    , close :: Char
+    }
+    deriving (Show)
 
 emptyChunk :: Chunk
-emptyChunk = Chunk {open = ' ', content = [], close = ' '}
+emptyChunk = Chunk{open = ' ', content = [], close = ' '}
 
 parseInput :: String -> [Line]
 parseInput = fmap (parseLine (Line [])) . lines
@@ -44,16 +44,16 @@ lineToString (Line cs) = foldl (\v c -> v ++ chunkToString c) "" cs
 lineToString l = show l
 
 chunkToString :: Chunk -> String
-chunkToString Chunk {open = o, content = cs, close = c} = o : foldl (\v c -> v ++ chunkToString c) "" cs ++ [c]
+chunkToString Chunk{open = o, content = cs, close = c} = o : foldl (\v c -> v ++ chunkToString c) "" cs ++ [c]
 
 parseLine :: Line -> String -> Line
 parseLine l [] = l
 parseLine (Line cs) xs =
-  let ecr = parseChunk xs
-   in case ecr of
-        Left c -> ErrorLine c
-        Right (c, []) -> Line (cs ++ [c])
-        Right (c, r) -> parseLine (Line (cs ++ [c])) r
+    let ecr = parseChunk xs
+     in case ecr of
+            Left c -> ErrorLine c
+            Right (c, []) -> Line (cs ++ [c])
+            Right (c, r) -> parseLine (Line (cs ++ [c])) r
 
 pairMap :: Map Char Char
 pairMap = M.fromList [('(', ')'), ('{', '}'), ('[', ']'), ('<', '>')]
@@ -68,24 +68,24 @@ parseChunk (x : _) = Left (Corrupted x)
 
 parseChunkNested :: String -> Char -> Either ErrorType (Chunk, String)
 parseChunkNested [] c = Left (Miss (fromJust (M.lookup c pairMap)))
-parseChunkNested (')' : xs) '(' = Right (Chunk {open = '(', content = [], close = ')'}, xs)
-parseChunkNested ('>' : xs) '<' = Right (Chunk {open = '<', content = [], close = '>'}, xs)
-parseChunkNested ('}' : xs) '{' = Right (Chunk {open = '{', content = [], close = '}'}, xs)
-parseChunkNested (']' : xs) '[' = Right (Chunk {open = '[', content = [], close = ']'}, xs)
+parseChunkNested (')' : xs) '(' = Right (Chunk{open = '(', content = [], close = ')'}, xs)
+parseChunkNested ('>' : xs) '<' = Right (Chunk{open = '<', content = [], close = '>'}, xs)
+parseChunkNested ('}' : xs) '{' = Right (Chunk{open = '{', content = [], close = '}'}, xs)
+parseChunkNested (']' : xs) '[' = Right (Chunk{open = '[', content = [], close = ']'}, xs)
 parseChunkNested (x : xs) c
-  | x `elem` M.elems pairMap = Left (Corrupted x)
-  | otherwise = case parseContentChunk (x : xs) c of
-    Left c' -> Left c'
-    Right (cs, x' : xs') -> Right (Chunk {open = c, content = cs, close = x'}, xs')
+    | x `elem` M.elems pairMap = Left (Corrupted x)
+    | otherwise = case parseContentChunk (x : xs) c of
+        Left c' -> Left c'
+        Right (cs, x' : xs') -> Right (Chunk{open = c, content = cs, close = x'}, xs')
 
 parseContentChunk :: String -> Char -> Either ErrorType ([Chunk], String)
 parseContentChunk [] c = Left (Miss (fromJust (M.lookup c pairMap)))
 parseContentChunk (x : xs) c
-  | x == fromJust (M.lookup c pairMap) = Right ([], x : xs)
-  | otherwise = do
-    (ch, xs') <- parseChunk (x : xs)
-    (cs, xs'') <- parseContentChunk xs' c
-    return (ch : cs, xs'')
+    | x == fromJust (M.lookup c pairMap) = Right ([], x : xs)
+    | otherwise = do
+        (ch, xs') <- parseChunk (x : xs)
+        (cs, xs'') <- parseContentChunk xs' c
+        return (ch : cs, xs'')
 
 corruptedScore :: Line -> Int
 corruptedScore (ErrorLine (Corrupted ')')) = 3
@@ -116,9 +116,9 @@ tenthDecemberSolution1 = solution1 <$> input
 
 fixLine :: String -> String
 fixLine s = case parseLine (Line []) s of
-  ErrorLine (Miss c) -> c : fixLine (s ++ [c])
-  Line _ -> []
-  ErrorLine (Corrupted _) -> error $ "Can't fix corrupted lines: " ++ s
+    ErrorLine (Miss c) -> c : fixLine (s ++ [c])
+    Line _ -> []
+    ErrorLine (Corrupted _) -> error $ "Can't fix corrupted lines: " ++ s
 
 fixScore :: String -> Int
 fixScore = foldl (\v c -> v * 5 + fixScore' c) 0
@@ -132,9 +132,9 @@ fixScore' _ = 0
 
 solution2 :: String -> Int
 solution2 i =
-  let input_lines = zip (lines i) (parseInput i)
-      fixedLinesScored = (sort . fmap (\(i, _) -> (fixScore . fixLine) i) . filter (isIncompleteLine . snd)) input_lines
-   in fixedLinesScored !! (length fixedLinesScored `div` 2)
+    let input_lines = zip (lines i) (parseInput i)
+        fixedLinesScored = (sort . fmap (\(i, _) -> (fixScore . fixLine) i) . filter (isIncompleteLine . snd)) input_lines
+     in fixedLinesScored !! (length fixedLinesScored `div` 2)
 
 tenthDecemberSolution2 :: IO Int
 tenthDecemberSolution2 = solution2 <$> input

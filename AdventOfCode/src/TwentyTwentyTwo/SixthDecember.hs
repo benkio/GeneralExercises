@@ -7,12 +7,12 @@ input = readFile "input/2022/6December.txt"
 
 testInput :: [String]
 testInput =
-  [ "mjqjpqmgbljsphdztnvjfqwrcgsmlb",
-    "bvwbjplbgvbhsrlpgdmjqwftvncz",
-    "nppdvjthqldpwncqszvftbrmjlhg",
-    "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg",
-    "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"
-  ]
+    [ "mjqjpqmgbljsphdztnvjfqwrcgsmlb"
+    , "bvwbjplbgvbhsrlpgdmjqwftvncz"
+    , "nppdvjthqldpwncqszvftbrmjlhg"
+    , "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"
+    , "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"
+    ]
 
 groupBy :: Int -> [a] -> [[a]]
 groupBy i s = take i s : groupBy i (tail s)

@@ -5,13 +5,13 @@ import Data.Vector (Vector, (!))
 import Data.Vector as Vector (fromList, length)
 
 data Instruction
-  = HLF String
-  | TPL String
-  | INC String
-  | JMP Int
-  | JIE String Int
-  | JIO String Int
-  deriving (Show)
+    = HLF String
+    | TPL String
+    | INC String
+    | JMP Int
+    | JIE String Int
+    | JIO String Int
+    deriving (Show)
 
 parseInstruction :: String -> Instruction
 parseInstruction i = parseInstruction' $ words i
@@ -32,46 +32,46 @@ toOffset s = error $ "offset not recognized: " ++ s
 
 input :: IO (Vector Instruction)
 input =
-  Vector.fromList . fmap parseInstruction . lines
-    <$> readFile "input/2015/23December.txt"
+    Vector.fromList . fmap parseInstruction . lines
+        <$> readFile "input/2015/23December.txt"
 
 inputTest :: Vector Instruction
 inputTest =
-  (Vector.fromList . fmap parseInstruction . lines)
-    "inc a\n\
-    \jio a, +2\n\
-    \tpl a\n\
-    \inc a"
+    (Vector.fromList . fmap parseInstruction . lines)
+        "inc a\n\
+        \jio a, +2\n\
+        \tpl a\n\
+        \inc a"
 
 interpreter :: Int -> State (Int, Int, Vector Instruction) (Int, Int)
 interpreter addr = do
-  (a, b, instr) <- get
-  let nextInstruction = instr ! addr
-  let (a', b', addr') = interpretInstruction nextInstruction a b addr
-  put (a', b', instr)
-  if addr' < Vector.length instr && addr' >= 0
-    then interpreter addr'
-    else return (a', b')
+    (a, b, instr) <- get
+    let nextInstruction = instr ! addr
+    let (a', b', addr') = interpretInstruction nextInstruction a b addr
+    put (a', b', instr)
+    if addr' < Vector.length instr && addr' >= 0
+        then interpreter addr'
+        else return (a', b')
 
 interpretInstruction :: Instruction -> Int -> Int -> Int -> (Int, Int, Int)
 interpretInstruction (HLF r) a b addr
-  | r == "a" = (a `div` 2, b, addr + 1)
-  | otherwise = (a, b `div` 2, addr + 1)
+    | r == "a" = (a `div` 2, b, addr + 1)
+    | otherwise = (a, b `div` 2, addr + 1)
 interpretInstruction (TPL r) a b addr
-  | r == "a" = (a * 3, b, addr + 1)
-  | otherwise = (a, b * 3, addr + 1)
+    | r == "a" = (a * 3, b, addr + 1)
+    | otherwise = (a, b * 3, addr + 1)
 interpretInstruction (INC r) a b addr
-  | r == "a" = (a + 1, b, addr + 1)
-  | otherwise = (a, b + 1, addr + 1)
+    | r == "a" = (a + 1, b, addr + 1)
+    | otherwise = (a, b + 1, addr + 1)
 interpretInstruction (JMP offset) a b addr = (a, b, addr + offset)
 interpretInstruction (JIE r offset) a b addr
-  | r == "a" && even a = (a, b, addr + offset)
-  | r == "b" && even b = (a, b, addr + offset)
-  | otherwise = (a, b, addr + 1)
+    | r == "a" && even a = (a, b, addr + offset)
+    | r == "b" && even b = (a, b, addr + offset)
+    | otherwise = (a, b, addr + 1)
 interpretInstruction (JIO r offset) a b addr
-  | r == "a" && a == 1 = (a, b, addr + offset)
-  | r == "b" && b == 1 = (a, b, addr + offset)
-  | otherwise = (a, b, addr + 1)
+    | r == "a" && a == 1 = (a, b, addr + offset)
+    | r == "b" && b == 1 = (a, b, addr + offset)
+    | otherwise = (a, b, addr + 1)
 
 solution1 :: Vector Instruction -> (Int, Int)
 solution1 instr = evalState (interpreter 0) (0, 0, instr)

@@ -13,7 +13,7 @@ generateLookAndSay = iterate generateNextLookAndSay
 
 generateNextLookAndSay :: Integer -> Integer
 generateNextLookAndSay =
-  read . concatMap (\l -> show (length l) ++ [head l]) . group . show
+    read . concatMap (\l -> show (length l) ++ [head l]) . group . show
 
 solution1Test :: Bool
 solution1Test = (== 312211) $ solution 5 1

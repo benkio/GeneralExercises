@@ -13,7 +13,7 @@ countTotalAnyoneYesAnswers = sum . fmap (length . nub . concat)
 
 countTotalEveryoneYesAnswers :: [[String]] -> Int
 countTotalEveryoneYesAnswers =
-  sum . fmap (length . foldl1 intersect) . filter (not . null)
+    sum . fmap (length . foldl1 intersect) . filter (not . null)
 
 input :: IO [[String]]
 input = splitByGroup . lines <$> readFile "input/2020/6December.txt"

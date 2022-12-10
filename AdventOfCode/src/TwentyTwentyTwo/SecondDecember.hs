@@ -27,15 +27,15 @@ playRPS _ _ = Draw
 
 playScoreRPS :: RPS -> RPS -> Int
 playScoreRPS rps rps' =
-  let gameScore = outcomeToScore $ playRPS rps rps'
-      rpsScore = rpsToScore rps'
-   in gameScore + rpsScore
+    let gameScore = outcomeToScore $ playRPS rps rps'
+        rpsScore = rpsToScore rps'
+     in gameScore + rpsScore
 
 stringToRPS :: String -> RPS
 stringToRPS s
-  | s == "A" || s == "X" = Rock
-  | s == "B" || s == "Y" = Paper
-  | s == "C" || s == "Z" = Scissors
+    | s == "A" || s == "X" = Rock
+    | s == "B" || s == "Y" = Paper
+    | s == "C" || s == "Z" = Scissors
 
 input :: IO [String]
 input = lines <$> readFile "input/2022/2December.txt"
@@ -45,9 +45,9 @@ parseInput = fmap (bimap stringToRPS (stringToRPS . tail) . break (== ' '))
 
 testInput :: String
 testInput =
-  "A Y\n\
-  \B X\n\
-  \C Z"
+    "A Y\n\
+    \B X\n\
+    \C Z"
 
 solution1 :: [(RPS, RPS)] -> Int
 solution1 = foldl (\score (rps, rps') -> score + playScoreRPS rps rps') 0

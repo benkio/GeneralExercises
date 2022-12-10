@@ -16,13 +16,13 @@ solution1Test = solution1 inputTest 25 == 4
 
 solution2 :: [Int] -> Int -> Int
 solution2 xs target =
-  ( length
-      . head
-      . groupBy (\x y -> length x == length y)
-      . sortOn length
-      . filter ((target ==) . sum)
-  )
-    $ subsequences xs
+    ( length
+        . head
+        . groupBy (\x y -> length x == length y)
+        . sortOn length
+        . filter ((target ==) . sum)
+    )
+        $ subsequences xs
 
 solution2Test :: Bool
 solution2Test = solution2 inputTest 25 == 3

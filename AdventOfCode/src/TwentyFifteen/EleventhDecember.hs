@@ -17,16 +17,16 @@ stringToNumbers = fmap (\c -> fromJust (Map.lookup c alphabetToNums))
 numbersToString :: [Int] -> String
 numbersToString [] = []
 numbersToString xs =
-  map
-    ( \x ->
-        (fst . fromJust . find (\(_, v) -> v == x) . Map.toList) alphabetToNums
-    )
-    xs
+    map
+        ( \x ->
+            (fst . fromJust . find (\(_, v) -> v == x) . Map.toList) alphabetToNums
+        )
+        xs
 
 zip3List :: [Int] -> [[Int]]
 zip3List xs =
-  let pairs = zip3 xs (tail xs) (tail (tail xs))
-   in fmap (\(a, b, c) -> [a, b, c]) pairs
+    let pairs = zip3 xs (tail xs) (tail (tail xs))
+     in fmap (\(a, b, c) -> [a, b, c]) pairs
 
 sequenceOfThreeConsecutive :: [[Int]]
 sequenceOfThreeConsecutive = zip3List [1 .. 26]
@@ -39,32 +39,32 @@ hasForbiddenLetters = any (`elem` stringToNumbers "iol")
 
 hasTwoDifferentNonOverlappingPairs :: [Int] -> Bool
 hasTwoDifferentNonOverlappingPairs =
-  (2 <=) . length . filter ((1 <) . length) . group
+    (2 <=) . length . filter ((1 <) . length) . group
 
 generateNewPassword :: [Int] -> [Int]
 generateNewPassword =
-  ( \(l, r) ->
-      if r == 1
-        then 1 : l
-        else l
-  )
-    . foldr moveLastChar ([], 1)
+    ( \(l, r) ->
+        if r == 1
+            then 1 : l
+            else l
+    )
+        . foldr moveLastChar ([], 1)
   where
     moveLastChar :: Int -> ([Int], Int) -> ([Int], Int)
     moveLastChar x (acc, r) =
-      let (x', r') =
-            if (x + r) `elem` [1 .. 26]
-              then (x + r, 0)
-              else (1, 1)
-       in (x' : acc, r')
+        let (x', r') =
+                if (x + r) `elem` [1 .. 26]
+                    then (x + r, 0)
+                    else (1, 1)
+         in (x' : acc, r')
 
 generateNewValidPassword :: [Int] -> [Int]
 generateNewValidPassword xs
-  | hasTwoDifferentNonOverlappingPairs xs
-      && hasThreeConsecutive xs
-      && not (hasForbiddenLetters xs) =
-    xs
-  | otherwise = generateNewValidPassword $ generateNewPassword xs
+    | hasTwoDifferentNonOverlappingPairs xs
+        && hasThreeConsecutive xs
+        && not (hasForbiddenLetters xs) =
+        xs
+    | otherwise = generateNewValidPassword $ generateNewPassword xs
 
 inputTest :: [String]
 inputTest = ["abcdefgh", "ghijklmn"]
@@ -74,10 +74,10 @@ solution1Test = ["abcdffaa", "ghjaabcc"] == fmap solution inputTest
 
 solution :: String -> String
 solution =
-  numbersToString
-    . generateNewValidPassword
-    . generateNewPassword
-    . stringToNumbers
+    numbersToString
+        . generateNewValidPassword
+        . generateNewPassword
+        . stringToNumbers
 
 eleventhDecemberSolution1 :: IO String
 eleventhDecemberSolution1 = solution <$> input

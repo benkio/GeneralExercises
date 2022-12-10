@@ -28,11 +28,11 @@ energy Desert = 1000
 
 exitRoom :: Int -> Hallway -> Set (Hallway, Int)
 exitRoom roomIndex h = S.fromList $ do
-  (anphi, room, outOfRoomSteps) <- (maybeToList . extractAnphipodFromRoom . getRoom h) roomIndex
-  destinationIndex <- [end | end <- (V.toList . emptyIndices) h, hallwayValidatePathExitRoom h roomIndex end]
-  let h' = h // [(roomIndex, RoomEntry room), (destinationIndex, Occupied anphi)]
-      energySpent = energy anphi * (outOfRoomSteps + abs (destinationIndex - roomIndex))
-  return (h', energySpent)
+    (anphi, room, outOfRoomSteps) <- (maybeToList . extractAnphipodFromRoom . getRoom h) roomIndex
+    destinationIndex <- [end | end <- (V.toList . emptyIndices) h, hallwayValidatePathExitRoom h roomIndex end]
+    let h' = h // [(roomIndex, RoomEntry room), (destinationIndex, Occupied anphi)]
+        energySpent = energy anphi * (outOfRoomSteps + abs (destinationIndex - roomIndex))
+    return (h', energySpent)
 
 exitRoomA :: Hallway -> Set (Hallway, Int)
 exitRoomA = exitRoom roomAIndex
@@ -51,23 +51,23 @@ exitRoomMoves h = foldl (\acc f -> acc `S.union` f h) S.empty [exitRoomA, exitRo
 
 enterRoomMoves :: Hallway -> Set (Hallway, Int)
 enterRoomMoves h = S.fromList $ do
-  occupiedHallwaySpot <- V.toList $ occupiedIndices h
-  let anphipod = unsafeGetOccupied (h ! occupiedHallwaySpot)
-  destinationIndex <- [end | end <- roomIndices, hallwayValidatePathEnterRoom anphipod (unsafeGetRoom (h ! end)) h occupiedHallwaySpot end]
-  (room', intoRoomSteps) <- maybeToList $ insertAnphipodInRoom anphipod (unsafeGetRoom (h ! destinationIndex))
-  let h' = h // [(occupiedHallwaySpot, Empty), (destinationIndex, RoomEntry room')]
-      energySpent = energy anphipod * (intoRoomSteps + abs (destinationIndex - occupiedHallwaySpot))
-  return (h', energySpent)
+    occupiedHallwaySpot <- V.toList $ occupiedIndices h
+    let anphipod = unsafeGetOccupied (h ! occupiedHallwaySpot)
+    destinationIndex <- [end | end <- roomIndices, hallwayValidatePathEnterRoom anphipod (unsafeGetRoom (h ! end)) h occupiedHallwaySpot end]
+    (room', intoRoomSteps) <- maybeToList $ insertAnphipodInRoom anphipod (unsafeGetRoom (h ! destinationIndex))
+    let h' = h // [(occupiedHallwaySpot, Empty), (destinationIndex, RoomEntry room')]
+        energySpent = energy anphipod * (intoRoomSteps + abs (destinationIndex - occupiedHallwaySpot))
+    return (h', energySpent)
 
 removeUpdateVisitedStates :: Map Hallway Int -> Set (Hallway, Int) -> (Map Hallway Int, Set (Hallway, Int))
 removeUpdateVisitedStates cache =
-  S.foldl
-    ( \(m, acc) (h, e) ->
-        if maybe False (<= e) (M.lookup h m)
-          then (m, acc)
-          else (M.insertWith min h e m, S.insert (h, e) acc)
-    )
-    (cache, S.empty)
+    S.foldl
+        ( \(m, acc) (h, e) ->
+            if maybe False (<= e) (M.lookup h m)
+                then (m, acc)
+                else (M.insertWith min h e m, S.insert (h, e) acc)
+        )
+        (cache, S.empty)
 
 allPossibleMovesStep :: Map Hallway Int -> Set (Hallway, Int) -> (Map Hallway Int, Set (Hallway, Int))
 allPossibleMovesStep cache states = traceShow (length states, M.size cache) $ removeUpdateVisitedStates cache nextMoves
@@ -153,20 +153,20 @@ hallwayValidatePathEnterRoom anphi room = hallwayValidatePath (pathValidatioCond
 
 pathValidatioConditionExitRoom :: Vector Space -> Bool
 pathValidatioConditionExitRoom path =
-  isEmpty (V.last path)
-    && isRoom (V.head path)
-    && not (isRoomDone (unsafeGetRoom (V.head path)))
-    && all (\s -> isEmpty s || isRoom s) path
+    isEmpty (V.last path)
+        && isRoom (V.head path)
+        && not (isRoomDone (unsafeGetRoom (V.head path)))
+        && all (\s -> isEmpty s || isRoom s) path
 
 pathValidatioConditionEnterRoom :: Anphipod -> Room -> Vector Space -> Bool
 pathValidatioConditionEnterRoom anphipod room path =
-  isOccupied (V.head path)
-    && unsafeGetOccupied (V.head path) == anphipod
-    && isRoom (V.last path)
-    && unsafeGetRoom (V.last path) == room
-    && anphipodOwnRoom anphipod room
-    && hasRoomSpace room
-    && all (\s -> isEmpty s || isRoom s) (V.tail path)
+    isOccupied (V.head path)
+        && unsafeGetOccupied (V.head path) == anphipod
+        && isRoom (V.last path)
+        && unsafeGetRoom (V.last path) == room
+        && anphipodOwnRoom anphipod room
+        && hasRoomSpace room
+        && all (\s -> isEmpty s || isRoom s) (V.tail path)
 
 unsafeGetRoom :: Space -> Room
 unsafeGetRoom (RoomEntry r) = r
@@ -222,49 +222,49 @@ allRoomsDone h = isRoomDone (getRoomA h) && isRoomDone (getRoomB h) && isRoomDon
 
 inputHallway :: Hallway
 inputHallway =
-  V.fromList
-    [ Empty,
-      Empty,
-      RoomEntry (A (Occupied Amber) (Occupied Copper)),
-      Empty,
-      RoomEntry (B (Occupied Desert) (Occupied Desert)),
-      Empty,
-      RoomEntry (C (Occupied Copper) (Occupied Bronze)),
-      Empty,
-      RoomEntry (D (Occupied Amber) (Occupied Bronze)),
-      Empty,
-      Empty
-    ]
+    V.fromList
+        [ Empty
+        , Empty
+        , RoomEntry (A (Occupied Amber) (Occupied Copper))
+        , Empty
+        , RoomEntry (B (Occupied Desert) (Occupied Desert))
+        , Empty
+        , RoomEntry (C (Occupied Copper) (Occupied Bronze))
+        , Empty
+        , RoomEntry (D (Occupied Amber) (Occupied Bronze))
+        , Empty
+        , Empty
+        ]
 
 testHallway :: Hallway
 testHallway =
-  V.fromList
-    [ Empty,
-      Empty,
-      RoomEntry (A (Occupied Bronze) (Occupied Amber)),
-      Empty,
-      RoomEntry (B (Occupied Copper) (Occupied Desert)),
-      Empty,
-      RoomEntry (C (Occupied Bronze) (Occupied Copper)),
-      Empty,
-      RoomEntry (D (Occupied Desert) (Occupied Amber)),
-      Empty,
-      Empty
-    ]
+    V.fromList
+        [ Empty
+        , Empty
+        , RoomEntry (A (Occupied Bronze) (Occupied Amber))
+        , Empty
+        , RoomEntry (B (Occupied Copper) (Occupied Desert))
+        , Empty
+        , RoomEntry (C (Occupied Bronze) (Occupied Copper))
+        , Empty
+        , RoomEntry (D (Occupied Desert) (Occupied Amber))
+        , Empty
+        , Empty
+        ]
 
 instance Show Space where
-  show Empty = "."
-  show (Occupied a) = "<" ++ show a ++ ">"
-  show (RoomEntry r) = "[" ++ show r ++ "]"
+    show Empty = "."
+    show (Occupied a) = "<" ++ show a ++ ">"
+    show (RoomEntry r) = "[" ++ show r ++ "]"
 
 instance Show Anphipod where
-  show Amber = "A"
-  show Bronze = "B"
-  show Copper = "C"
-  show Desert = "D"
+    show Amber = "A"
+    show Bronze = "B"
+    show Copper = "C"
+    show Desert = "D"
 
 instance Show Room where
-  show (A s s') = show s ++ "," ++ show s'
-  show (B s s') = show s ++ "," ++ show s'
-  show (C s s') = show s ++ "," ++ show s'
-  show (D s s') = show s ++ "," ++ show s'
+    show (A s s') = show s ++ "," ++ show s'
+    show (B s s') = show s ++ "," ++ show s'
+    show (C s s') = show s ++ "," ++ show s'
+    show (D s s') = show s ++ "," ++ show s'

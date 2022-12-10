@@ -5,18 +5,18 @@ input = init <$> readFile "input/2016/16December.txt"
 
 generateDragonCurveStep :: String -> String
 generateDragonCurveStep s =
-  let s' = (fmap (\c -> if c == '0' then '1' else '0') . reverse) s
-   in s ++ ['0'] ++ s'
+    let s' = (fmap (\c -> if c == '0' then '1' else '0') . reverse) s
+     in s ++ ['0'] ++ s'
 
 generateDragonCurve :: Int -> String -> String
 generateDragonCurve i s
-  | length s >= i = take i s
-  | otherwise = generateDragonCurve i (generateDragonCurveStep s)
+    | length s >= i = take i s
+    | otherwise = generateDragonCurve i (generateDragonCurveStep s)
 
 generateChecksum :: String -> String
 generateChecksum s
-  | odd (length s) = s
-  | otherwise = generateChecksum $ (fmap (\l -> if head l == last l then '1' else '0') . pairs) s
+    | odd (length s) = s
+    | otherwise = generateChecksum $ (fmap (\l -> if head l == last l then '1' else '0') . pairs) s
 
 pairs :: String -> [String]
 pairs [] = []

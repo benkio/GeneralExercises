@@ -24,10 +24,10 @@ groupByEta = Map.unionWith (+) emptyInput . Map.fromList . fmap (\x -> (head x, 
 
 evolve :: Map.Map Int Int -> Map.Map Int Int
 evolve fs =
-  let fs' = Map.foldrWithKey (\i v acc -> Map.insert (i - 1) v acc) emptyInput $ Map.filterWithKey (\k _ -> k /= -1) fs
-      newBorn = fromJust $ Map.lookup (-1) fs'
-      result = Map.filterWithKey (\k _ -> k /= -1) $ Map.insertWith (+) 8 newBorn $ Map.insertWith (+) 6 newBorn fs'
-   in result
+    let fs' = Map.foldrWithKey (\i v acc -> Map.insert (i - 1) v acc) emptyInput $ Map.filterWithKey (\k _ -> k /= -1) fs
+        newBorn = fromJust $ Map.lookup (-1) fs'
+        result = Map.filterWithKey (\k _ -> k /= -1) $ Map.insertWith (+) 8 newBorn $ Map.insertWith (+) 6 newBorn fs'
+     in result
 
 solution :: Int -> Map.Map Int Int -> Int
 solution gg fs = (sum . Map.elems) $ iterate evolve fs !! gg

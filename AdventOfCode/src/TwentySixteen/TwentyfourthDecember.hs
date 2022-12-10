@@ -25,16 +25,16 @@ parseGrid = fst . foldl foldLine (Map.empty, 0)
   where
     foldLine :: (Grid, Int) -> String -> (Grid, Int)
     foldLine (grid, y) =
-      (,y + 1) . fst
-        . foldl
-          ( \(g, x) c -> case c of
-              '.' -> (Map.insert (x, y) Open g, x + 1)
-              '#' -> (Map.insert (x, y) Wall g, x + 1)
-              _ -> (Map.insert (x, y) (HVAC (read [c] :: Int)) g, x + 1)
-          )
-          (grid, 0)
-        . tail
-        . init
+        (,y + 1) . fst
+            . foldl
+                ( \(g, x) c -> case c of
+                    '.' -> (Map.insert (x, y) Open g, x + 1)
+                    '#' -> (Map.insert (x, y) Wall g, x + 1)
+                    _ -> (Map.insert (x, y) (HVAC (read [c] :: Int)) g, x + 1)
+                )
+                (grid, 0)
+            . tail
+            . init
 
 hvacPosition :: Int -> Grid -> Coordinate
 hvacPosition hId = fst . head . Map.toList . Map.filter (HVAC hId ==)
@@ -57,34 +57,34 @@ neighboors maxCell (x, y) = [(a, b) | a <- [max 0 (x - 1) .. min (fst maxCell) (
 robotSearch :: Grid -> Set Coordinate -> [Coordinate] -> [Coordinate] -> Int -> [(Coordinate, Int)]
 robotSearch _ _ _ [] _ = []
 robotSearch grid visited positions targetPositions step
-  | any (`elem` targetPositions) positions =
-    let hvac = filter (`elem` targetPositions) positions
-     in fmap (,step) hvac ++ robotSearch grid visited positions (targetPositions \\ hvac) step
-  | otherwise = robotSearch grid (Set.union visited (Set.fromList positions)) nextPositions targetPositions (step + 1)
+    | any (`elem` targetPositions) positions =
+        let hvac = filter (`elem` targetPositions) positions
+         in fmap (,step) hvac ++ robotSearch grid visited positions (targetPositions \\ hvac) step
+    | otherwise = robotSearch grid (Set.union visited (Set.fromList positions)) nextPositions targetPositions (step + 1)
   where
     nextPositions = (filter (\x -> x `notMember` visited && x `elem` Map.keys grid) . nub . concatMap (neighboors ((fst . Map.findMax) grid))) positions
 
 buildGraph :: Grid -> [Coordinate] -> Map (Coordinate, Coordinate) Int
 buildGraph _ [] = Map.empty
 buildGraph grid (h : hs) =
-  let partialGraph = (\(c, x) -> [((h, c), x), ((c, h), x)]) <$> robotSearch grid Set.empty [h] hs 0
-   in Map.union ((Map.fromList . concat) partialGraph) $ buildGraph grid hs
+    let partialGraph = (\(c, x) -> [((h, c), x), ((c, h), x)]) <$> robotSearch grid Set.empty [h] hs 0
+     in Map.union ((Map.fromList . concat) partialGraph) $ buildGraph grid hs
 
 computeSteps :: Map (Coordinate, Coordinate) Int -> [Coordinate] -> Int
 computeSteps graph hvacs = foldl (\acc x -> acc + (graph ! x)) 0 $ hvacs `zip` tail hvacs
 
 search :: [Coordinate] -> ([Coordinate] -> Bool) -> Grid -> Int
 search hvacs filterPermutations grid =
-  (minimum . fmap (computeSteps (buildGraph grid hvacs)) . filter filterPermutations . permutations) hvacs
+    (minimum . fmap (computeSteps (buildGraph grid hvacs)) . filter filterPermutations . permutations) hvacs
 
 inputTest :: Grid
 inputTest =
-  parseInput
-    "###########\n\
-    \#0.1.....2#\n\
-    \#.#######.#\n\
-    \#4.......3#\n\
-    \###########"
+    parseInput
+        "###########\n\
+        \#0.1.....2#\n\
+        \#.#######.#\n\
+        \#4.......3#\n\
+        \###########"
 
 test :: Bool
 test = search hvacs filterPermutations inputTest == 14

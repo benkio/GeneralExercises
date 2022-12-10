@@ -16,11 +16,11 @@ inputTest = parseInput "16,1,2,0,4,2,7,1,2,14"
 
 solution :: (Int -> Int -> [Int]) -> [Int] -> Int
 solution stepCost xs =
-  let max = maximum xs
-      accumulator = replicate (max + 1) 0
-      deltas = fmap (stepCost max) xs
-      sumDeltas = foldr (zipWith (+)) accumulator deltas
-   in minimum sumDeltas
+    let max = maximum xs
+        accumulator = replicate (max + 1) 0
+        deltas = fmap (stepCost max) xs
+        sumDeltas = foldr (zipWith (+)) accumulator deltas
+     in minimum sumDeltas
 
 solution1StepCost :: Int -> Int -> [Int]
 solution1StepCost max x = fmap (\y -> abs (y - x)) [0 .. max]

@@ -12,39 +12,39 @@ import Data.Maybe (fromJust, isJust)
 
 input :: IO (Int, [String])
 input = do
-  content <- readFile "input/2020/13December.txt"
-  let departTime = read (head (lines content)) :: Int
-      busses =
-        filter
-          (not . null)
-          ( fst
-              ( foldl
-                  ( \(acc, b) c ->
-                      case c of
-                        ',' -> (acc ++ [b], [])
-                        _ -> (acc, b ++ [c])
-                  )
-                  ([[]], [])
-                  (lines content !! 1)
-              )
-          )
-  return (departTime, busses)
+    content <- readFile "input/2020/13December.txt"
+    let departTime = read (head (lines content)) :: Int
+        busses =
+            filter
+                (not . null)
+                ( fst
+                    ( foldl
+                        ( \(acc, b) c ->
+                            case c of
+                                ',' -> (acc ++ [b], [])
+                                _ -> (acc, b ++ [c])
+                        )
+                        ([[]], [])
+                        (lines content !! 1)
+                    )
+                )
+    return (departTime, busses)
 
 bussesTimelines :: [Int] -> [[Int]]
 bussesTimelines = fmap (\x -> iterate (+ x) x)
 
 findMyBusNWait :: Int -> [[Int]] -> (Int, Int)
 findMyBusNWait myTimestamp =
-  (\(b, t) -> (b, t - myTimestamp))
-    . minimumBy (\(_, a) (_, b) -> compare a b)
-    . foldl (\acc bt -> acc ++ [(head bt, head (dropWhile (myTimestamp >) bt))]) []
+    (\(b, t) -> (b, t - myTimestamp))
+        . minimumBy (\(_, a) (_, b) -> compare a b)
+        . foldl (\acc bt -> acc ++ [(head bt, head (dropWhile (myTimestamp >) bt))]) []
 
 thirteenthDecemberSolution1 :: IO Int
 thirteenthDecemberSolution1 =
-  uncurry (*)
-    . uncurry findMyBusNWait
-    . second (bussesTimelines . fmap (\x -> read x :: Int) . filter ("x" /=))
-    <$> input
+    uncurry (*)
+        . uncurry findMyBusNWait
+        . second (bussesTimelines . fmap (\x -> read x :: Int) . filter ("x" /=))
+        <$> input
 
 -----------------------------------------------------------------------------
 --                          Copied from the web :(                          --
@@ -54,28 +54,28 @@ thirteenthDecemberSolution1 =
 parse :: String -> Int -> [(Int, Int)]
 parse [] _ = []
 parse xs offset
-  | head xs == 'x' = parse (tail xs) (offset + 1)
-  | head xs == ',' = parse (tail xs) offset
-  | otherwise =
-    let (n, xs') = span isDigit xs
-     in (read n :: Int, offset) : parse xs' (offset + 1)
+    | head xs == 'x' = parse (tail xs) (offset + 1)
+    | head xs == ',' = parse (tail xs) offset
+    | otherwise =
+        let (n, xs') = span isDigit xs
+         in (read n :: Int, offset) : parse xs' (offset + 1)
 
 task1 ts = head . filter isJust . concatMap (\(ts, ids) -> map (check ts) ids)
   where
     check ts' id
-      | ts' `mod` id == 0 = Just ((ts' - ts) * id)
-      | otherwise = Nothing
+        | ts' `mod` id == 0 = Just ((ts' - ts) * id)
+        | otherwise = Nothing
 
 -- Chinese Remainder Gaussian
 -- https://en.wikipedia.org/wiki/Chinese_remainder_theorem
 crt :: [Int] -> Int -> [Int] -> Int
 crt diffs mprod ids =
-  let ins = zip diffs ids
-   in foldr (\(x, y) r -> r + aux x y) 0 ins `mod` mprod
+    let ins = zip diffs ids
+     in foldr (\(x, y) r -> r + aux x y) 0 ins `mod` mprod
   where
     aux x y =
-      let f = (mprod `div` y) `inv` y
-       in ((x * mprod) `div` y) * f
+        let f = (mprod `div` y) `inv` y
+         in ((x * mprod) `div` y) * f
     -- Modular multiplicative inverse
     -- https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
     a `inv` m = let (_, i, _) = gcd' a m in i `mod` m
@@ -89,7 +89,7 @@ crt diffs mprod ids =
 
 thirteenthDecemberSolution2 :: IO Int
 thirteenthDecemberSolution2 = do
-  [_, ids] <- lines <$> readFile "input/2020/13December.txt"
-  let ids' = parse ids 0
-      ids'' = map fst ids'
-  return $ crt (map (uncurry (-)) ids') (product ids'') ids''
+    [_, ids] <- lines <$> readFile "input/2020/13December.txt"
+    let ids' = parse ids 0
+        ids'' = map fst ids'
+    return $ crt (map (uncurry (-)) ids') (product ids'') ids''

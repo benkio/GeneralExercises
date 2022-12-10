@@ -8,22 +8,22 @@ input = readFile "input/2015/4December.txt"
 
 inputTest :: String
 inputTest =
-  "abcdef\n\
-  \pqrstuv"
+    "abcdef\n\
+    \pqrstuv"
 
 testSolution1 :: Bool
 testSolution1 =
-  ((\l -> l == [609043, 1048970]) . fmap solution1 . lines) inputTest
+    ((\l -> l == [609043, 1048970]) . fmap solution1 . lines) inputTest
 
 generateMD5 :: String -> Int -> String
 generateMD5 prefix num =
-  let md5input = B.pack $ prefix ++ show num
-   in show $ M.md5 md5input
+    let md5input = B.pack $ prefix ++ show num
+     in show $ M.md5 md5input
 
 bruteSearchLeadingZeros :: String -> [Int] -> Int -> Int
 bruteSearchLeadingZeros prefix (x : xs) zeros
-  | all ('0' ==) md5Prefix = x
-  | otherwise = bruteSearchLeadingZeros prefix xs zeros
+    | all ('0' ==) md5Prefix = x
+    | otherwise = bruteSearchLeadingZeros prefix xs zeros
   where
     md5Prefix = take zeros (generateMD5 prefix x)
 
