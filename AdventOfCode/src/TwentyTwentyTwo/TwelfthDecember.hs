@@ -1,9 +1,9 @@
 module TwentyTwentyTwo.TwelfthDecember where
 
 import Data.Bifunctor (second)
-import Data.List (find, nub, sortOn, (\\))
-import Data.Map (Map, elems, findMax, fromList, insert, keys, lookup, (!))
-import Data.Maybe (catMaybes, fromJust, isJust)
+import Data.List (find, minimumBy, sortOn, (\\))
+import Data.Map (Map, elems, fromList, lookup)
+import Data.Maybe (catMaybes, fromJust)
 import Debug.Trace
 import Text.Printf
 import Prelude hiding (lookup)
@@ -13,11 +13,16 @@ type Position = (Int, Int)
 data Ground = Ground
     { position :: Position
     , height :: Char
+    , distance :: Int
+    , distanceTraveled :: Int
     }
-    deriving (Eq)
 
 instance Show Ground where
-    show (Ground{position = p, height = h}) = printf "%s -> %c" (show p) h
+    show (Ground{position = p, height = h, distance = d, distanceTraveled = dt}) = printf "%s | %c | %d | %d" (show p) h d dt
+
+instance Eq Ground where
+    (==) g g' = position g == position g'
+    (/=) g g' = position g /= position g'
 
 input :: IO (Map Position Ground)
 input = toGrid <$> readFile "input/2022/12December.txt"
@@ -25,59 +30,37 @@ input = toGrid <$> readFile "input/2022/12December.txt"
 toGrid :: String -> Map Position Ground
 toGrid = fromList . concatMap (fmap amendStartEnd . uncurry parseRow) . (`zip` [0 ..]) . lines
   where
-    parseRow row y = (fmap (\(c, x) -> Ground{position = (x, y), height = c}) . (`zip` [0 ..])) row
+    parseRow row y = (fmap (\(c, x) -> Ground{position = (x, y), height = c, distance = maxBound :: Int, distanceTraveled = 0}) . (`zip` [0 ..])) row
     amendStartEnd g@(Ground{height = 'S'}) = (position g, g{height = '`'})
     amendStartEnd g@(Ground{height = 'E'}) = (position g, g{height = '{'})
     amendStartEnd g = (position g, g)
 
-neighboor :: Map Position Ground -> Ground -> [Ground]
-neighboor m (Ground{position = (x, y), height = h}) =
-    ( filter (\x -> height x <= succ h)
-        . catMaybes
-        . fmap (flip lookup m)
-    )
-        [(x - 1, y), (x + 1, y), (x, y + 1), (x, y - 1)]
-
-knownGround :: Map Position [Ground] -> [[Ground]] -> Map Position [Ground]
-knownGround = foldl addToKnown
+nextCandidate :: [Ground] -> Ground
+nextCandidate = minimumBy (\g g' -> value g `compare` value g')
   where
-    addToKnown m xs =
-        let lastP = (position . last) xs
-            mayBestSoFar = lookup lastP m
-         in maybe
-                (insert lastP xs m)
-                ( \bs ->
-                    if length bs >= length xs then insert lastP xs m else m
-                )
-                mayBestSoFar
+    value x = computeDistance' x
 
-explode :: Map Position Ground -> Map Position [Ground] -> [Position] -> (Map Position [Ground], [Position])
-explode m km lastKeys = (knownGround km closestPathsExtended, ks)
+getX :: Ground -> Int
+getX = fst . position
+getY :: Ground -> Int
+getY = snd . position
+getTarget :: Map Position Ground -> Ground
+getTarget = fromJust . find ((== '{') . height) . elems
+getStart :: Map Position Ground -> Ground
+getStart = fromJust . find ((== '`') . height) . elems
+computeDistance :: Ground -> Ground -> Int
+computeDistance t x = abs x' + abs y'
   where
-    closestKeys = ((\\ lastKeys) . keys) km
-    ks = if null closestKeys then keys km else closestKeys
-    closestPathsExtended = concatMap (extendPath m km) $ ks
+    x' = getX x - getX t
+    y' = getY x - getY t
+computeDistance' :: Ground -> Int
+computeDistance' (Ground{distance = d, distanceTraveled = d', height = h}) = d + d' + (fromEnum '{' - fromEnum h) ^ 2
 
-extendPath :: Map Position Ground -> Map Position [Ground] -> Position -> [[Ground]]
-extendPath m km k =
-    let path = km ! k
-        ns = neighboor m (m ! k)
-     in fmap (\n -> path ++ [n]) ns
-
-gridPaths :: Ground -> Map Position Ground -> Position -> Map Position [Ground]
-gridPaths start m target =
-    let known = fromList [(position start, [start])]
-     in fst $ until (exitCondition target . fst) (uncurry (explode m)) (known, [])
-
-solution1 :: Map Position Ground -> Int
-solution1 m =
-    let start = (fromJust . find ((== '`') . height) . elems) m
-        target = (position . fromJust . find ((== '{') . height) . elems) m
-        ex = gridPaths start m target
-     in (\x -> x - 1) $ length $ ex ! target
-
-exitCondition :: Position -> Map Position [Ground] -> Bool
-exitCondition t = isJust . lookup t
+neighboors :: Map Position Ground -> Ground -> [Ground]
+neighboors m g = filter (\x -> height x <= succ (height g)) $ catMaybes $ fmap (`lookup` m) [(gx - 1, gy), (gx + 1, gy), (gx, gy + 1), (gx, gy - 1)]
+  where
+    gx = getX g
+    gy = getY g
 
 testInput :: Map Position Ground
 testInput =
@@ -88,15 +71,42 @@ testInput =
         \acctuvwj\n\
         \abdefghi"
 
-solution2 :: Map Position Ground -> Int
-solution2 m =
-    let starts = (filter (\g -> height g == '`' || height g == 'a') . elems) m
-        target = (position . fromJust . find ((== '{') . height) . elems) m
-        exs = fmap (\s -> gridPaths s m target) starts
-     in ((\x -> x - 1) . minimum) $ fmap (length . (! target)) exs
+findPath :: Map Position Ground -> [Ground] -> [Ground] -> Int
+findPath _ [] _ = 0
+findPath m open closed =
+    let q = nextCandidate open
+        open' = filter ((/= q)) open
+        ns = neighboors m q
+        target = getTarget m
+        open'' = pushNeighboorsToOpen open' closed target q ns
+     in if target `elem` ns && height q == 'z'
+            then distanceTraveled q + 1
+            else findPath m open'' (q : closed)
+
+pushNeighboorsToOpen :: [Ground] -> [Ground] -> Ground -> Ground -> [Ground] -> [Ground]
+pushNeighboorsToOpen open closed target q ns =
+    foldl (\acc n -> if skippingCondition n then acc else n : (filter ((/= (position n)) . position) acc)) open ns'
+  where
+    ns' = fmap (\n -> n{distanceTraveled = distanceTraveled q + 1, distance = computeDistance target n}) ns
+    skippingCondition n =
+        any (\x -> x == n && computeDistance' x <= computeDistance' n) open
+            || any (\x -> x == n && computeDistance' x <= computeDistance' n) closed
+
+solution :: Ground -> Map Position Ground -> Int
+solution start m =
+    let open = [start]
+     in findPath m open []
 
 twelfthDecemberSolution1 :: IO Int
-twelfthDecemberSolution1 = solution1 <$> input
+twelfthDecemberSolution1 = (\m -> solution (getStart m) m) <$> input
 
 twelfthDecemberSolution2 :: IO Int
 twelfthDecemberSolution2 = solution2 <$> input
+
+solution2 :: Map Position Ground -> Int
+solution2 m =
+    let as = (filter ((\g -> (height g == 'a' || height g == '`') && quickToC m g)) . elems) m
+     in minimum $ fmap (\p -> solution p m) as
+
+quickToC :: Map Position Ground -> Ground -> Bool
+quickToC m h = any (any ((== 'c') . height)) $ neighboors m <$> neighboors m h
