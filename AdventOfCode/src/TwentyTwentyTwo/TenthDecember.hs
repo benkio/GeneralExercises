@@ -32,9 +32,9 @@ runDevice = iterate runCycle
 runCycle :: Device -> Device
 runCycle d@Device{instructionBuffer = []} = d
 runCycle d@Device{regX = x, instructionBuffer = (Addx v 0 : is)} = runCycle $ d{regX = x + v, instructionBuffer = is}
-runCycle d@Device{regX = x, instructionBuffer = (Addx v t : is)} = d{instructionBuffer = (Addx v (t - 1) : is)}
+runCycle d@Device{regX = x, instructionBuffer = (Addx v t : is)} = d{instructionBuffer = Addx v (t - 1) : is}
 runCycle d@Device{instructionBuffer = (Noop 0 : is)} = runCycle $ d{instructionBuffer = is}
-runCycle d@Device{instructionBuffer = (Noop t : is)} = d{instructionBuffer = (Noop (t - 1) : is)}
+runCycle d@Device{instructionBuffer = (Noop t : is)} = d{instructionBuffer = Noop (t - 1) : is}
 
 sampleSignalStrength :: [Device] -> [Int]
 sampleSignalStrength ds = (\i -> i * regX (ds !! i)) <$> [20, 60 .. 220]
@@ -53,10 +53,10 @@ buildCRT i r = CRT{index = i `mod` 40, sprite = [r - 1 .. r + 1]}
 
 drawCRT :: CRT -> IO ()
 drawCRT c@(CRT{index = i, sprite = xs})
-    | i == 0 && i `elem` xs = putStr $ "\n#"
-    | i == 0 && i `notElem` xs = putStr $ "\n."
-    | i /= 0 && i `elem` xs = putStr $ "#"
-    | i /= 0 && i `notElem` xs = putStr $ "."
+    | i == 0 && i `elem` xs = putStr "\n#"
+    | i == 0 && i `notElem` xs = putStr "\n."
+    | i /= 0 && i `elem` xs = putStr "#"
+    | i /= 0 && i `notElem` xs = putStr "."
 
 solution2 :: [Instruction] -> IO ()
 solution2 = mapM_ drawCRT . take 240 . runCRT . runDevice . initialDevice
