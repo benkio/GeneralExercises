@@ -84,7 +84,7 @@ instance ToValidate HexColor where
     validate = hexColorValidation
 
 instance ToValidate UnitOfMeasure where
-    validate s = unitOfMeasureValidation s
+    validate = unitOfMeasureValidation
 
 instance ToValidate BirthYear where
     validate s = do

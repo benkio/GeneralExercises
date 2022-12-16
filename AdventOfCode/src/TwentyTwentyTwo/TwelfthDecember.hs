@@ -3,7 +3,7 @@ module TwentyTwentyTwo.TwelfthDecember where
 import Data.Bifunctor (second)
 import Data.List (find, minimumBy, sortOn, (\\))
 import Data.Map (Map, elems, fromList, lookup)
-import Data.Maybe (catMaybes, fromJust)
+import Data.Maybe (fromJust, mapMaybe)
 import Debug.Trace
 import Text.Printf
 import Prelude hiding (lookup)
@@ -38,7 +38,7 @@ toGrid = fromList . concatMap (fmap amendStartEnd . uncurry parseRow) . (`zip` [
 nextCandidate :: [Ground] -> Ground
 nextCandidate = minimumBy (\g g' -> value g `compare` value g')
   where
-    value x = computeDistance' x
+    value = computeDistance'
 
 getX :: Ground -> Int
 getX = fst . position
@@ -57,7 +57,11 @@ computeDistance' :: Ground -> Int
 computeDistance' (Ground{distance = d, distanceTraveled = d', height = h}) = d + d' + (fromEnum '{' - fromEnum h) ^ 2
 
 neighboors :: Map Position Ground -> Ground -> [Ground]
-neighboors m g = filter (\x -> height x <= succ (height g)) $ catMaybes $ fmap (`lookup` m) [(gx - 1, gy), (gx + 1, gy), (gx, gy + 1), (gx, gy - 1)]
+neighboors m g =
+    filter (\x -> height x <= succ (height g)) $
+        mapMaybe
+            (`lookup` m)
+            [(gx - 1, gy), (gx + 1, gy), (gx, gy + 1), (gx, gy - 1)]
   where
     gx = getX g
     gy = getY g
@@ -75,7 +79,7 @@ findPath :: Map Position Ground -> [Ground] -> [Ground] -> Int
 findPath _ [] _ = 0
 findPath m open closed =
     let q = nextCandidate open
-        open' = filter ((/= q)) open
+        open' = filter (/= q) open
         ns = neighboors m q
         target = getTarget m
         open'' = pushNeighboorsToOpen open' closed target q ns
@@ -85,7 +89,7 @@ findPath m open closed =
 
 pushNeighboorsToOpen :: [Ground] -> [Ground] -> Ground -> Ground -> [Ground] -> [Ground]
 pushNeighboorsToOpen open closed target q ns =
-    foldl (\acc n -> if skippingCondition n then acc else n : (filter ((/= (position n)) . position) acc)) open ns'
+    foldl (\acc n -> if skippingCondition n then acc else n : filter ((/= position n) . position) acc) open ns'
   where
     ns' = fmap (\n -> n{distanceTraveled = distanceTraveled q + 1, distance = computeDistance target n}) ns
     skippingCondition n =
@@ -105,8 +109,8 @@ twelfthDecemberSolution2 = solution2 <$> input
 
 solution2 :: Map Position Ground -> Int
 solution2 m =
-    let as = (filter ((\g -> (height g == 'a' || height g == '`') && quickToC m g)) . elems) m
-     in minimum $ fmap (\p -> solution p m) as
+    let as = (filter (\g -> (height g == 'a' || height g == '`') && quickToC m g) . elems) m
+     in minimum $ fmap (`solution` m) as
 
 quickToC :: Map Position Ground -> Ground -> Bool
 quickToC m h = any (any ((== 'c') . height)) $ neighboors m <$> neighboors m h

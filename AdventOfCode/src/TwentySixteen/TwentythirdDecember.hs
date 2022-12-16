@@ -31,13 +31,13 @@ data InstructionV2
 
 instance TCInstruction T.Instruction where
     parse = T.parseInstruction
-    toInstruction x = Just x
+    toInstruction = Just
     toInstructionV2 _ = Nothing
 
 instance TCInstruction InstructionV2 where
     parse = parseInstructionV2
     toInstruction _ = Nothing
-    toInstructionV2 x = Just x
+    toInstructionV2 = Just
 
 instance TCInstruction SafeInstruction where
     parse _ = error "no need to parse a SafeInstruction"

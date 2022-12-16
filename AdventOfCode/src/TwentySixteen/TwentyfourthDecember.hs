@@ -91,18 +91,18 @@ test = search hvacs filterPermutations inputTest == 14
   where
     hvacs = (Map.keys . Map.filter isHVAC) inputTest
     initialRobotPosition = hvacPosition 0 inputTest
-    filterPermutations = \p -> head p == initialRobotPosition
+    filterPermutations p = head p == initialRobotPosition
 
 twentyfourthDecemberSolution1 :: IO Int
 twentyfourthDecemberSolution1 = (\x -> search (hvacs x) (filterPermutations x) x) <$> input
   where
-    hvacs x = (Map.keys . Map.filter isHVAC) x
-    initialRobotPosition x = hvacPosition 0 x
-    filterPermutations = \x p -> head p == initialRobotPosition x
+    hvacs = Map.keys . Map.filter isHVAC
+    initialRobotPosition = hvacPosition 0
+    filterPermutations x p = head p == initialRobotPosition x
 
 twentyfourthDecemberSolution2 :: IO Int
 twentyfourthDecemberSolution2 = (\x -> search (hvacs x) (filterPermutations x) x) <$> input
   where
     hvacs x = (Map.keys . Map.filter isHVAC) x ++ [initialRobotPosition x]
-    initialRobotPosition x = hvacPosition 0 x
-    filterPermutations = \x p -> head p == initialRobotPosition x && last p == initialRobotPosition x
+    initialRobotPosition = hvacPosition 0
+    filterPermutations x p = head p == initialRobotPosition x && last p == initialRobotPosition x

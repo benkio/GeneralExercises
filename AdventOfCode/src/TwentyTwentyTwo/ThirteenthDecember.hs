@@ -27,7 +27,7 @@ input = parsePacket <$> readFile "input/2022/13December.txt"
 
 parsePacket :: String -> [(Int, Packet, Packet)]
 parsePacket =
-    fmap (\((x : y : []), i) -> (i, read x :: Packet, read y :: Packet))
+    fmap (\([x, y], i) -> (i, read x :: Packet, read y :: Packet))
         . (`zip` [1 ..])
         . filter ((== 2) . length)
         . split (onSublist [""])
@@ -61,12 +61,12 @@ testInput =
 
 checkOrder :: Packet -> Packet -> Ordering
 checkOrder (PK x) (PK y) = x `compare` y
-checkOrder (PK x) (PKL ys) = checkOrderLists [(PK x)] ys
-checkOrder (PKL xs) (PK y) = checkOrderLists xs [(PK y)]
+checkOrder (PK x) (PKL ys) = checkOrderLists [PK x] ys
+checkOrder (PKL xs) (PK y) = checkOrderLists xs [PK y]
 checkOrder (PKL xs) (PKL ys) = checkOrderLists xs ys
 
 checkOrderLists :: [Packet] -> [Packet] -> Ordering
-checkOrderLists xs ys = if zipCompare == EQ then (length xs `compare` length ys) else zipCompare
+checkOrderLists xs ys = if zipCompare == EQ then length xs `compare` length ys else zipCompare
   where
     zipCompare = mconcat $ uncurry checkOrder <$> xs `zip` ys
 
