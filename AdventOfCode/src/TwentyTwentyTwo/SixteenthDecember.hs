@@ -1,8 +1,10 @@
 module TwentyTwentyTwo.SixteenthDecember where
 
+import Text.Printf (printf)
+
 import Data.Bifunctor (second)
-import Data.List (groupBy, maximumBy, minimumBy, partition, sortOn, (\\))
-import Data.Map (Map, delete, fromList, (!))
+import Data.List (groupBy, maximumBy, minimumBy, partition, sort, sortOn, (\\))
+import Data.Map (Map, delete, elems, fromList, keys, size, (!))
 import Debug.Trace
 
 data Valve = Valve
@@ -13,64 +15,86 @@ data Valve = Valve
     deriving (Show, Eq, Ord)
 
 data State = State
-    { activeValves :: [Valve]
-    , timeLeft :: Int
-    , currentPosition :: Valve
+    { valves :: [String]
+    , timeSpent :: Int
+    , total :: Int
     }
     deriving (Show)
 
-initialState :: Valve -> State
-initialState cp = State{activeValves = [], timeLeft = 30, currentPosition = cp}
+initialState :: (String, String) -> Int -> Int -> State
+initialState (sv, ev) c t = State{valves = [sv, ev], timeSpent = c, total = t}
+
+addStepState :: ValveMap -> (String, String) -> (Int, Int) -> State -> State
+addStepState vm (sv, ev) (c, r) s =
+    State
+        { valves = [sv] ++ valves s
+        , timeSpent = c + timeSpent s
+        , total = (((rate . (vm !))) sv * timeSpent s) + r + total s
+        }
 
 type ValveMap = Map String Valve
+type ConnectionCostMap = Map (String, String) (Int, Int)
 
 input :: IO ValveMap
 input = parseInput <$> readFile "input/2022/16December.txt"
 
--- valves reacheable from the input valve
--- With time to reach them and activate them
--- and through which next pipe name
-reachableValves :: ([String], Int) -> Valve -> ValveMap -> [([String], Int, Valve)]
-reachableValves prev v vm = fmap (minimumBy (\(_, c, _) (_, c', _) -> c `compare` c')) . groupBy (\(_, _, v) (_, _, v') -> v == v') . sortOn (\(_, _, v) -> v) $ reachableValves' prev v vm
+connectionMap :: ValveMap -> ConnectionCostMap
+connectionMap vm = (fromList . innerSearch . filter (\v -> ((> 0) . rate) v || name v == "AA") . elems) vm
+  where
+    innerSearch :: [Valve] -> [((String, String), (Int, Int))]
+    innerSearch [] = []
+    innerSearch (v : vs) =
+        let vrs = (\(v', c) -> ((name v, name v'), (c, c * rate v))) <$> reachableValves ([], 0) v vm
+         in vrs ++ innerSearch vs
+
+reachableValves :: ([String], Int) -> Valve -> ValveMap -> [(Valve, Int)]
+reachableValves prev v vm = (fmap ((\(_, c, v) -> (v, c)) . minimumBy (\(_, c, _) (_, c', _) -> c `compare` c')) . groupBy (\(_, _, v) (_, _, v') -> v == v') . sortOn (\(_, _, v) -> v)) $ reachableValves' prev v vm
 
 reachableValves' :: ([String], Int) -> Valve -> ValveMap -> [([String], Int, Valve)]
 reachableValves' (prevValves, cost) v@Valve{connections = cv, name = vn} vm =
     (fmap (\v -> (prevValves ++ [vn, name v], cost + 2, v)) nextValvesNonEmpty) ++ keepLooking
   where
-    (nextValvesEmpty, nextValvesNonEmpty) = (partition ((== 0) . rate) . fmap (vm !) . (\\ prevValves)) cv
+    (nextValvesEmpty, nextValvesNonEmpty) = (partition (\v -> (rate v == 0 || name v == "AA")) . fmap (vm !) . (\\ prevValves)) cv
     keepLooking = concatMap (\x -> reachableValves' (prevValves ++ [vn], cost + 1) x vm) (nextValvesEmpty ++ nextValvesNonEmpty)
 
-selectPathToValve :: Int -> [([String], Int, Valve)] -> [String]
-selectPathToValve _ [] = []
-selectPathToValve timeLeft cs = ((\(p, _, _) -> tail p) . maximumBy (\(_, c, v) (_, c', v') -> candidatePotentialFlow timeLeft c v `compare` candidatePotentialFlow timeLeft c' v')) cs
+log' f x = trace (f x) x
 
-candidatePotentialFlow :: Int -> Int -> Valve -> Int
-candidatePotentialFlow timeLeft stepsToActivateValve (Valve{rate = r}) =
-    (timeLeft - stepsToActivateValve) * r
+search :: ValveMap -> ConnectionCostMap -> State
+search vm cm =
+    (maximumBy (\s s' -> total s `compare` total s') . fmap (extendTo30Time vm)) $ innerSearch "AA" vm cm ["AA"] (keys cm)
 
-moveToValve :: State -> ValveMap -> State
-moveToValve st@State{currentPosition = cp, activeValves = av, timeLeft = tl} vm =
-    if cp `notElem` av && rate cp > 0
-        then st{activeValves = av ++ [cp], timeLeft = tl - 1}
-        else st{currentPosition = nextValve, timeLeft = tl - 1}
-  where
-    candidates = filter (\(_, _, v) -> v `notElem` av) $ reachableValves ([], 0) cp (delete (name cp) vm)
-    path = selectPathToValve tl candidates
-    nextValve = if null path then cp else vm ! (head path)
+innerSearch :: String -> ValveMap -> ConnectionCostMap -> [String] -> [(String, String)] ->[State]
+innerSearch starting vm cm visited ks =
+    ( take (size cm * 2)
+        . reverse
+        . sortOn total
+        . concatMap
+            ( \(x, y) ->
+                let ss = innerSearch y vm cm (visited ++ [x,y]) ks
+                 in if null ss
+                        then [(uncurry (initialState (x, y)) . (cm !)) (x, y)]
+                        else (filter ((<= 30) . timeSpent) . fmap (addStepState vm (x, y) (cm ! (x, y)))) ss
+            )
+        . filter (\(s, e) -> s == starting && e `notElem` visited)
+    )
+        ks
 
-evolve :: ValveMap -> [State]
-evolve vm = (takeWhile ((> 0) . timeLeft) . iterate (`moveToValve` vm) . initialState) (vm ! "AA")
+releasedPressure :: ValveMap -> [String] -> Int
+releasedPressure vm av = sum $ fmap (rate . (vm !)) av
 
-releasedPressure :: State -> Int
-releasedPressure (State{activeValves = av}) = sum $ fmap rate av
+extendTo30Time :: ValveMap -> State -> State
+extendTo30Time vm (State{timeSpent = ts, total = t, valves = vs}) =
+    State
+        { timeSpent = 30
+        , valves = vs
+        , total = t + ((30 - ts) * releasedPressure vm vs)
+        }
 
 solution1 :: ValveMap -> Int
-solution1 =
-    -- fmap (\s -> (releasedPressure s, s))
-    sum . fmap releasedPressure . evolve
+solution1 vm = (total . search vm. connectionMap) vm
 
 sixteenthDecemberSolution1 :: IO Int
-sixteenthDecemberSolution1 = undefined
+sixteenthDecemberSolution1 = solution1 <$> input -- return (solution1 testInput)
 
 sixteenthDecemberSolution2 :: IO Int
 sixteenthDecemberSolution2 = undefined
@@ -86,6 +110,14 @@ parseValve s = ((take 2 . drop 6) s, Valve{name = parseName, rate = parseRate, c
     parseConnection = (parseConnections . drop 5 . words . snd . break (== ';')) s
     parseConnections [] = []
     parseConnections (s : ss) = if last s == ',' then init s : parseConnections ss else s : parseConnections ss
+
+testInput' :: ValveMap
+testInput' =
+    parseInput
+        "Valve AA has flow rate=0; tunnels lead to valves DD, BB\n\
+        \Valve BB has flow rate=13; tunnels lead to valves CC, AA\n\
+        \Valve CC has flow rate=0; tunnels lead to valves DD, BB\n\
+        \Valve DD has flow rate=20; tunnels lead to valves CC, AA"
 
 testInput :: ValveMap
 testInput =
