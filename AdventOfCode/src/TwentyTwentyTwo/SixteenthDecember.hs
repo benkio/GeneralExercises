@@ -4,8 +4,9 @@ import Text.Printf (printf)
 
 import Data.Bifunctor (second)
 import Data.List (groupBy, maximumBy, minimumBy, partition, sort, sortOn, (\\))
-import Data.Map (Map, delete, elems, fromList, keys, size, (!))
+import Data.Map (Map, delete, elems, empty, fromList, insert, keys, lookup, size, (!))
 import Debug.Trace
+import Prelude hiding (lookup)
 
 data Valve = Valve
     { name :: String
@@ -15,24 +16,27 @@ data Valve = Valve
     deriving (Show, Eq, Ord)
 
 data State = State
-    { valves :: [String]
+    { currentValve :: String
+    , valves :: [String]
     , timeSpent :: Int
     , total :: Int
     }
     deriving (Show)
 
-initialState :: (String, String) -> Int -> Int -> State
-initialState (sv, ev) c t = State{valves = [sv, ev], timeSpent = c, total = t}
+initialState :: String -> State
+initialState sv = State{currentValve = sv, valves = [], timeSpent = 0, total = 0}
 
 addStepState :: ValveMap -> (String, String) -> (Int, Int) -> State -> State
 addStepState vm (sv, ev) (c, r) s =
     State
-        { valves = [sv] ++ valves s
+        { currentValve = ev
+        , valves = sv : (valves s)
         , timeSpent = c + timeSpent s
-        , total = (((rate . (vm !))) sv * timeSpent s) + r + total s
+        , total = (releasedPressure vm (valves s)) * c + total s + r
         }
 
 type ValveMap = Map String Valve
+type BestPaths = Map String State
 type ConnectionCostMap = Map (String, String) (Int, Int)
 
 input :: IO ValveMap
@@ -61,40 +65,61 @@ log' f x = trace (f x) x
 
 search :: ValveMap -> ConnectionCostMap -> State
 search vm cm =
-    (maximumBy (\s s' -> total s `compare` total s') . fmap (extendTo30Time vm)) $ innerSearch "AA" vm cm ["AA"] (keys cm)
+    let startingState = initialState "AA"
+     in ( maximumBy (\s s' -> total s `compare` total s')
+            . fmap (extendToTime vm 30)
+            . traceShowId
+            . elems
+        )
+            $ searchR [startingState] empty cm vm
 
-innerSearch :: String -> ValveMap -> ConnectionCostMap -> [String] -> [(String, String)] ->[State]
-innerSearch starting vm cm visited ks =
-    ( take (size cm * 2)
-        . reverse
-        . sortOn total
-        . concatMap
-            ( \(x, y) ->
-                let ss = innerSearch y vm cm (visited ++ [x,y]) ks
-                 in if null ss
-                        then [(uncurry (initialState (x, y)) . (cm !)) (x, y)]
-                        else (filter ((<= 30) . timeSpent) . fmap (addStepState vm (x, y) (cm ! (x, y)))) ss
-            )
-        . filter (\(s, e) -> s == starting && e `notElem` visited)
+searchR :: [State] -> BestPaths -> ConnectionCostMap -> ValveMap -> BestPaths
+searchR sts bsp cm vm =
+    let next = sts >>= \s -> nextStep s vm cm bsp
+        nextBest = (fmap (bestState vm) . groupBy (\s s' -> currentValve s == currentValve s') . sortOn currentValve) next
+        bsb' = foldl (\bs s -> insert (currentValve s) s bs) bsp nextBest
+     in if null (log' (show . length) next)
+            then bsp
+            else searchR next bsb' cm vm
+
+nextStep :: State -> ValveMap -> ConnectionCostMap -> BestPaths -> [State]
+nextStep st vm cm bsp =
+    ( filter (\s -> (timeSpent s <= 30))
+        . fmap (\(x, y) -> addStepState vm (x, y) (cm ! (x, y)) st)
+        . filter (\(s, e) -> s == (currentValve st) && e `notElem` (valves st))
+        . keys
     )
-        ks
+        cm
+
+compareState :: ValveMap -> State -> State -> Ordering
+compareState vm s s' =
+    let maxTime = max (timeSpent s) (timeSpent s')
+     in total (extendToTime vm maxTime s) `compare` total (extendToTime vm maxTime s')
+
+bestState :: ValveMap -> [State] -> State
+bestState _ (s : []) = s
+bestState vm (x : y : xs) =
+    let s = if compareState vm x y == GT then x else y
+     in bestState vm (s : xs)
 
 releasedPressure :: ValveMap -> [String] -> Int
 releasedPressure vm av = sum $ fmap (rate . (vm !)) av
 
-extendTo30Time :: ValveMap -> State -> State
-extendTo30Time vm (State{timeSpent = ts, total = t, valves = vs}) =
+extendToTime :: ValveMap -> Int -> State -> State
+extendToTime vm time (State{timeSpent = ts, total = t, valves = vs, currentValve = cv}) =
     State
-        { timeSpent = 30
+        { currentValve = cv
+        , timeSpent = time
         , valves = vs
-        , total = t + ((30 - ts) * releasedPressure vm vs)
+        , total = t + ((time - ts) * releasedPressure vm (cv : vs))
         }
 
 solution1 :: ValveMap -> Int
-solution1 vm = (total . search vm. connectionMap) vm
+solution1 vm = (total . traceShowId . search vm . connectionMap) vm
 
+-- 1909 too low
 sixteenthDecemberSolution1 :: IO Int
-sixteenthDecemberSolution1 = solution1 <$> input -- return (solution1 testInput)
+sixteenthDecemberSolution1 = solution1 <$> input
 
 sixteenthDecemberSolution2 :: IO Int
 sixteenthDecemberSolution2 = undefined
