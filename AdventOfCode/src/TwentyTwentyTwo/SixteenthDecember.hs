@@ -43,11 +43,11 @@ move vm ccn (State{currentValve = cv, openValves = ovs, total = t, cost = c})
     | length ovs == length (flowRatesValves vm) || c >= 30 = []
     | otherwise = connectionStates
   where
-    newTotal c = t + ((sum . fmap rate) ovs) * c
+    newTotal c = t + (sum . fmap rate) ovs * c
     connectionStates =
         ( fmap (\((_, e), (c, _)) -> buildState e c)
             . toList
-            . (\n -> filterWithKey (\(s, e) _ -> s == n && e `notElem` (fmap name ovs)) ccn)
+            . (\n -> filterWithKey (\(s, e) _ -> s == n && e `notElem` fmap name ovs) ccn)
             . name
         )
             cv
@@ -60,7 +60,7 @@ move vm ccn (State{currentValve = cv, openValves = ovs, total = t, cost = c})
             }
 
 pathTree :: ValveMap -> ConnectionCostMap -> State -> Tree State
-pathTree vm ccm s = unfoldTree (\x -> (x, move vm ccm x)) s
+pathTree vm ccm = unfoldTree (\x -> (x, move vm ccm x))
 
 extendToTime :: Int -> State -> State
 extendToTime time (State{cost = ts, total = t, openValves = vs, currentValve = cv}) =
@@ -68,7 +68,7 @@ extendToTime time (State{cost = ts, total = t, openValves = vs, currentValve = c
         { currentValve = cv
         , cost = time
         , openValves = vs
-        , total = t + ((time - ts) * ((sum . fmap rate) vs))
+        , total = t + (time - ts) * (sum . fmap rate) vs
         }
 
 solution1 :: ValveMap -> Int
@@ -78,7 +78,7 @@ solution1 vm = foldTree comparePaths tree
 
 comparePaths :: State -> [Int] -> Int
 comparePaths s [] = (total . extendToTime 30) s
-comparePaths _ childs = maximum childs
+comparePaths s childs = maximum (total (extendToTime 30 s) : childs)
 
 -- 1947
 sixteenthDecemberSolution1 :: IO Int
@@ -110,9 +110,9 @@ reachableValves prev v vm = (fmap ((\(_, c, v) -> (v, c)) . minimumBy (\(_, c, _
 
 reachableValves' :: ([String], Int) -> Valve -> ValveMap -> [([String], Int, Valve)]
 reachableValves' (prevValves, cost) v@Valve{connections = cv, name = vn} vm =
-    (fmap (\v -> (prevValves ++ [vn, name v], cost + 2, v)) nextValvesNonEmpty) ++ keepLooking
+    fmap (\v -> (prevValves ++ [vn, name v], cost + 2, v)) nextValvesNonEmpty ++ keepLooking
   where
-    (nextValvesEmpty, nextValvesNonEmpty) = (partition (\v -> (rate v == 0 || name v == "AA")) . fmap (vm !) . (\\ prevValves)) cv
+    (nextValvesEmpty, nextValvesNonEmpty) = (partition (\v -> rate v == 0 || name v == "AA") . fmap (vm !) . (\\ prevValves)) cv
     keepLooking = concatMap (\x -> reachableValves' (prevValves ++ [vn], cost + 1) x vm) (nextValvesEmpty ++ nextValvesNonEmpty)
 
 -- Parse -----------------------------------------
@@ -125,7 +125,7 @@ parseValve s = ((take 2 . drop 6) s, Valve{name = parseName, rate = parseRate, c
   where
     parseName = (take 2 . drop 6) s
     parseRate = ((\x -> read x :: Int) . takeWhile (/= ';') . drop 23) s
-    parseConnection = (parseConnections . drop 5 . words . snd . break (== ';')) s
+    parseConnection = (parseConnections . drop 5 . words . dropWhile (/= ';')) s
     parseConnections [] = []
     parseConnections (s : ss) = if last s == ',' then init s : parseConnections ss else s : parseConnections ss
 
