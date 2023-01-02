@@ -1,9 +1,9 @@
 module TwentyTwentyTwo.SixteenthDecember where
 
 import Data.Bifunctor (bimap)
-import Data.List (groupBy, minimumBy, partition, sortOn, (\\))
+import Data.List (groupBy, intersect, maximum, minimumBy, partition, sortOn, (\\))
 import Data.Map (Map, elems, empty, filterWithKey, fromList, toList, unionWith, (!))
-import Data.Tree (Tree, foldTree, unfoldTree)
+import Data.Tree (Tree, flatten, foldTree, unfoldTree)
 import Debug.Trace
 import Text.Printf (printf)
 
@@ -20,6 +20,7 @@ data State = State
     , total :: Int
     , cost :: Int
     }
+    deriving (Eq)
 
 instance Show Valve where
     show v = printf "V: %s %d %s" (name v) (rate v) ((show . connections) v)
@@ -38,16 +39,27 @@ flowRatesValves = filter ((> 0) . rate) . elems
 startingState :: ValveMap -> State
 startingState = (\v -> State{currentValve = v, total = 0, cost = 0, openValves = []}) . (! "AA")
 
-move :: ValveMap -> ConnectionCostMap -> State -> [State]
-move vm ccn (State{currentValve = cv, openValves = ovs, total = t, cost = c})
-    | length ovs == length (flowRatesValves vm) || c >= 30 = []
+endValveFilter :: String -> String -> String -> [Valve] -> Bool
+endValveFilter currentValveName start end ovs =
+    start == currentValveName && end `notElem` fmap name ovs
+
+move ::
+    ValveMap ->
+    ConnectionCostMap ->
+    State ->
+    (String -> String -> String -> [Valve] -> Bool) ->
+    Int ->
+    [State]
+move vm ccn (State{currentValve = cv, openValves = ovs, total = t, cost = c}) filterF minutes
+    | length ovs == length (flowRatesValves vm) || c >= minutes = []
     | otherwise = connectionStates
   where
     newTotal c = t + (sum . fmap rate) ovs * c
     connectionStates =
-        ( fmap (\((_, e), (c, _)) -> buildState e c)
+        ( filter (\s -> cost s <= minutes)
+            . fmap (\((_, e), (c, _)) -> buildState e c)
             . toList
-            . (\n -> filterWithKey (\(s, e) _ -> s == n && e `notElem` fmap name ovs) ccn)
+            . (\n -> filterWithKey (\(s, e) _ -> filterF n s e ovs) ccn)
             . name
         )
             cv
@@ -59,8 +71,8 @@ move vm ccn (State{currentValve = cv, openValves = ovs, total = t, cost = c})
             , openValves = (vm ! end) : ovs
             }
 
-pathTree :: ValveMap -> ConnectionCostMap -> State -> Tree State
-pathTree vm ccm = unfoldTree (\x -> (x, move vm ccm x))
+pathTree :: Int -> ValveMap -> ConnectionCostMap -> State -> Tree State
+pathTree minutes vm ccm = unfoldTree (\x -> (x, move vm ccm x endValveFilter minutes))
 
 extendToTime :: Int -> State -> State
 extendToTime time (State{cost = ts, total = t, openValves = vs, currentValve = cv}) =
@@ -72,20 +84,38 @@ extendToTime time (State{cost = ts, total = t, openValves = vs, currentValve = c
         }
 
 solution1 :: ValveMap -> Int
-solution1 vm = foldTree comparePaths tree
+solution1 vm = foldTree (comparePaths 30) tree
   where
-    tree = pathTree vm (connectionMap vm) (startingState vm)
+    tree = pathTree 30 vm (connectionMap vm) (startingState vm)
 
-comparePaths :: State -> [Int] -> Int
-comparePaths s [] = (total . extendToTime 30) s
-comparePaths s childs = maximum (total (extendToTime 30 s) : childs)
+comparePaths :: Int -> State -> [Int] -> Int
+comparePaths minutes s [] = (total . extendToTime minutes) s
+comparePaths minutes s childs = maximum (total (extendToTime minutes s) : childs)
 
 -- 1947
 sixteenthDecemberSolution1 :: IO Int
 sixteenthDecemberSolution1 = solution1 <$> input
 
+foldToMax :: Int -> [State] -> Int
+foldToMax x [] = x
+foldToMax m xs =
+    let totalCombinations =
+            ( filter (> m)
+                . fmap (\a -> total a + total (head xs))
+                . filter (\x -> null (openValves x `intersect` openValves (head xs)))
+                . tail
+            )
+                xs
+        maxCombination = if null totalCombinations then 0 else maximum totalCombinations
+     in trace (show (show maxCombination, show (length xs))) $ foldToMax (max maxCombination m) (tail xs)
+
+solution2 :: ValveMap -> Int
+solution2 vm = foldToMax 0 treeList
+  where
+    treeList = fmap (extendToTime 26) . flatten $ pathTree 26 vm (connectionMap vm) (startingState vm)
+
 sixteenthDecemberSolution2 :: IO Int
-sixteenthDecemberSolution2 = undefined
+sixteenthDecemberSolution2 = solution2 <$> input
 
 -- connectionMap ---------------------------------
 
