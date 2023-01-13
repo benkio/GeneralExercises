@@ -1,19 +1,37 @@
 module TwentyTwentyTwo.SeventeenthDecember where
 
-import Data.List (find, sortOn)
-import Data.Map (Map, adjust, filterWithKey, fromList, lookup, toList, union, findMin, findMax, mapKeys, empty)
+import Data.Bifoldable (bifoldMap)
+import Data.IntSet (IntSet)
+import qualified Data.IntSet as IntSet
+import Data.List (elem, find, intersperse, minimum, sort)
+import Data.List.Split (chunksOf)
+import Data.Maybe (fromJust)
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Debug.Trace
 import Text.Printf (printf)
 import Prelude hiding (lookup)
-import Debug.Trace
 
-data Rock = HLine | Plus | LShape | VLine | Square deriving (Show)
-data HotGas = R | L deriving Show
-data Space = Empty | Occupied
-type Position = (Int, Int)
+data Rock = HLine | Plus | LShape | VLine | Square deriving (Show, Eq)
+data HotGas = R | L deriving (Show, Eq)
 
-instance Show Space where
-    show Empty = "."
-    show Occupied = "#"
+data State = State
+    { rocks :: [Rock]
+    , chamber :: IntSet
+    , hotGas :: [HotGas]
+    , fallenBlocks :: Int
+    }
+
+initialState hs = State{rocks = rockStream, chamber = IntSet.empty, hotGas = hs, fallenBlocks = 0}
+
+instance Show State where
+    show s = printf "State: %d" (fallenBlocks s)
+
+instance Eq State where
+    (==) s s' =
+        IntSet.map (\x -> x - IntSet.findMax (chamber s)) (chamber s) == IntSet.map (\x -> x - IntSet.findMax (chamber s')) (chamber s')
+            && (head . rocks) s == (head . rocks) s'
+            && (take 5 . hotGas) s == (take 5 . hotGas) s'
 
 input :: IO [HotGas]
 input = cycle . fmap parseHotGas . init <$> readFile "input/2022/17December.txt"
@@ -21,12 +39,18 @@ input = cycle . fmap parseHotGas . init <$> readFile "input/2022/17December.txt"
 rockStream :: [Rock]
 rockStream = cycle [HLine, Plus, LShape, VLine, Square]
 
-isOccupied :: Space -> Bool
-isOccupied Occupied = True
-isOccupied _ = False
+indexX :: Int -> Int
+indexX = (`mod` 10)
 
-lowestOccupiedSpaceY :: Map Position Space -> Int
-lowestOccupiedSpaceY = maybe 0 (\((_, y),_) -> y) . find (\((_, _),s) -> isOccupied s) . sortOn (snd . fst) . toList
+indexY :: Int -> Int
+indexY = (* 10) . (`div` 10)
+
+rockWidth :: Rock -> Int
+rockWidth HLine = 4
+rockWidth Plus = 3
+rockWidth LShape = 3
+rockWidth VLine = 1
+rockWidth Square = 2
 
 rockHeight :: Rock -> Int
 rockHeight HLine = 1
@@ -43,100 +67,129 @@ parseHotGas x = error $ printf "char %c is not recognized" x
 testInput :: [HotGas]
 testInput = cycle $ parseHotGas <$> ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
 
-initialPosition :: Position
-initialPosition = (2, 0)
+fallOffset :: Int -> IntSet -> Int
+fallOffset i is
+    | i == 0 && IntSet.null is = 20
+    | otherwise = i + 30
 
-rockInitialBoard :: Rock -> Map Position Space
-rockInitialBoard r = rockBoard r `union` emptyLines (rockHeight r)
+initialFallPosition :: Rock -> Int -> IntSet -> Int
+initialFallPosition HLine i is = fallOffset i is + 12
+initialFallPosition Plus i is = fallOffset i is + 32
+initialFallPosition LShape i is = fallOffset i is + 32
+initialFallPosition VLine i is = fallOffset i is + 42
+initialFallPosition Square i is = fallOffset i is + 22
+
+rockSpace :: Rock -> Int -> [Int]
+rockSpace HLine i = [i + x | x <- [0 .. 3]]
+rockSpace Plus i = [i + 1, i - 10, i - 9, i - 8, i - 19]
+rockSpace VLine i = [i - (10 * x) | x <- [0 .. 3]]
+rockSpace Square i = [i, i + 1, i - 10, i - 9]
+rockSpace LShape i = [i + 2, i - 8, i - 18, i - 19, i - 20]
+
+collision :: Rock -> Int -> IntSet -> Bool
+collision r p is = sideCollision r || bottomCollision r || rockCollision r is
   where
-    emptyLines sy = fromList [((x, y), Empty) | x <- [0 .. 6], y <- [sy .. sy + 2]]
-    rockBoard r =
-      -- foldl setSingleRock (
-      emptyBoard (rockHeight r)-- ) $ rockSpace r initialPosition
-    --setSingleRock m' rp = adjust (const Occupied) rp m'
+    sideCollision x = (rockWidth x - 1) + indexX p > 6 || (indexX p `elem` [7 .. 9])
+    bottomCollision x = indexY p - ((rockHeight x - 1) * 10) < 0
+    rockCollision x s = any (\i -> i `IntSet.member` s) $ rockSpace x p
 
-emptyBoard :: Int -> Map Position Space
-emptyBoard h = fromList [((x, y), Empty) | x <- [0 .. 6], y <- [0 .. h - 1]]
+hotGasShift :: HotGas -> Int
+hotGasShift L = -1
+hotGasShift R = 1
 
-rockSpace :: Rock -> Position -> [Position]
-rockSpace HLine (x, y) = [(x + i, y) | i <- [0 .. 3]]
-rockSpace Plus (x, y) = [(x + 1, y), (x, y + 1), (x + 1, y + 1), (x + 2, y + 1), (x + 1, y + 2)]
-rockSpace VLine (x, y) = [(x, y + i) | i <- [0 .. 3]]
-rockSpace Square (x, y) = [(x + ix, y + iy) | ix <- [0, 1], iy <- [0, 1]]
-rockSpace LShape (x, y) = [(x + 2, y), (x + 2, y + 1), (x + 2, y + 2), (x + 1, y + 2), (x, y + 2)]
-
-rockCollision :: Rock -> Position -> Map Position Space -> Bool
-rockCollision r p m = any (\rp -> maybe True isOccupied (lookup rp m)) $ rockSpace r p
-
-settleRock :: Rock -> Position -> Map Position Space -> Map Position Space
-settleRock r p m = filterWithKey (\k _ -> snd k >= minY) resultM
+hotGasMovement :: Rock -> Int -> HotGas -> IntSet -> Int
+hotGasMovement r p h is = if collision r p' is then p else p'
   where
-    setSingleRock m' rp = adjust (const Occupied) rp m'
-    resultM = foldl setSingleRock m $ rockSpace r p
-    minY = lowestOccupiedSpaceY resultM
+    p' = p + hotGasShift h
 
-downwardMovement :: Rock -> Position -> Map Position Space -> Maybe Position
-downwardMovement r (x, y) m
-    | rockCollision r (x, y + 1) m = Nothing
-    | otherwise = Just (x, y + 1)
+downwardMovement :: Rock -> Int -> IntSet -> Maybe Int
+downwardMovement r p is = if collision r (p - 10) is then Nothing else Just (p - 10)
 
-hotGasHorizontalMovement :: Rock -> Position -> HotGas -> Map Position Space -> Position
-hotGasHorizontalMovement r p L m = hotGasHorizontalMovementLeft r p m
-hotGasHorizontalMovement r p R m = hotGasHorizontalMovementRight r p m
-
-hotGasHorizontalMovementLeft :: Rock -> Position -> Map Position Space -> Position
-hotGasHorizontalMovementLeft r p@(x, y) m
-    | rockCollision r (x - 1, y) m = p
-    | otherwise = (x - 1, y)
-hotGasHorizontalMovementRight :: Rock -> Position -> Map Position Space -> Position
-hotGasHorizontalMovementRight r p@(x, y) m
-    | rockCollision r (x + 1, y) m = p
-    | otherwise = (x + 1, y)
-
-fallStep :: Rock -> Position -> HotGas -> Map Position Space -> Either Position Position
-fallStep r p h m = maybe (Left hotGasPosition) Right downwardPosition
+singleFall :: Rock -> Int -> IntSet -> HotGas -> Either Int Int
+singleFall r p is h = maybe (Left hotGasMP) Right downwardMP
   where
-    hotGasPosition = hotGasHorizontalMovement r p h m
-    downwardPosition = downwardMovement r hotGasPosition m
+    hotGasMP = hotGasMovement r p h is
+    downwardMP = downwardMovement r hotGasMP is
 
-singleFall :: Rock -> Position -> [HotGas] -> Map Position Space -> (Map Position Space, [HotGas])
-singleFall r p (h : hs) m = case fallStepPosition of
-    Left p' -> (settleRock r p' m, hs)
-    Right p' -> singleFall r p' hs m
-  where
-    fallStepPosition = fallStep r p h m
+rockSettle :: Rock -> Int -> IntSet -> IntSet
+rockSettle r i is = foldl (flip IntSet.insert) is $ rockSpace r i
 
-freeFall :: [Rock] -> Int -> Map Position Space -> [HotGas] -> Map Position Space
-freeFall _ 0 m _ =
-  let minY = lowestOccupiedSpaceY m
-  in  mapKeys (\(x,y) -> (x,y-minY)) m
-freeFall (r:rs) b m hs = freeFall rs (traceShowId (b-1)) m'' hs'
+rockFall :: Rock -> Int -> IntSet -> [HotGas] -> (IntSet, [HotGas])
+rockFall r p is (h : hs) =
+    case fall of
+        Left p' -> (rockSettle r p' is, hs)
+        Right p' -> rockFall r p' is hs
   where
-    ((_, maxY), _) = findMax $ rockInitialBoard r
-    ((_, minY), _) = if null m then ((0,0), Empty) else findMin m
-    m' = rockInitialBoard r `union` mapKeys (\(x,y) -> (x, y-minY+maxY+1)) m
-    (m'', hs') = singleFall r initialPosition hs m'
+    fall = singleFall r p is h
+
+filterMinY :: IntSet -> IntSet
+filterMinY is = (snd . IntSet.split (minMaxY - 30)) is
+  where
+    maxByColumn x =
+        let column = IntSet.filter ((== x) . indexX) is
+         in if IntSet.null column then 0 else IntSet.findMax (IntSet.map indexY column)
+    maxColumns = fmap maxByColumn [0 .. 6]
+    minMaxY = minimum maxColumns
+
+freeFall :: State -> State
+freeFall State{rocks = (r : rs), chamber = is, hotGas = hs, fallenBlocks = fb} =
+    State{rocks = rs, chamber = filterMinY is', hotGas = hs', fallenBlocks = fb + 1}
+  where
+    m = if IntSet.null is then 0 else (indexY . IntSet.findMax) is
+    (is', hs') = rockFall r (initialFallPosition r m is) is hs
+
+calculateChamberHeight :: State -> Int
+calculateChamberHeight =
+    (+ 1)
+        . (`div` 10)
+        . indexY
+        . IntSet.findMax
+        . chamber
 
 solution1 :: Int -> [HotGas] -> Int
-solution1 limit hs = calcHeight $ freeFall rockStream limit empty hs
-  where calcHeight = (+1) . snd . fst . traceShowId . findMax
+solution1 limit hs =
+    ( calculateChamberHeight
+        . until ((== limit) . fallenBlocks) freeFall
+    )
+        (initialState hs)
 
 seventeenthDecemberSolution1 :: IO Int
 seventeenthDecemberSolution1 = solution1 2022 <$> input
 
+findCycle :: [HotGas] -> (State, State)
+findCycle hs = findCycle' (initialState hs) []
+
+findCycle' :: State -> [State] -> (State, State)
+findCycle' s st
+    | s `elem` st = (s, fromJust (find (== s) st))
+    | otherwise = findCycle' (freeFall s) (s : st)
+
+solution2 :: [HotGas] -> Int
+solution2 hots = hs + (fbic * ch) + (hs'' - hs')
+  where
+    (s, s') = findCycle hots
+    hs = calculateChamberHeight s
+    hs' = calculateChamberHeight s'
+    ch = hs - hs'
+    cfb = fallenBlocks s - fallenBlocks s'
+    (fbic, lfb) = (1000000000000 - (fallenBlocks s)) `divMod` cfb
+    (s'', _) = until (\(_, b) -> b == 0) (\(x, b) -> (freeFall x, b - 1)) (s', lfb)
+    hs'' = calculateChamberHeight s''
+
+-- 1581512605025 too High
+-- 1581512604084 too High
 seventeenthDecemberSolution2 :: IO Int
-seventeenthDecemberSolution2 = solution1 1000000000000 <$> input
+seventeenthDecemberSolution2 = solution2 <$> input
 
-showGrid :: Map Position Space -> String
-showGrid = showGrid' . sortOn (snd . fst) . toList
-
-showGrid' grid =
-    fst $
-        foldl
-            ( \(acc, y) ((_, y'), s) ->
-                if y /= y'
-                    then (acc ++ "\n" ++ show s, y')
-                    else (acc ++ show s, y)
-            )
-            ("", 0)
-            grid
+showChamber :: IntSet -> String
+showChamber is = (printStuff . IntSet.toAscList) is
+  where
+    m = (indexY . IntSet.findMax) is
+    validIdexes = (chunksOf 7 . sort) [x + (10 * y) | x <- [0 .. 6], y <- [0 .. (m `div` 10)]]
+    printStuff l =
+        ( concat
+            . reverse
+            . intersperse ['\n']
+            . fmap (fmap (\i -> if i `elem` l then '#' else '.'))
+        )
+            validIdexes
