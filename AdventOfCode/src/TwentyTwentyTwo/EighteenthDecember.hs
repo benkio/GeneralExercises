@@ -65,7 +65,8 @@ solution1 = length . freeFaces
 eighteenthDecemberSolution1 :: IO Int
 eighteenthDecemberSolution1 = solution1 <$> input
 
-eighteenthDecemberSolution2 :: IO Int
+-- 2440 too low
+--eighteenthDecemberSolution2 :: IO Int
 eighteenthDecemberSolution2 = solution2 <$> input
 
 connectFace :: ObsidianFace -> [ObsidianFace] -> [ObsidianFace] -> ([ObsidianFace], [ObsidianFace])
@@ -124,25 +125,25 @@ connectionFaces (ObsidianFace{orientation = L, center = (x, y, z)}) =
     [ -- North Connection
 
         [ ObsidianFace{orientation = S, center = (x - 0.5, y + 0.5, z)}
-        , ObsidianFace{orientation = R, center = (x, y + 1, z)}
+        , ObsidianFace{orientation = L, center = (x, y + 1, z)}
         , ObsidianFace{orientation = N, center = (x + 0.5, y + 0.5, z)}
         ]
     , -- Back Connection
 
         [ ObsidianFace{orientation = F, center = (x - 0.5, y, z - 0.5)}
-        , ObsidianFace{orientation = R, center = (x, y, z - 1)}
+        , ObsidianFace{orientation = L, center = (x, y, z - 1)}
         , ObsidianFace{orientation = B, center = (x + 0.5, y, z - 0.5)}
         ]
     , -- South Connection
 
         [ ObsidianFace{orientation = N, center = (x - 0.5, y - 0.5, z)}
-        , ObsidianFace{orientation = R, center = (x, y - 1, z)}
+        , ObsidianFace{orientation = L, center = (x, y - 1, z)}
         , ObsidianFace{orientation = S, center = (x + 0.5, y - 0.5, z)}
         ]
     , -- Front Connection
 
         [ ObsidianFace{orientation = B, center = (x - 0.5, y, z + 0.5)}
-        , ObsidianFace{orientation = R, center = (x, y, z + 1)}
+        , ObsidianFace{orientation = L, center = (x, y, z + 1)}
         , ObsidianFace{orientation = F, center = (x + 0.5, y, z + 0.5)}
         ]
     ]
