@@ -91,7 +91,7 @@ collision r p is = sideCollision r || bottomCollision r || rockCollision r is
   where
     sideCollision x = (rockWidth x - 1) + indexX p > 6 || (indexX p `elem` [7 .. 9])
     bottomCollision x = indexY p - ((rockHeight x - 1) * 10) < 0
-    rockCollision x s = any (\i -> i `IntSet.member` s) $ rockSpace x p
+    rockCollision x s = any (`IntSet.member` s) $ rockSpace x p
 
 hotGasShift :: HotGas -> Int
 hotGasShift L = -1
@@ -172,7 +172,7 @@ solution2 hots = hs + (fbic * ch) + (hs'' - hs')
     hs' = calculateChamberHeight s'
     ch = hs - hs'
     cfb = fallenBlocks s - fallenBlocks s'
-    (fbic, lfb) = (1000000000000 - (fallenBlocks s)) `divMod` cfb
+    (fbic, lfb) = (1000000000000 - fallenBlocks s) `divMod` cfb
     (s'', _) = until (\(_, b) -> b == 0) (\(x, b) -> (freeFall x, b - 1)) (s', lfb)
     hs'' = calculateChamberHeight s''
 

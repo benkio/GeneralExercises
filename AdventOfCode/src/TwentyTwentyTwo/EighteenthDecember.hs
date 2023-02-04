@@ -1,6 +1,6 @@
 module TwentyTwentyTwo.EighteenthDecember where
 
-import Data.List (groupBy, sortBy, (\\), find)
+import Data.List (find, groupBy, sortBy, (\\))
 import Data.Maybe (catMaybes, listToMaybe)
 import Debug.Trace
 
@@ -9,7 +9,8 @@ data Orientation = L | R | N | S | B | F deriving (Eq, Ord, Show)
 data ObsidianFace = ObsidianFace
     { orientation :: Orientation
     , center :: (Float, Float, Float)
-    } deriving (Eq, Ord, Show)
+    }
+    deriving (Eq, Ord, Show)
 
 parseInput = fmap parseObsidian . lines
   where
@@ -71,17 +72,19 @@ eighteenthDecemberSolution2 = solution2 <$> input
 
 connectFace :: ObsidianFace -> [ObsidianFace] -> [ObsidianFace] -> ([ObsidianFace], [ObsidianFace])
 connectFace f ss fs = (connections, fs \\ connections)
-  where possibleConnections = connectionFaces f
-        connections = ((\\ ss) . catMaybes) $ find (\x -> x `elem` (fs ++ ss)) <$> possibleConnections
+  where
+    possibleConnections = connectionFaces f
+    connections = ((\\ ss) . catMaybes) $ find (\x -> x `elem` (fs ++ ss)) <$> possibleConnections
 
-expandSurface ::[ObsidianFace] -> [ObsidianFace] -> [ObsidianFace] -> ([ObsidianFace], [ObsidianFace])
+expandSurface :: [ObsidianFace] -> [ObsidianFace] -> [ObsidianFace] -> ([ObsidianFace], [ObsidianFace])
 expandSurface expanded surface fs = maybe (surface, fs) loop mayS
-  where mayS = (listToMaybe . filter (`notElem` expanded)) surface
-        loop s =
-          let (connections, fs') = connectFace s surface fs
-              expanded' = s:expanded
-              surface' = (connections ++ surface)
-          in expandSurface expanded' surface' fs'
+  where
+    mayS = find (`notElem` expanded) surface
+    loop s =
+        let (connections, fs') = connectFace s surface fs
+            expanded' = s : expanded
+            surface' = (connections ++ surface)
+         in expandSurface expanded' surface' fs'
 
 findSurface :: [ObsidianFace] -> ([ObsidianFace], [ObsidianFace])
 findSurface fs = expandSurface [] [head fs] (tail fs)
