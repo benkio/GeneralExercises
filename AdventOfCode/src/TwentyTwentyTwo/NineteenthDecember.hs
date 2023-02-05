@@ -1,7 +1,11 @@
 module TwentyTwentyTwo.NineteenthDecember where
 
 import Data.Bifunctor (first)
-import Data.Maybe (mapMaybe)
+import Data.List (find)
+import Data.Maybe (isJust, mapMaybe, maybeToList)
+import Data.Set (Set, notMember)
+import qualified Data.Set as Set
+import Debug.Trace
 import Text.Read
 
 newtype OreRobotCost = OreRobotCost {oreCost :: Int} deriving (Show)
@@ -21,6 +25,16 @@ data Blueprint = Blueprint
     }
     deriving (Show)
 
+maximumResource :: Blueprint -> Robot -> Int
+maximumResource b Ore = maximum [(oreCost . oreRobotCost) b, (clayOreCost . clayRobotCost) b, (obsidianOreCost . obsidianRobotCost) b, (geodeOreCost . geodeRobotCost) b]
+maximumResource b Clay = (obsidianClayCost . obsidianRobotCost) b
+maximumResource b Obsidian = (geodeObsidianCost . geodeRobotCost) b
+
+enoughResourcesMined :: State -> Blueprint -> Robot -> Int -> Bool
+enoughResourcesMined s b Ore tl = (r_ore s * tl) + ore s >= tl * (maximumResource b Ore)
+enoughResourcesMined s b Clay tl = (r_clay s * tl) + clay s >= tl * (maximumResource b Clay)
+enoughResourcesMined s b Obsidian tl = (r_obsidian s * tl) + obsidian s >= tl * (maximumResource b Obsidian)
+
 data State = State
     { ore :: Int
     , clay :: Int
@@ -31,7 +45,7 @@ data State = State
     , r_obsidian :: Int
     , r_geode :: Int
     }
-    deriving (Show)
+    deriving (Eq, Ord, Show)
 
 startingState =
     State
@@ -77,11 +91,11 @@ collectingMaterial s =
         , geode = geode s + r_geode s
         }
 
-spendResources :: State -> Blueprint -> [(State, Robot)]
-spendResources s b = mapMaybe (buildRobot s b) robots
+spendResources :: State -> Blueprint -> Int -> [(State, Robot)]
+spendResources s b tl = mapMaybe (\r -> buildRobot s b r tl) robots
 
-computeMinute :: State -> Blueprint -> [State]
-computeMinute s b = uncurry addRobot . first collectingMaterial <$> spendResources s b
+computeMinute :: State -> Blueprint -> Int -> [State]
+computeMinute s b tl = uncurry addRobot . first collectingMaterial <$> spendResources s b tl
 
 addRobot :: State -> Robot -> State
 addRobot s Ore = s{r_ore = r_ore s + 1}
@@ -90,12 +104,32 @@ addRobot s Obsidian = s{r_obsidian = r_obsidian s + 1}
 addRobot s Geode = s{r_geode = r_geode s + 1}
 addRobot s NoRobot = s
 
-buildRobot :: State -> Blueprint -> Robot -> Maybe (State, Robot)
-buildRobot s _ NoRobot = Just (s, NoRobot)
-buildRobot s b Ore = if ore s >= (oreCost . oreRobotCost) b then Just ((s{ore = ore s - (oreCost . oreRobotCost) b}, Ore)) else Nothing
-buildRobot s b Clay = if ore s >= (clayOreCost . clayRobotCost) b then Just ((s{ore = ore s - (clayOreCost . clayRobotCost) b}, Clay)) else Nothing
-buildRobot s b Obsidian =
-    if ore s >= (obsidianOreCost . obsidianRobotCost) b && clay s >= (obsidianClayCost . obsidianRobotCost) b
+enoughRobots :: State -> Blueprint -> Robot -> Bool
+enoughRobots s b Ore = r_ore s == (oreCost . oreRobotCost) b
+enoughRobots s b Clay = r_ore s == (clayOreCost . clayRobotCost) b
+enoughRobots s b Obsidian = r_ore s == (obsidianOreCost . obsidianRobotCost) b && r_clay s == (obsidianClayCost . obsidianRobotCost) b
+enoughRobots s b Geode = r_ore s == (geodeOreCost . geodeRobotCost) b && r_obsidian s == (geodeObsidianCost . geodeRobotCost) b
+enoughRobots s b NoRobot = False --I always consider valid doing nothing
+
+enoughResources :: State -> Blueprint -> Robot -> Bool
+enoughResources s b Ore = ore s >= (oreCost . oreRobotCost) b
+enoughResources s b Clay = ore s >= (clayOreCost . clayRobotCost) b
+enoughResources s b Obsidian = ore s >= (obsidianOreCost . obsidianRobotCost) b && clay s >= (obsidianClayCost . obsidianRobotCost) b
+enoughResources s b Geode = ore s >= (geodeOreCost . geodeRobotCost) b && obsidian s >= (geodeObsidianCost . geodeRobotCost) b
+enoughResources s b NoRobot = True
+
+buildRobot :: State -> Blueprint -> Robot -> Int -> Maybe (State, Robot)
+buildRobot s _ NoRobot _ = Just (s, NoRobot)
+buildRobot s b Ore tl =
+    if enoughResources s b Ore && not (enoughRobots s b Ore) && not (enoughResourcesMined s b Ore tl)
+        then Just ((s{ore = ore s - (oreCost . oreRobotCost) b}, Ore))
+        else Nothing
+buildRobot s b Clay tl =
+    if enoughResources s b Clay && not (enoughRobots s b Clay) && not (enoughResourcesMined s b Clay tl)
+        then Just ((s{ore = ore s - (clayOreCost . clayRobotCost) b}, Clay))
+        else Nothing
+buildRobot s b Obsidian tl =
+    if enoughResources s b Obsidian && not (enoughRobots s b Obsidian) && not (enoughResourcesMined s b Obsidian tl)
         then
             Just
                 ( ( s
@@ -106,8 +140,8 @@ buildRobot s b Obsidian =
                   )
                 )
         else Nothing
-buildRobot s b Geode =
-    if ore s >= (geodeOreCost . geodeRobotCost) b && obsidian s >= (geodeObsidianCost . geodeRobotCost) b
+buildRobot s b Geode tl =
+    if enoughResources s b Geode && not (enoughRobots s b Geode)
         then
             Just
                 ( ( s
@@ -119,7 +153,28 @@ buildRobot s b Geode =
                 )
         else Nothing
 
-test = (computeMinute startingState . head) testInput
+totalTime :: Int
+totalTime = 24
+
+timeLeft :: Int -> Int
+timeLeft i = totalTime - i
+
+search :: [State] -> Blueprint -> Set State -> Int -> [State]
+search [] _ _ _ = error "unexpected empty states"
+search sts b visited i
+    | i == totalTime = sts -- maxGeode
+    | otherwise = search sts'' b visited' (i + 1)
+  where
+    --maxGeode =  maximum $ fmap geode sts
+    sts' =
+        filter
+            ( \s -> s `notMember` visited -- && geode s == maxGeode
+            )
+            sts
+    sts'' = concatMap (\s -> computeMinute s b (timeLeft i)) sts'
+    visited' = foldl (\acc s -> Set.insert s acc) visited sts'
+
+test = maximum . fmap geode . (\b -> search [startingState] b Set.empty 0) $ testInput !! 1
 
 nineteenthDecemberSolution1 :: IO Int
 nineteenthDecemberSolution1 = undefined
