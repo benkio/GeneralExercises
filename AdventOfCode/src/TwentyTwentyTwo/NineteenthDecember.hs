@@ -30,7 +30,6 @@ data State = State
     , r_ore :: Int
     , r_clay :: Int
     , r_obsidian :: Int
-    , r_geode :: Int
     }
     deriving (Eq, Ord, Show)
 
@@ -43,7 +42,6 @@ startingState =
         , r_ore = 1
         , r_clay = 0
         , r_obsidian = 0
-        , r_geode = 0
         }
 
 robots = [Ore, Clay, Obsidian, Geode]
@@ -82,34 +80,34 @@ evolveState t s =
         { ore = ore s + r_ore s * t
         , clay = clay s + r_clay s * t
         , obsidian = obsidian s + r_obsidian s * t
-        , geode = geode s + r_geode s * t
+        --, geode = geode s + r_geode s * t
         }
 
 -- return the states with new robots and the time when those are operational
 newRobotStates :: State -> Int -> Int -> Blueprint -> [(Int, State)]
 newRobotStates s time totalTime b =
     ( filter ((<= totalTime) . fst)
-        . mapMaybe (fmap (\(t, s) -> (t + time, s)) . newRobotState s time b)
+        . mapMaybe (fmap (\(t, s) -> (t + time, s)) . newRobotState s time b totalTime)
         . filter (\r -> (not . enoughRobot s b) r && (not . enoughResource s time totalTime b) r) --do I need to buy this bot
     )
         robots
 
-newRobotState :: State -> Int -> Blueprint -> Robot -> Maybe (Int, State)
-newRobotState s time b Ore =
+newRobotState :: State -> Int -> Blueprint -> Int -> Robot -> Maybe (Int, State)
+newRobotState s time b totalTime Ore =
     ( \t ->
         ( t
         , ((\s' -> s'{r_ore = r_ore s' + 1, ore = ore s' - (oreCost . oreRobotCost) b}) . evolveState t) s
         )
     )
-        <$> newRobotTime s time b Ore
-newRobotState s time b Clay =
+        <$> newRobotTime s b Ore
+newRobotState s time b totalTime Clay =
     ( \t ->
         ( t
         , ((\s' -> s'{r_clay = r_clay s' + 1, ore = ore s' - (clayOreCost . clayRobotCost) b}) . evolveState t) s
         )
     )
-        <$> newRobotTime s time b Clay
-newRobotState s time b Obsidian =
+        <$> newRobotTime s b Clay
+newRobotState s time b totalTime Obsidian =
     ( \t ->
         ( t
         , ( ( \s' ->
@@ -124,13 +122,13 @@ newRobotState s time b Obsidian =
             s
         )
     )
-        <$> newRobotTime s time b Obsidian
-newRobotState s time b Geode =
+        <$> newRobotTime s b Obsidian
+newRobotState s time b totalTime Geode =
     ( \t ->
         ( t
         , ( ( \s' ->
                 s'
-                    { r_geode = r_geode s' + 1
+                    { geode = geode s + (totalTime - (time + t))
                     , ore = ore s' - (geodeOreCost . geodeRobotCost) b
                     , obsidian = obsidian s' - (geodeObsidianCost . geodeRobotCost) b
                     }
@@ -140,10 +138,10 @@ newRobotState s time b Geode =
             s
         )
     )
-        <$> newRobotTime s time b Geode
+        <$> newRobotTime s b Geode
 
-newRobotTime :: State -> Int -> Blueprint -> Robot -> Maybe Int
-newRobotTime s time b r = case r of
+newRobotTime :: State -> Blueprint -> Robot -> Maybe Int
+newRobotTime s b r = case r of
     Ore -> timeRequired ((oreCost . oreRobotCost) b) (ore s) (r_ore s)
     Clay -> timeRequired ((clayOreCost . clayRobotCost) b) (ore s) (r_ore s)
     Obsidian -> timeRequired ((obsidianOreCost . obsidianRobotCost) b) (ore s) (r_ore s) >>= \t -> fmap (max t) (timeRequired ((obsidianClayCost . obsidianRobotCost) b) (clay s) (r_clay s))
@@ -155,9 +153,9 @@ newRobotTime s time b r = case r of
         | robots /= 0 && resource < price = (Just . (+ 1) . ceiling) $ fromIntegral (price - resource) / fromIntegral robots
         | otherwise = Just 1
 
-bfs :: [(Int, State)] -> Set State -> Blueprint -> Int -> Int
-bfs [] _ _ _  = 0
-bfs ((t, s) : sts) visited b totalTime = trace ((show . length) sts) $ max (geode finalState) $ bfs (sts ++ nextStates) visited' b totalTime
+bfs :: [(Int, State)] -> Set State -> Int -> Blueprint -> Int -> Int
+bfs [] _ result _ _  = result
+bfs ((t, s) : sts) visited result b totalTime = trace ((show . length) sts) $ bfs (sts ++ nextStates) visited' (max (geode finalState) result) b totalTime
   where
     finalState = evolveState (totalTime - t) s
     nextStates = filter ((`Set.notMember` visited) . snd) $ newRobotStates s t totalTime b
@@ -169,13 +167,13 @@ input = parseInput <$> readFile "input/2022/19December.txt"
 solution1 :: [Blueprint] -> Int
 solution1 = sum . computeQualityLevels
   where
-    computeQualityLevels = parMap rseq (\b -> num b * bfs [(0, startingState)] (Set.singleton startingState) b 24)
+    computeQualityLevels = parMap rseq (\b -> num b * bfs [(0, startingState)] (Set.singleton startingState) 0 b 24)
 
 nineteenthDecemberSolution1 :: IO Int
 nineteenthDecemberSolution1 = solution1 <$> input
 
 solution2 :: [Blueprint] -> Int
-solution2 = product . parMap rseq (\b -> bfs [(0, startingState)] (Set.singleton startingState) b 32)
+solution2 = product . parMap rseq (\b -> bfs [(0, startingState)] (Set.singleton startingState) 0 b 32)
 
 nineteenthDecemberSolution2 :: IO Int
 nineteenthDecemberSolution2 = solution2 . take 3 <$> input
