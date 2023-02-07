@@ -5,6 +5,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Debug.Trace
 import Text.Read
+import Control.Parallel.Strategies
 
 newtype OreRobotCost = OreRobotCost {oreCost :: Int} deriving (Show)
 newtype ClayRobotCost = ClayRobotCost {clayOreCost :: Int} deriving (Show)
@@ -47,8 +48,6 @@ startingState =
 
 robots = [Ore, Clay, Obsidian, Geode]
 
-totalTime = 24
-
 maxResource :: Robot -> Blueprint -> Int
 maxResource Ore b =
     maximum
@@ -71,11 +70,11 @@ enoughRobot s b Geode = False
 -- stock of Y for that resource, T minutes left, and no robot requires
 -- more than Z of resource R to build, and X * T+Y >= T * Z, then you
 -- never need to build another robot mining R anymore.
-enoughResource :: State -> Int -> Blueprint -> Robot -> Bool
-enoughResource s time b Ore = r_ore s * (totalTime - time) + ore s >= (totalTime - time) * maxResource Ore b
-enoughResource s time b Clay = r_clay s * (totalTime - time) + clay s >= (totalTime - time) * maxResource Clay b
-enoughResource s time b Obsidian = r_obsidian s * (totalTime - time) + obsidian s >= (totalTime - time) * maxResource Obsidian b
-enoughResource s time b Geode = False
+enoughResource :: State -> Int -> Int -> Blueprint -> Robot -> Bool
+enoughResource s time totalTime b Ore = r_ore s * (totalTime - time) + ore s >= (totalTime - time) * maxResource Ore b
+enoughResource s time totalTime b Clay = r_clay s * (totalTime - time) + clay s >= (totalTime - time) * maxResource Clay b
+enoughResource s time totalTime b Obsidian = r_obsidian s * (totalTime - time) + obsidian s >= (totalTime - time) * maxResource Obsidian b
+enoughResource s time totalTime b Geode = False
 
 evolveState :: Int -> State -> State
 evolveState t s =
@@ -87,11 +86,11 @@ evolveState t s =
         }
 
 -- return the states with new robots and the time when those are operational
-newRobotStates :: State -> Int -> Blueprint -> [(Int, State)]
-newRobotStates s time b =
+newRobotStates :: State -> Int -> Int -> Blueprint -> [(Int, State)]
+newRobotStates s time totalTime b =
     ( filter ((<= totalTime) . fst)
-        . mapMaybe (fmap (\ (t, s) -> (t + time, s)) . newRobotState s time b)
-        . filter (\r -> (not . enoughRobot s b) r && (not . enoughResource s time b) r) --do I need to buy this bot
+        . mapMaybe (fmap (\(t, s) -> (t + time, s)) . newRobotState s time b)
+        . filter (\r -> (not . enoughRobot s b) r && (not . enoughResource s time totalTime b) r) --do I need to buy this bot
     )
         robots
 
@@ -156,29 +155,30 @@ newRobotTime s time b r = case r of
         | robots /= 0 && resource < price = (Just . (+ 1) . ceiling) $ fromIntegral (price - resource) / fromIntegral robots
         | otherwise = Just 1
 
-bfs :: [(Int, State)] -> Set State -> Blueprint -> Int
-bfs [] _ _ = 0
-bfs ((t, s) : sts) visited b = max (geode finalState) $ bfs (sts ++ nextStates) visited' b
+bfs :: [(Int, State)] -> Set State -> Blueprint -> Int -> Int
+bfs [] _ _ _  = 0
+bfs ((t, s) : sts) visited b totalTime = trace ((show . length) sts) $ max (geode finalState) $ bfs (sts ++ nextStates) visited' b totalTime
   where
     finalState = evolveState (totalTime - t) s
-    nextStates = filter ((`Set.notMember` visited) . snd) $ newRobotStates s t b
+    nextStates = filter ((`Set.notMember` visited) . snd) $ newRobotStates s t totalTime b
     visited' = foldl (\acc (_, x) -> Set.insert x acc) visited nextStates
 
 input :: IO [Blueprint]
 input = parseInput <$> readFile "input/2022/19December.txt"
 
-test = solution testInput
-
-solution :: [Blueprint] -> Int
-solution = sum . computeQualityLevels
+solution1 :: [Blueprint] -> Int
+solution1 = sum . computeQualityLevels
   where
-    computeQualityLevels = fmap (\b -> num b * bfs [(0, startingState)] (Set.singleton startingState) b)
+    computeQualityLevels = parMap rseq (\b -> num b * bfs [(0, startingState)] (Set.singleton startingState) b 24)
 
 nineteenthDecemberSolution1 :: IO Int
-nineteenthDecemberSolution1 = solution <$> input
+nineteenthDecemberSolution1 = solution1 <$> input
+
+solution2 :: [Blueprint] -> Int
+solution2 = product . parMap rseq (\b -> bfs [(0, startingState)] (Set.singleton startingState) b 32)
 
 nineteenthDecemberSolution2 :: IO Int
-nineteenthDecemberSolution2 = undefined
+nineteenthDecemberSolution2 = solution2 . take 3 <$> input
 
 parseInput :: String -> [Blueprint]
 parseInput = fmap buildBlueprint . zip [1 ..] . lines

@@ -27,6 +27,7 @@ dependencies:
 - vector
 - bytestring
 - pureMD5
+- parallel
 - aeson
 - scientific
 - text
