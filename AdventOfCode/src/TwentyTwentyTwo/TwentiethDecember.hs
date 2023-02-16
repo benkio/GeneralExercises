@@ -76,8 +76,23 @@ coordinateFromZero x v = (V.!) v i
 solution :: [Int] -> Int
 solution i = (sum . findCoordinates . moveCycle i) $ fromList i
 
+-- -2257 wrong
 twentiethDecemberSolution1 :: IO Int
 twentiethDecemberSolution1 = solution <$> input
 
 twentiethDecemberSolution2 :: IO Int
 twentiethDecemberSolution2 = undefined
+
+testExample :: Bool
+testExample =
+    solution testInput == 3
+        && ((findCoordinates . moveCycle testInput) (fromList testInput)) == [4, -3, 2]
+        && ((moveCycle testInput) (fromList testInput)) == (fromList [1, 2, -3, 4, 0, 3, -2])
+
+test2 :: Bool
+test2 =
+    solution testCase == 3
+    && ((findCoordinates . moveCycle testCase) (fromList testCase)) == [4, -3, 2]
+    && ((moveCycle testCase) (fromList testCase)) == (fromList [0, -5, 9])
+  where
+    testCase = [9, 0, -5]
