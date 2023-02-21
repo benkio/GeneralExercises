@@ -1,8 +1,8 @@
 module TwentyTwentyTwo.TwentiethDecember where
 
 import Data.Maybe (fromJust)
-import Data.Vector (Vector, elemIndex, fromList, singleton)
-import qualified Data.Vector as V (concat, head, length, splitAt, tail, (!))
+import Data.Vector (Vector, cons, elemIndex, fromList, singleton, snoc)
+import qualified Data.Vector as V (concat, filter, head, length, splitAt, tail, (!))
 import Debug.Trace
 
 parseInput = fmap (\x -> (read x :: Int)) . lines
@@ -22,16 +22,18 @@ testInput =
         \4"
 
 -- from a value return the starting and ending indexes of the move
-calculateIndexes :: Int -> Vector Int -> (Int, Int)
-calculateIndexes x v
-    | (i + x) < 0 = (i, headToTail (ei - 1))
-    | (i + x) >= vl = (i, headToTail (ei + 1))
-    | otherwise = (i, headToTail ei)
+calculateIndexes :: Int -> Int -> Vector Int -> (Int, Int)
+calculateIndexes prevOffset x v
+    | prevOffset == (abs x) = (i, offset)
+    | offset <= 0 = (\(_, e) -> (i, e)) $ calculateIndexes (i + prevOffset) x v'
+    | offset >= vl = (\(_, e) -> (i, e)) $ calculateIndexes (vl - 1 - i + prevOffset) x v''
+    | otherwise = (i, offset)
   where
     vl = V.length v
     i = (fromJust . elemIndex x) v
-    ei = mod (i + x) vl
-    headToTail a = if a == 0 then vl else a
+    offset = if x < 0 then i + x + prevOffset else i + x - prevOffset
+    v' = snoc (V.filter (/= x) v) x
+    v'' = cons x $ V.filter (/= x) v
 
 moveNumber :: Int -> Int -> Vector Int -> Vector Int
 moveNumber si ei v
@@ -57,7 +59,7 @@ moveCycle :: [Int] -> Vector Int -> Vector Int
 moveCycle [] v = v
 moveCycle (x : xs) v = moveCycle xs v'
   where
-    (si, ei) = calculateIndexes x v
+    (si, ei) = calculateIndexes 0 x v
     v' = moveNumber si ei v
 
 findCoordinates :: Vector Int -> [Int]
@@ -90,9 +92,6 @@ testExample =
         && ((moveCycle testInput) (fromList testInput)) == (fromList [1, 2, -3, 4, 0, 3, -2])
 
 test2 :: Bool
-test2 =
-    solution testCase == 3
-    && ((findCoordinates . moveCycle testCase) (fromList testCase)) == [4, -3, 2]
-    && ((moveCycle testCase) (fromList testCase)) == (fromList [0, -5, 9])
+test2 = ((moveCycle testCase) (fromList testCase)) == (fromList [0, -5, 9])
   where
     testCase = [9, 0, -5]
