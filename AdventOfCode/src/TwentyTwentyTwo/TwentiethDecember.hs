@@ -1,16 +1,21 @@
 module TwentyTwentyTwo.TwentiethDecember where
 
 import Data.Maybe (fromJust)
-import Data.Vector (Vector, cons, elemIndex, fromList, singleton, snoc)
-import qualified Data.Vector as V (concat, filter, head, length, splitAt, tail, (!))
+import Data.Sequence (Seq, cycleTaking, deleteAt, elemIndexL, foldlWithIndex, fromList, index, insertAt, spanl, (><))
+import qualified Data.Sequence as S (length)
 import Debug.Trace
 
-parseInput = fmap (\x -> (read x :: Int)) . lines
+data EncryptedValue = EncryptedValue {eid :: Int, value :: Int} deriving (Eq)
 
-input :: IO [Int]
+instance Show EncryptedValue where
+    show = show . value
+
+parseInput = fromList . fmap (\(i, x) -> EncryptedValue{eid = i, value = (read x :: Int)}) . ([0 ..] `zip`) . lines
+
+input :: IO (Seq EncryptedValue)
 input = parseInput <$> readFile "input/2022/20December.txt"
 
-testInput :: [Int]
+testInput :: Seq EncryptedValue
 testInput =
     parseInput
         "1\n\
@@ -21,77 +26,48 @@ testInput =
         \0\n\
         \4"
 
--- from a value return the starting and ending indexes of the move
-calculateIndexes :: Int -> Int -> Vector Int -> (Int, Int)
-calculateIndexes prevOffset x v
-    | prevOffset == (abs x) = (i, offset)
-    | offset <= 0 = (\(_, e) -> (i, e)) $ calculateIndexes (i + prevOffset) x v'
-    | offset >= vl = (\(_, e) -> (i, e)) $ calculateIndexes (vl - 1 - i + prevOffset) x v''
-    | otherwise = (i, offset)
+calculateEndPosition :: EncryptedValue -> Seq EncryptedValue -> Int
+calculateEndPosition e es
+    | movement == 0 = epos
+    | endIndex == 0 = esLength
+    | endIndex == esLength = 0
+    | otherwise = mod endIndex esLength
   where
-    vl = V.length v
-    i = (fromJust . elemIndex x) v
-    offset = if x < 0 then i + x + prevOffset else i + x - prevOffset
-    v' = snoc (V.filter (/= x) v) x
-    v'' = cons x $ V.filter (/= x) v
+    epos = fromJust $ elemIndexL e es
+    esLength = S.length es - 1
+    movement = signum (value e) * (mod (abs (value e)) esLength)
+    endIndex = epos + movement
 
-moveNumber :: Int -> Int -> Vector Int -> Vector Int
-moveNumber si ei v
-    | si < ei =
-        ( ( \(pre, post) ->
-                let (prepre, postpre) = V.splitAt si pre
-                 in V.concat [prepre, V.tail postpre, singleton (V.head postpre), post]
-          )
-            . V.splitAt (ei + 1)
-        )
-            v
-    | si > ei =
-        ( ( \(pre, post) ->
-                let (prepost, postpost) = V.splitAt (si - ei) post
-                 in V.concat [pre, singleton (V.head postpost), prepost, V.tail postpost]
-          )
-            . V.splitAt ei
-        )
-            v
-    | otherwise = v
-
-moveCycle :: [Int] -> Vector Int -> Vector Int
-moveCycle [] v = v
-moveCycle (x : xs) v = moveCycle xs v'
+moveElem :: EncryptedValue -> Int -> Seq EncryptedValue -> Seq EncryptedValue
+moveElem e endIndex es = if endIndex == startIndex then es else es'
   where
-    (si, ei) = calculateIndexes 0 x v
-    v' = moveNumber si ei v
+    startIndex = fromJust $ elemIndexL e es
+    es' = insertAt endIndex e $ deleteAt startIndex es
 
-findCoordinates :: Vector Int -> [Int]
-findCoordinates v =
-    [ coordinateFromZero 1000 v
-    , coordinateFromZero 2000 v
-    , coordinateFromZero 3000 v
-    ]
+moveElems :: Seq EncryptedValue -> Seq EncryptedValue
+moveElems es = foldlWithIndex (\acc _ e -> trace ("acc: " ++ show acc ++ " elem: " ++ show e) (moveElem e (calculateEndPosition e acc) acc)) es es
 
-coordinateFromZero :: Int -> Vector Int -> Int
-coordinateFromZero x v = (V.!) v i
+findCoordinates :: Seq EncryptedValue -> [Int]
+findCoordinates es = [coordinate 1000, coordinate 2000, coordinate 3000]
   where
-    zi = (fromJust . elemIndex 0) v
-    i = mod (x - zi + 1) (V.length v)
+    (rest, zeroHead) = spanl ((/= 0) . value) es
+    longEs = cycleTaking 3001 (zeroHead >< rest)
+    coordinate = value . index longEs
 
-solution :: [Int] -> Int
-solution i = (sum . findCoordinates . moveCycle i) $ fromList i
+test1 = moveElem zero (calculateEndPosition zero testInput) testInput == testInput
+  where
+    zero = EncryptedValue{eid = 5, value = 0}
+test2 = solution testInput == 3
+test3 = (findCoordinates . moveElems) testInput == [4, -3, 2]
+test4 = (moveElems . parseInput) "9\n0\n1\n-5"
+test = test1 && test2 && test3
 
--- -2257 wrong
-twentiethDecemberSolution1 :: IO Int
-twentiethDecemberSolution1 = solution <$> input
+solution = sum . findCoordinates . moveElems
+
+-- 14118
+-- 3139 2740 8239
+-- twentiethDecemberSolution1 :: IO Int
+twentiethDecemberSolution1 = findCoordinates . moveElems <$> input
 
 twentiethDecemberSolution2 :: IO Int
 twentiethDecemberSolution2 = undefined
-
-testExample :: Bool
-testExample =
-    solution testInput == 3
-        && ((findCoordinates . moveCycle testInput) (fromList testInput)) == [4, -3, 2]
-        && ((moveCycle testInput) (fromList testInput)) == (fromList [1, 2, -3, 4, 0, 3, -2])
-
-test2 :: Bool
-test2 = ((moveCycle testCase) (fromList testCase)) == (fromList [0, -5, 9])
-  where
-    testCase = [9, 0, -5]
