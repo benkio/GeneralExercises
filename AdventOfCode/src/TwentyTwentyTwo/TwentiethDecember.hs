@@ -1,7 +1,7 @@
 module TwentyTwentyTwo.TwentiethDecember where
 
 import Data.IntMap (IntMap, filterWithKey, fromList, toList, union, (!))
-import qualified Data.IntMap as M (filter, foldl)
+import qualified Data.IntMap as M (filter, foldl, map)
 import Data.Maybe (fromJust)
 import Debug.Trace
 
@@ -72,8 +72,8 @@ moveNode n ns
 -- printll _ 0 _ = ""
 -- printll n x ns = ((show . value) n) ++ " " ++ printll (nodeAtDistanceRight n 1 ns) (x-1) ns
 
-mix :: IntMap Node -> IntMap Node
-mix ns =
+mix :: IntMap Node -> IntMap Node -> IntMap Node
+mix sequence ns =
     M.foldl
         ( \acc n ->
             let n' = findEid (eid n) acc
@@ -81,11 +81,11 @@ mix ns =
              in xs
         )
         ns
-        ns
+        sequence
 
 findCoordinates ns = fmap (\s -> value (nodeAtDistanceRight (findZero ns) s ns)) [1000, 2000, 3000]
 
-solution = sum . findCoordinates . mix
+solution ns = (sum . findCoordinates . mix ns) ns
 
 input :: IO (IntMap Node)
 input = parseInput <$> readFile "input/2022/20December.txt"
@@ -104,8 +104,25 @@ testInput =
 twentiethDecemberSolution1 :: IO Int
 twentiethDecemberSolution1 = solution <$> input
 
+decriptionKey = 811589153
+
+solution2 ns =
+    ( sum
+        . findCoordinates
+        . snd
+    )
+        ( until
+            (\(r, _) -> r == 10)
+            ( \(r, xs) ->
+                (r + 1, mix nsD xs)
+            )
+            (0, nsD)
+        )
+  where
+    nsD = M.map (\n -> n{value = value n * decriptionKey}) ns
+
 twentiethDecemberSolution2 :: IO Int
-twentiethDecemberSolution2 = undefined
+twentiethDecemberSolution2 = solution2 <$> input
 
 parseInput input =
     ( fromList
