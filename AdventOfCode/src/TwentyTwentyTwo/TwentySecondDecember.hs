@@ -49,7 +49,7 @@ applyMovesHelper fieldMap (move : rest) curPos dir =
         L -> applyMovesHelper fieldMap rest curPos (rotateLeft dir)
         R -> applyMovesHelper fieldMap rest curPos (rotateRight dir)
         Move n ->
-            let newPos = trace ("curPos: " ++ (show curPos) ++ " dir: " ++ (show dir) ++ " n: " ++ (show n)) $ moveSteps fieldMap curPos curPos dir n
+            let newPos = moveSteps fieldMap curPos curPos dir n
              in applyMovesHelper fieldMap rest newPos dir
   where
     rotateLeft :: Position -> Position
@@ -59,10 +59,10 @@ applyMovesHelper fieldMap (move : rest) curPos dir =
     rotateRight (x, y) = (y, -x)
 
 moveSteps :: Map Position Field -> Position -> Position -> Position -> Int -> Position
-moveSteps _ _ pos _ 0 = pos
 moveSteps fieldMap prevPos pos dir n
     | val == Just Wall = prevPos
     | val == Nothing = moveSteps fieldMap prevPos (wrapAround pos dir fieldMap) dir n
+    | n == 0 = pos
     | otherwise = moveSteps fieldMap pos (addPos pos dir) dir (n - 1)
   where
     val = M.lookup pos fieldMap
@@ -104,7 +104,7 @@ solution = (uncurry calculatePassword . uncurry applyMoves)
     directionValue (0, -1) = 1
 
 twentySecondDecemberSolution1 :: IO Int
-twentySecondDecemberSolution1 = undefined
+twentySecondDecemberSolution1 = solution <$> input
 
 twentySecondDecemberSolution2 :: IO Int
 twentySecondDecemberSolution2 = undefined
