@@ -2,11 +2,12 @@ module TwentyTwentyTwo.TwentySecondDecember where
 
 import Data.Bifunctor (bimap, first, second)
 import Data.Char (isDigit)
-import Data.List (find, groupBy, sort, nub)
+import Data.List (find, groupBy, nub, sort, (\\))
 import Data.Map (Map, alter, empty, fromList, keys, toList, (!))
 import qualified Data.Map as M (filter, lookup, member, notMember)
 import Data.Maybe (catMaybes, fromJust, isJust, mapMaybe)
---import Debug.Trace
+import Debug.Trace
+import Text.Printf
 
 data Field = Empty | Wall deriving (Eq, Show)
 type Position = (Int, Int)
@@ -119,7 +120,7 @@ data Cube = Cube
     deriving (Show)
 
 emptyCube :: Cube
-emptyCube = Cube { edges = [], zips = []}
+emptyCube = Cube{edges = [], zips = []}
 
 edgeToPosition :: Edge -> [Position]
 edgeToPosition (E1{e1}) = [e1]
@@ -134,6 +135,11 @@ findEdge near mf (x, y) =
 isAngleEdge = findEdge 8 -- edge that needs 1 zips to complete
 isFlatEdge = findEdge 6 -- edge that needs 2 zips to complete
 isFloatingEdge = findEdge 4 -- edge that needs 3 zips to complete
+isEdge mf p = (any isJust . fmap (\f -> f mf p)) [isFloatingEdge, isFlatEdge, isAngleEdge, findEdge 7]
+
+perimeter mf = (filter (isEdge mf) . keys) mf
+cubeZips :: Cube -> [Position]
+cubeZips = nub . concat . uncurry (++) . unzip . zips
 
 neighboors mf (x, y) = filter (`M.member` mf) [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]
 missingNeighboors mf (x, y) = filter (`M.notMember` mf) [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]
@@ -144,31 +150,42 @@ searchEdges mf = (mapMaybe (isAngleEdge mf) . keys) mf
 buildCube :: Map Position Field -> Int -> Cube -> [Edge] -> Cube
 buildCube mf faceSize c [] = c
 buildCube mf faceSize c (e : es) =
-    let (e', zs) = zipFromEdge mf faceSize (edges c) e
-        cube' =
-            c
-                { edges = edges c ++ [e]
-                , zips = zips c ++ [zs]
-                }
-     in if (length . edges) cube' == 6 then cube' else buildCube mf faceSize cube' (es ++ [e'])
+    maybe
+        (buildCube mf faceSize c es)
+        ( \(e', zs) ->
+            let cube' =
+                    c
+                        { edges = edges c ++ [e]
+                        , zips = zips c ++ [zs]
+                        }
+             in if e' `notElem` edges cube'
+                    then buildCube mf faceSize cube' (es ++ [e'])
+                    else buildCube mf faceSize cube' es
+        )
+        (zipFromEdge mf faceSize (edges c) e)
 
-zipFromEdge :: Map Position Field -> Int -> [Edge] -> Edge -> (Edge, ([Position], [Position]))
-zipFromEdge mf faceSize es e@(E1{e1 = p}) =
-    let [ne1, ne2] = neighboorEdges mf faceSize es e
+zipFromEdge :: Map Position Field -> Int -> [Edge] -> Edge -> Maybe (Edge, ([Position], [Position]))
+zipFromEdge mf faceSize es e@(E1{e1 = p}) = do
+    nemaybe <- neighboorEdges mf faceSize es e
+    let [ne1, ne2] = trace (printf "e: %s - nemaybe: %s" (show e) (show nemaybe)) $ nemaybe
         zipEdges p' = [(x, y) | x <- [min (fst p) (fst p') .. max (fst p) (fst p')], y <- [min (snd p) (snd p') .. max (snd p) (snd p')]]
         orderZip zs = if last zs == p then zs else reverse zs
-     in (E2{e1 = ne1, e2 = ne2}, ((orderZip . zipEdges) ne1, (orderZip . zipEdges) ne2))
-zipFromEdge mf faceSize es e@(E2{e1 = p, e2 = p'}) =
-  let [ne1, ne2] = neighboorEdges mf faceSize es e
-      zipEdges a b = [(x, y) | x <- [min (fst a) (fst b) .. max (fst a) (fst b)], y <- [min (snd a) (snd b) .. max (snd a) (snd b)]]
-      orderZip end zs = if last zs == end then zs else reverse zs
-  in (E2{e1 = ne1, e2 = ne2},
-      ((orderZip p . zipEdges p) ne1, (orderZip p' . zipEdges p') ne2)
-     )
+    return (E2{e1 = ne1, e2 = ne2}, ((orderZip . zipEdges) ne1, (orderZip . zipEdges) ne2))
+zipFromEdge mf faceSize es e@(E2{e1 = p, e2 = p'}) = do
+    nemaybe <- neighboorEdges mf faceSize es e
+    let [ne1, ne2] = nemaybe
+        zipEdges a b = [(x, y) | x <- [min (fst a) (fst b) .. max (fst a) (fst b)], y <- [min (snd a) (snd b) .. max (snd a) (snd b)]]
+        orderZip end zs = if last zs == end then zs else reverse zs
+    return
+        ( E2{e1 = ne1, e2 = ne2}
+        , ((orderZip p . zipEdges p) ne1, (orderZip p' . zipEdges p') ne2)
+        )
 
-neighboorEdges :: Map Position Field -> Int -> [Edge] -> Edge -> [Position]
+neighboorEdges :: Map Position Field -> Int -> [Edge] -> Edge -> Maybe [Position]
 neighboorEdges mf faceSize es (E1{e1}) =
-    ( filter (\p -> p `notElem` (concatMap (\(x,y) -> [(a,b)| a <- [x-1..x+1], b <- [y-1..y+1]]) . concatMap edgeToPosition) es && M.member p mf)
+    ( -- (\xs -> if length xs == 2 then Just xs else Nothing)
+      Just
+        . filter (\p -> p `notElem` (concatMap (\(x, y) -> [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]) . concatMap edgeToPosition) es && M.member p mf)
         . concatMap
             ( \(x, y) ->
                 let offsetX = fst e1 + ((x - (fst e1)) * faceSize)
@@ -179,17 +196,20 @@ neighboorEdges mf faceSize es (E1{e1}) =
         . missingNeighboors mf
     )
         e1
-neighboorEdges mf faceSize es (E2{e1, e2}) =
-  let
-    ps1' = neighboorEdges mf faceSize es (E1{e1 = e1})
-    ps2' = neighboorEdges mf faceSize es (E1{e1 = e2})
-    ps1 = if null ps1' then neighboorEdges mf (faceSize-1) es (E1{e1 = e1}) else ps1'
-    ps2 = if null ps2' then neighboorEdges mf (faceSize-1) es (E1{e1 = e1}) else ps2'
-  in if (length . nub) (ps1 ++ ps2) /= 2 then error ("erroooor: " ++ (show (ps1 ++ ps2)) ++ " e1 " ++ show e1 ++ " e2 " ++ show e2)  else nub $ ps1 ++ ps2
+neighboorEdges mf faceSize es (E2{e1, e2}) = do
+    ps1' <- neighboorEdges mf faceSize es (E1{e1 = e1})
+    ps2' <- neighboorEdges mf faceSize es (E1{e1 = e2})
+    ps1 <- if null ps1' then neighboorEdges mf (faceSize - 1) es (E1{e1 = e1}) else Just ps1'
+    ps2 <- if null ps2' then neighboorEdges mf (faceSize - 1) es (E1{e1 = e2}) else Just ps2'
+    if (length . nub) (ps1 ++ ps2) /= 2
+        then Nothing -- error ("erroooor: " ++ (show (ps1 ++ ps2)) ++ " e1 " ++ show e1 ++ " e2 " ++ show e2)
+        else Just $ nub $ ps1 ++ ps2
 
 test = (buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
-test2 = neighboorEdges (fst testInput) 3 [] (E1 {e1 = (15,8)})
-test3 = buildCube (fst testInput) 4 emptyCube [E2 {e1 = (11,4), e2 = (15,8)}]
+test5 = (buildCube (fst testInput) 50 emptyCube . searchEdges . fst) <$> input
+test4 = ((\\ perimeter (fst testInput)) . cubeZips . buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
+test2 = neighboorEdges (fst testInput) 3 [] (E1{e1 = (15, 8)})
+test3 = buildCube (fst testInput) 4 emptyCube [E2{e1 = (11, 4), e2 = (15, 8)}]
 
 twentySecondDecemberSolution2 :: IO Int
 twentySecondDecemberSolution2 = undefined
