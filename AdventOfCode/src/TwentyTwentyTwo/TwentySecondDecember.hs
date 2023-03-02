@@ -2,9 +2,9 @@ module TwentyTwentyTwo.TwentySecondDecember where
 
 import Data.Bifunctor (bimap, first, second)
 import Data.Char (isDigit)
-import Data.List (find, groupBy)
+import Data.List (find, groupBy, sort, nub)
 import Data.Map (Map, alter, empty, fromList, keys, toList, (!))
-import qualified Data.Map as M (filter, lookup, member)
+import qualified Data.Map as M (filter, lookup, member, notMember)
 import Data.Maybe (catMaybes, fromJust, isJust, mapMaybe)
 import Debug.Trace
 
@@ -109,167 +109,92 @@ solution (mf, ms) wrapFunc = uncurry calculatePassword $ applyMoves mf wrapFunc 
 twentySecondDecemberSolution1 :: IO Int
 twentySecondDecemberSolution1 = (\(mf, ms) -> solution (mf, ms) (wrapAround mf)) <$> input
 
-data Face
-    = EmptyFace
-        { top :: [Position]
-        , bottom :: [Position]
-        , left :: [Position]
-        , right :: [Position]
-        , fid :: Int
-        , faceTopId :: Int
-        , faceBottomId :: Int
-        , faceLeftId :: Int
-        , faceRightId :: Int
-        }
-    | Face
-        { top :: [Position]
-        , bottom :: [Position]
-        , left :: [Position]
-        , right :: [Position]
-        , fid :: Int
-        , faceTopId :: Int
-        , faceBottomId :: Int
-        , faceLeftId :: Int
-        , faceRightId :: Int
-        }
-    deriving (Show, Ord, Eq)
+data Edge = E1 {e1 :: Position} | E2 {e1 :: Position, e2 :: Position} deriving (Show)
+
+instance Eq Edge where
+    (==) e1 e2 = (sort . edgeToPosition) e1 == (sort . edgeToPosition) e2
 
 data Cube = Cube
-    { c_front :: Maybe Face
-    , c_back :: Maybe Face
-    , c_left :: Maybe Face
-    , c_right :: Maybe Face
-    , c_top :: Maybe Face
-    , c_bottom :: Maybe Face
+    { edges :: [Edge]
+    , zips :: [([Position], [Position])]
     }
     deriving (Show)
 
-isEmptyFace :: Face -> Bool
-isEmptyFace (EmptyFace{}) = True
-isEmptyFace _ = False
-
-test = ((\x -> foldCube x emptyCube) . (\x -> generateFacesMap x maxX maxY) . (\fm -> faceBoundaries fm faceSize) . fst) testInput
-  where
-    faceSize = 4
-    (_, (maxX, maxY)) = (bounds . fst) testInput
-
-test2 = do
-    i <- input
-    let faceSize = 50
-        (_, (maxX, maxY)) = (bounds . fst) i
-    return $ ((\x -> foldCube x emptyCube) . (\x -> generateFacesMap x maxX maxY) . (\fm -> faceBoundaries fm faceSize) . fst) i
-
-faceBoundaries :: Map Position Field -> Int -> [Face]
-faceBoundaries fieldMap faceSize = buildFace edges 0
-  where
-    ((minX, minY), (maxX, maxY)) = bounds fieldMap
-    edges = [(x, y) | x <- [minX, minX + faceSize .. maxX], y <- [minY, minY + faceSize .. maxY]]
-    buildFace [] fid = []
-    buildFace (e : es) fid =
-        let brb = bimap (+ (faceSize - 1)) (+ (faceSize - 1)) e
-            check = M.lookup brb fieldMap >> M.lookup e fieldMap
-            face =
-                maybe
-                    ( EmptyFace
-                        { top = fmap (\x -> (x, snd e)) [fst e .. fst brb]
-                        , bottom = fmap (\x -> (x, snd brb)) [fst e .. fst brb]
-                        , left = fmap (\y -> (fst e, y)) [snd e .. snd brb]
-                        , right = fmap (\y -> (fst brb, y)) [snd e .. snd brb]
-                        , fid = fid
-                        , faceTopId = -1
-                        , faceBottomId = -1
-                        , faceLeftId = -1
-                        , faceRightId = -1
-                        }
-                    )
-                    ( const
-                        Face
-                            { top = fmap (\x -> (x, snd e)) [fst e .. fst brb]
-                            , bottom = fmap (\x -> (x, snd brb)) [fst e .. fst brb]
-                            , left = fmap (\y -> (fst e, y)) [snd e .. snd brb]
-                            , right = fmap (\y -> (fst brb, y)) [snd e .. snd brb]
-                            , fid = fid
-                            , faceTopId = -1
-                            , faceBottomId = -1
-                            , faceLeftId = -1
-                            , faceRightId = -1
-                            }
-                    )
-                    check
-         in if fst brb > maxX || snd brb > maxY then buildFace es fid else face : buildFace es (fid + 1)
-
--- Check if two faces share an edge
-shareEdge :: Face -> Face -> Int -> Int -> Maybe (Face, Face)
-shareEdge f1 f2 maxX maxY
-    | ((fmap (second (\x -> (x - 1) `mod` (maxY + 1))) . top) f1) == (bottom f2) = Just (f1{faceTopId = fid f2}, f2{faceBottomId = fid f1})
-    | ((fmap (second ((`mod` (maxY + 1)) . (+ 1))) . bottom) f1) == (top f2) = Just (f1{faceBottomId = fid f2}, f2{faceTopId = fid f1})
-    | ((fmap (first (\x -> (x - 1) `mod` (maxX + 1))) . left) f1) == (right f2) = Just (f1{faceLeftId = fid f2}, f2{faceRightId = fid f1})
-    | ((fmap (first ((`mod` (maxX + 1)) . (+ 1))) . right) f1) == (left f2) = Just (f1{faceRightId = fid f2}, f2{faceLeftId = fid f1})
-    | otherwise = Nothing
-
-mergeFaces :: Face -> Face -> Face
-mergeFaces f1 f2
-    | fid f1 == fid f2 =
-        f1
-            { faceTopId = max (faceTopId f1) (faceTopId f2)
-            , faceBottomId = max (faceBottomId f1) (faceBottomId f2)
-            , faceLeftId = max (faceLeftId f1) (faceLeftId f2)
-            , faceRightId = max (faceRightId f1) (faceRightId f2)
-            }
-    | otherwise = error "can't merge 2 different faces"
-
-generateFacesMap :: [Face] -> Int -> Int -> Map Int Face
-generateFacesMap faces maxX maxY =
-    let mergeF f1 (Just f) = Just (mergeFaces f f1)
-        mergeF f1 Nothing = Just f1
-        connections =
-            ( M.filter (not . isEmptyFace)
-                . foldl (\acc (f1, f2) -> alter (mergeF f2) (fid f2) (alter (mergeF f1) (fid f1) acc)) empty
-                . catMaybes
-            )
-                [shareEdge f1' f2' maxX maxY | f1' <- faces, f2' <- faces, f1' /= f2']
-     in connections
-
 emptyCube :: Cube
-emptyCube = Cube{c_front = Nothing, c_back = Nothing, c_left = Nothing, c_right = Nothing, c_bottom = Nothing, c_top = Nothing}
-getCubeFaces :: Cube -> [Face]
-getCubeFaces c = mapMaybe (\f -> f c) [c_front, c_back, c_left, c_right, c_bottom, c_top]
-getCubeFaces' :: Cube -> [Cube -> Maybe Face] -> [Face]
-getCubeFaces' c sel = mapMaybe (\f -> f c) sel
+emptyCube = Cube { edges = [], zips = []}
 
-foldCube :: Map Int Face -> Cube -> Cube
-foldCube fm c = if ((== 6) . length . getCubeFaces) c' then c' else foldCube fm c'
-  where
-    c' = traceShowId $ foldl addFace c fm
+edgeToPosition :: Edge -> [Position]
+edgeToPosition (E1{e1}) = [e1]
+edgeToPosition (E2{e1, e2}) = [e1, e2]
 
-addFace :: Cube -> Face -> Cube
-addFace c f
-    | (null . getCubeFaces) c = c{c_front = Just f}
-    | (fid f) `elem` (fmap fid (getCubeFaces c)) = c
-    | (fid f) `elem` fmap faceTopId (getCubeFaces' c [c_front, c_left, c_right, c_back]) || lastFaceCondition c_top = c{c_top = Just f{faceTopId = maybe (faceTopId f) fid (c_back c), faceBottomId = maybe (faceBottomId f) fid (c_front c), faceRightId = maybe (faceRightId f) fid (c_right c), faceLeftId = maybe (faceLeftId f) fid (c_left c)}}
-    | (fid f) `elem` fmap faceBottomId (getCubeFaces' c [c_front, c_left, c_right, c_back]) || lastFaceCondition c_bottom = c{c_bottom = Just f{faceTopId = maybe (faceTopId f) fid (c_back c), faceBottomId = maybe (faceBottomId f) fid (c_front c), faceRightId = maybe (faceRightId f) fid (c_right c), faceLeftId = maybe (faceLeftId f) fid (c_left c)}}
-    | (fid f) `elem` fmap faceRightId (getCubeFaces' c [c_front, c_top, c_bottom]) || lastFaceCondition c_right = c{c_right = Just f{faceTopId = maybe (faceTopId f) fid (c_top c), faceBottomId = maybe (faceBottomId f) fid (c_bottom c), faceRightId = maybe (faceRightId f) fid (c_back c), faceLeftId = maybe (faceLeftId f) fid (c_front c)}}
-    | (fid f) `elem` fmap faceLeftId (getCubeFaces' c [c_back]) = c{c_right = Just f{faceTopId = maybe (faceTopId f) fid (c_top c), faceBottomId = maybe (faceBottomId f) fid (c_bottom c), faceRightId = maybe (faceRightId f) fid (c_back c), faceLeftId = maybe (faceLeftId f) fid (c_front c)}}
-    | (fid f) `elem` fmap faceLeftId (getCubeFaces' c [c_front, c_top, c_bottom]) || lastFaceCondition c_left = c{c_left = Just f{faceTopId = maybe (faceTopId f) fid (c_top c), faceBottomId = maybe (faceBottomId f) fid (c_bottom c), faceRightId = maybe (faceRightId f) fid (c_front c), faceLeftId = maybe (faceLeftId f) fid (c_back c)}}
-    | (fid f) `elem` fmap faceRightId (getCubeFaces' c [c_back]) = c{c_left = Just f{faceTopId = maybe (faceTopId f) fid (c_top c), faceBottomId = maybe (faceBottomId f) fid (c_bottom c), faceRightId = maybe (faceRightId f) fid (c_front c), faceLeftId = maybe (faceLeftId f) fid (c_back c)}}
-    | (fid f) `elem` fmap faceTopId (getCubeFaces' c [c_top, c_bottom]) || lastFaceCondition c_back = c{c_back = Just f{faceTopId = maybe (faceTopId f) fid (c_top c), faceBottomId = maybe (faceBottomId f) fid (c_bottom c), faceRightId = maybe (faceRightId f) fid (c_left c), faceLeftId = maybe (faceLeftId f) fid (c_right c)}}
-    | (fid f) `elem` fmap faceLeftId (getCubeFaces' c [c_left]) = c{c_back = Just f{faceTopId = maybe (faceTopId f) fid (c_top c), faceBottomId = maybe (faceBottomId f) fid (c_bottom c), faceRightId = maybe (faceRightId f) fid (c_left c), faceLeftId = maybe (faceLeftId f) fid (c_right c)}}
-    | (fid f) `elem` fmap faceRightId (getCubeFaces' c [c_right]) = c{c_back = Just f{faceTopId = maybe (faceTopId f) fid (c_top c), faceBottomId = maybe (faceBottomId f) fid (c_bottom c), faceRightId = maybe (faceRightId f) fid (c_left c), faceLeftId = maybe (faceLeftId f) fid (c_right c)}}
-    | otherwise = c
-  where
-    lastFaceCondition sel = ((== 5) . length . getCubeFaces) c && (not . isJust . sel) c
+findEdge :: Int -> Map Position Field -> Position -> Maybe Edge
+findEdge near mf (x, y) =
+    if length (neighboors mf (x, y)) == near
+        then Just $ E1{e1 = (x, y)}
+        else Nothing
+
+isAngleEdge = findEdge 8 -- edge that needs 1 zips to complete
+isFlatEdge = findEdge 6 -- edge that needs 2 zips to complete
+isFloatingEdge = findEdge 4 -- edge that needs 3 zips to complete
+
+neighboors mf (x, y) = filter (`M.member` mf) [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]
+missingNeighboors mf (x, y) = filter (`M.notMember` mf) [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]
+
+searchEdges :: Map Position Field -> [Edge]
+searchEdges mf = (mapMaybe (isAngleEdge mf) . keys) mf
+
+buildCube :: Map Position Field -> Int -> Cube -> [Edge] -> Cube
+buildCube mf faceSize c [] = c
+buildCube mf faceSize c (e : es) =
+    let (e', zs) = zipFromEdge mf faceSize (edges c) e
+        cube' =
+            c
+                { edges = edges c ++ [e]
+                , zips = zips c ++ [zs]
+                }
+     in if (length . edges) cube' == 6 then cube' else buildCube mf faceSize cube' (es ++ [e'])
+
+zipFromEdge :: Map Position Field -> Int -> [Edge] -> Edge -> (Edge, ([Position], [Position]))
+zipFromEdge mf faceSize es e@(E1{e1 = p}) =
+    let [ne1, ne2] = neighboorEdges mf faceSize es e
+        zipEdges p' = [(x, y) | x <- [min (fst p) (fst p') .. max (fst p) (fst p')], y <- [min (snd p) (snd p') .. max (snd p) (snd p')]]
+        orderZip zs = if last zs == p then zs else reverse zs
+     in (E2{e1 = ne1, e2 = ne2}, ((orderZip . zipEdges) ne1, (orderZip . zipEdges) ne2))
+zipFromEdge mf faceSize es e@(E2{e1 = p, e2 = p'}) =
+  let [ne1, ne2] = neighboorEdges mf faceSize es e
+      zipEdges a b = [(x, y) | x <- [min (fst a) (fst b) .. max (fst a) (fst b)], y <- [min (snd a) (snd b) .. max (snd a) (snd b)]]
+      orderZip end zs = if last zs == end then zs else reverse zs
+  in (E2{e1 = ne1, e2 = ne2},
+      ((orderZip p . zipEdges p) ne1, (orderZip p' . zipEdges p') ne2)
+     )
+
+neighboorEdges :: Map Position Field -> Int -> [Edge] -> Edge -> [Position]
+neighboorEdges mf faceSize es (E1{e1}) =
+    ( filter (\p -> p `notElem` concatMap edgeToPosition es && M.member p mf)
+      . traceShowId
+        . concatMap
+            ( \(x, y) ->
+                let offsetX = fst e1 + ((x - (fst e1)) * faceSize)
+                    offsetY = snd e1 + ((y - (snd e1)) * faceSize)
+                 in [(fst e1, offsetY), (offsetX, snd e1)]
+            )
+        . filter (\(x, y) -> x /= fst e1 && y /= snd e1)
+        . missingNeighboors mf
+    )
+        e1
+neighboorEdges mf faceSize es (E2{e1, e2}) =
+  let
+    ps1 = neighboorEdges mf faceSize es (E1{e1 = e1})
+    ps2 = neighboorEdges mf faceSize es (E1{e1 = e2})
+  in if length (ps1 ++ ps2) /= 2 then error ("erroooor: " ++ (show (ps1 ++ ps2)) ++ " e1 " ++ show e1 ++ " e2 " ++ show e2)  else nub $ ps1 ++ ps2
+
+test = (buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
+test2 = neighboorEdges (fst testInput) 4 [] (E1 {e1 = (8,0)})
 
 twentySecondDecemberSolution2 :: IO Int
-twentySecondDecemberSolution2 =
-    ( \(mf, ms) ->
-        let faceSize = 50
-            (_, (maxX, maxY)) = bounds mf
-            cube = ((\x -> foldCube x emptyCube) . (\x -> generateFacesMap x maxX maxY) . (\fm -> faceBoundaries fm faceSize)) mf
-         in solution (mf, ms) (wrapAroundCube mf cube)
-    )
-        <$> input
+twentySecondDecemberSolution2 = undefined
 
-wrapAroundCube :: Map Position Field -> Cube -> Position -> Position -> Position
+--wrapAroundCube :: Map Position Field -> Cube -> Position -> Position -> Position
 wrapAroundCube mf cube pos dir = undefined
 
 parseInputWithMoves :: String -> (Map Position Field, [Move])
