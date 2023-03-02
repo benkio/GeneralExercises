@@ -6,7 +6,7 @@ import Data.List (find, groupBy, sort, nub)
 import Data.Map (Map, alter, empty, fromList, keys, toList, (!))
 import qualified Data.Map as M (filter, lookup, member, notMember)
 import Data.Maybe (catMaybes, fromJust, isJust, mapMaybe)
-import Debug.Trace
+--import Debug.Trace
 
 data Field = Empty | Wall deriving (Eq, Show)
 type Position = (Int, Int)
@@ -62,9 +62,7 @@ applyMovesHelper fieldMap wrapFunc (move : rest) curPos dir =
 moveSteps :: Map Position Field -> (Position -> Position -> Position) -> Position -> Position -> Position -> Int -> Position
 moveSteps fieldMap wrapFunction prevPos pos dir n
     | val == Just Wall = prevPos
-    | val == Nothing -- (wrapAround pos dir fieldMap)
-        =
-        moveSteps fieldMap wrapFunction prevPos (wrapFunction pos dir) dir n
+    | val == Nothing = moveSteps fieldMap wrapFunction prevPos (wrapFunction pos dir) dir n
     | n == 0 = pos
     | otherwise = moveSteps fieldMap wrapFunction pos (addPos pos dir) dir (n - 1)
   where
@@ -170,8 +168,7 @@ zipFromEdge mf faceSize es e@(E2{e1 = p, e2 = p'}) =
 
 neighboorEdges :: Map Position Field -> Int -> [Edge] -> Edge -> [Position]
 neighboorEdges mf faceSize es (E1{e1}) =
-    ( filter (\p -> p `notElem` concatMap edgeToPosition es && M.member p mf)
-      . traceShowId
+    ( filter (\p -> p `notElem` (concatMap (\(x,y) -> [(a,b)| a <- [x-1..x+1], b <- [y-1..y+1]]) . concatMap edgeToPosition) es && M.member p mf)
         . concatMap
             ( \(x, y) ->
                 let offsetX = fst e1 + ((x - (fst e1)) * faceSize)
@@ -184,12 +181,15 @@ neighboorEdges mf faceSize es (E1{e1}) =
         e1
 neighboorEdges mf faceSize es (E2{e1, e2}) =
   let
-    ps1 = neighboorEdges mf faceSize es (E1{e1 = e1})
-    ps2 = neighboorEdges mf faceSize es (E1{e1 = e2})
-  in if length (ps1 ++ ps2) /= 2 then error ("erroooor: " ++ (show (ps1 ++ ps2)) ++ " e1 " ++ show e1 ++ " e2 " ++ show e2)  else nub $ ps1 ++ ps2
+    ps1' = neighboorEdges mf faceSize es (E1{e1 = e1})
+    ps2' = neighboorEdges mf faceSize es (E1{e1 = e2})
+    ps1 = if null ps1' then neighboorEdges mf (faceSize-1) es (E1{e1 = e1}) else ps1'
+    ps2 = if null ps2' then neighboorEdges mf (faceSize-1) es (E1{e1 = e1}) else ps2'
+  in if (length . nub) (ps1 ++ ps2) /= 2 then error ("erroooor: " ++ (show (ps1 ++ ps2)) ++ " e1 " ++ show e1 ++ " e2 " ++ show e2)  else nub $ ps1 ++ ps2
 
 test = (buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
-test2 = neighboorEdges (fst testInput) 4 [] (E1 {e1 = (8,0)})
+test2 = neighboorEdges (fst testInput) 3 [] (E1 {e1 = (15,8)})
+test3 = buildCube (fst testInput) 4 emptyCube [E2 {e1 = (11,4), e2 = (15,8)}]
 
 twentySecondDecemberSolution2 :: IO Int
 twentySecondDecemberSolution2 = undefined
