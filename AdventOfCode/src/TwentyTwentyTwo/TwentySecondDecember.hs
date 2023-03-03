@@ -2,7 +2,8 @@ module TwentyTwentyTwo.TwentySecondDecember where
 
 import Data.Bifunctor (bimap, first, second)
 import Data.Char (isDigit)
-import Data.List (elemIndex, find, groupBy, nub, sort, (\\))
+import Data.List (elemIndex, find, groupBy, intersperse, nub, sort, (\\))
+import Data.List.Split
 import Data.Map (Map, alter, empty, fromList, keys, toList, (!))
 import qualified Data.Map as M (filter, lookup, member, notMember)
 import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, listToMaybe, mapMaybe)
@@ -68,7 +69,9 @@ moveSteps fieldMap wrapFunction (prevPos, prevDir) pos dir n
     | otherwise = moveSteps fieldMap wrapFunction (pos, dir) (addPos pos dir) dir (n - 1)
   where
     val = M.lookup pos fieldMap
-    (posWrapped, newDir) = (wrapFunction pos dir)
+    (posWrapped, newDir) =
+        -- trace (printf "prevPos: %s %"s (show pos) (show dir)) $ traceShowId $
+        (wrapFunction pos dir)
     addPos :: Position -> Position -> Position
     addPos (x1, y1) (x2, y2) = (x1 + x2, y1 - y2)
 
@@ -100,7 +103,7 @@ boundsBy fil sel fieldMap =
 solution :: (Map Position Field, [Move]) -> (Position -> Position -> (Position, Position)) -> Int
 solution (mf, ms) wrapFunc = uncurry calculatePassword $ applyMoves mf wrapFunc ms
   where
-    calculatePassword (x, y) dir = (y + 1) * 1000 + (x + 1) * 4 + directionValue dir
+    calculatePassword (x, y) dir = trace (printf "finalTile: %s" (show (x, y))) $ (y + 1) * 1000 + (x + 1) * 4 + directionValue dir
     directionValue (1, 0) = 0
     directionValue (-1, 0) = 2
     directionValue (0, 1) = 3
@@ -205,13 +208,14 @@ test1 = do
 test3 = ((perimeter (fst testInput) \\) . cubeZips . buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
 
 -- 119103 too low
+-- 129339 correct - final tile (83,128)
 twentySecondDecemberSolution2 :: IO Int
 twentySecondDecemberSolution2 = solution2 50 <$> input
 
 solution2 :: Int -> (Map Position Field, [Move]) -> Int
 solution2 faceSize (mf, ms) =
     let edges = searchEdges mf
-        cube = buildCube mf faceSize emptyCube edges
+        cube = traceShowId $ buildCube mf faceSize emptyCube edges
      in solution (mf, ms) (wrapAroundCube mf cube)
 
 wrapAroundCube :: Map Position Field -> Cube -> Position -> Position -> (Position, Position)
@@ -220,7 +224,10 @@ wrapAroundCube mf cube pos dir =
   where
     prevPos = (fst pos - fst dir, snd pos + snd dir)
     jumpToCubeFace' = mapMaybe selectElem (zips cube)
-    jumpToCubeFace = if null jumpToCubeFace' then error (printf "pos: %s - prevPos: %s - dir: %s" (show pos) (show prevPos) (show dir)) else head jumpToCubeFace'
+    jumpToCubeFace =
+        if null jumpToCubeFace' -- length jumpToCubeFace' /= 1
+            then error (printf "pos: %s - prevPos: %s - dir: %s" (show pos) (show prevPos) (show dir))
+            else head jumpToCubeFace'
     newDir = ortogonalDirection mf jumpToCubeFace
     selectElem (xs, ys)
         | prevPos `elem` xs = (ys !!) <$> elemIndex prevPos xs
@@ -265,6 +272,10 @@ parseCell '.' = Just Empty
 parseCell '#' = Just Wall
 parseCell ' ' = Nothing
 parseCell _ = error "Invalid character in input"
+
+cellToChar :: Field -> Char
+cellToChar Empty = '.'
+cellToChar Wall = '#'
 
 reconstructInput :: Map Position Field -> String
 reconstructInput fieldMap =
