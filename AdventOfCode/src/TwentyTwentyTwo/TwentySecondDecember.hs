@@ -6,7 +6,7 @@ import Data.List (elemIndex, find, groupBy, intersperse, nub, sort, (\\))
 import Data.List.Split
 import Data.Map (Map, alter, empty, fromList, keys, toList, (!))
 import qualified Data.Map as M (filter, lookup, member, notMember)
-import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, listToMaybe, mapMaybe)
+import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import Debug.Trace
 import Text.Printf
 
@@ -64,14 +64,14 @@ applyMovesHelper fieldMap wrapFunc (move : rest) curPos dir =
 moveSteps :: Map Position Field -> (Position -> Position -> (Position, Position)) -> (Position, Position) -> Position -> Position -> Int -> (Position, Position)
 moveSteps fieldMap wrapFunction (prevPos, prevDir) pos dir n
     | val == Just Wall = (prevPos, prevDir)
-    | val == Nothing = moveSteps fieldMap wrapFunction (prevPos, prevDir) posWrapped newDir n
+    | isNothing val = moveSteps fieldMap wrapFunction (prevPos, prevDir) posWrapped newDir n
     | n == 0 = (pos, dir)
     | otherwise = moveSteps fieldMap wrapFunction (pos, dir) (addPos pos dir) dir (n - 1)
   where
     val = M.lookup pos fieldMap
     (posWrapped, newDir) =
         -- trace (printf "prevPos: %s %"s (show pos) (show dir)) $ traceShowId $
-        (wrapFunction pos dir)
+        wrapFunction pos dir
     addPos :: Position -> Position -> Position
     addPos (x1, y1) (x2, y2) = (x1 + x2, y1 - y2)
 
@@ -88,10 +88,10 @@ bounds fieldMap =
      in ((minimum xs, minimum ys), (maximum xs, maximum ys))
 
 boundsByRow :: Int -> Map Position Field -> (Int, Int)
-boundsByRow row fm = boundsBy (\(x, y) -> y == row) fst fm
+boundsByRow row = boundsBy (\(x, y) -> y == row) fst
 
 boundsByColumn :: Int -> Map Position Field -> (Int, Int)
-boundsByColumn column fm = boundsBy (\(x, y) -> x == column) snd fm
+boundsByColumn column = boundsBy (\(x, y) -> x == column) snd
 
 boundsBy :: (Position -> Bool) -> (Position -> Int) -> Map Position Field -> (Int, Int)
 boundsBy fil sel fieldMap =
@@ -117,7 +117,7 @@ data Edge = E {e1 :: Position, e2 :: Position}
 instance Eq Edge where
     (==) e1 e2 = (sort . edgeToPosition) e1 == (sort . edgeToPosition) e2
 instance Show Edge where
-    show (E{e1, e2}) = printf "E %s - %s" (show e1) (show e2)
+    show (E{e1 = e, e2 = e'}) = printf "E %s - %s" (show e) (show e')
 
 data Cube = Cube
     { edges :: [Edge]
@@ -164,10 +164,10 @@ buildCube mf faceSize c (e : es) =
   where
     mayEdge =
         -- trace (printf "debug: %s - %s" (show e) (show (edges c))) $ traceShowId $
-        (zipFromEdge mf faceSize (edges c) e)
+        zipFromEdge mf faceSize (edges c) e
     buildCube' zs = c{edges = edges c ++ [e], zips = zips c ++ [zs]}
     recurseIf e' c' =
-        if e' `notElem` edges c && not (isJust (isFloatingEdge mf (e1 e')) && (isJust (isFloatingEdge mf (e2 e'))))
+        if e' `notElem` edges c && not (isJust (isFloatingEdge mf (e1 e')) && isJust (isFloatingEdge mf (e2 e')))
             then buildCube mf faceSize c' (es ++ [e'])
             else buildCube mf faceSize c' es
     loop (e', zs) = recurseIf e' $ buildCube' zs
@@ -184,27 +184,26 @@ zipFromEdge mf faceSize es e@(E{e1 = p, e2 = p'}) =
 
 calculateEdges :: Map Position Field -> Int -> [Edge] -> Position -> Maybe (Position, Maybe Position)
 calculateEdges mf faceSize es e1 =
-    (\e -> (e, edges faceSize)) <$> edges (faceSize - 1)
+    (,edges faceSize) <$> edges (faceSize - 1)
   where
     diagonalMissingNeighboors = (filter (\(x, y) -> x /= fst e1 && y /= snd e1) . missingNeighboors mf) e1
     computeEdgesFromDiagonalNeighboors step (x, y) =
-        let offsetX = ((x - (fst e1)) * step)
-            offsetY = ((y - (snd e1)) * step)
-         in [((fst e1, snd e1 + offsetY)), ((fst e1 + offsetX, snd e1))]
-    cleanUnwantedEdges filterEdgeF = (listToMaybe . filter filterEdgeF)
+        let offsetX = ((x - fst e1) * step)
+            offsetY = ((y - snd e1) * step)
+         in [(fst e1, snd e1 + offsetY), (fst e1 + offsetX, snd e1)]
     filterEdgeF p =
         p `notElem` (concatMap (\(x, y) -> [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]) . concatMap edgeToPosition) es
             && isEdge mf p
-    edges step = cleanUnwantedEdges filterEdgeF $ computeEdgesFromDiagonalNeighboors step =<< diagonalMissingNeighboors
+    edges step = find filterEdgeF $ computeEdgesFromDiagonalNeighboors step =<< diagonalMissingNeighboors
 
 test = (buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
-test2 = ((\mf -> calculateEdges mf 50 [] (49, 150)) . fst) <$> input
+test2 = (\mf -> calculateEdges mf 50 [] (49, 150)) . fst <$> input
 test1 = do
     (mf, ms) <- input
     let edges = searchEdges mf
         cube = buildCube mf 50 emptyCube edges
         ps = perimeter mf
-    return $ ps \\ (cubeZips cube)
+    return $ ps \\ cubeZips cube
 test3 = ((perimeter (fst testInput) \\) . cubeZips . buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
 
 -- 119103 too low
@@ -222,7 +221,7 @@ wrapAroundCube :: Map Position Field -> Cube -> Position -> Position -> (Positio
 wrapAroundCube mf cube pos dir =
     (jumpToCubeFace, newDir)
   where
-    prevPos = (fst pos - fst dir, snd pos + snd dir)
+    prevPos = bimap (fst pos -) (snd pos +) dir
     jumpToCubeFace' = mapMaybe selectElem (zips cube)
     jumpToCubeFace =
         if null jumpToCubeFace' -- length jumpToCubeFace' /= 1
@@ -236,10 +235,10 @@ wrapAroundCube mf cube pos dir =
 
 ortogonalDirection :: Map Position Field -> Position -> Position
 ortogonalDirection mf (x, y)
-    | M.lookup (x + 1, y) mf == Nothing = (-1, 0)
-    | M.lookup (x - 1, y) mf == Nothing = (1, 0)
-    | M.lookup (x, y + 1) mf == Nothing = (0, 1)
-    | M.lookup (x, y - 1) mf == Nothing = (0, -1)
+    | isNothing (M.lookup (x + 1, y) mf) = (-1, 0)
+    | isNothing (M.lookup (x - 1, y) mf) = (1, 0)
+    | isNothing (M.lookup (x, y + 1) mf) = (0, 1)
+    | isNothing (M.lookup (x, y - 1) mf) = (0, -1)
     | otherwise = error $ "no blank space near " ++ show (x, y)
 
 parseInputWithMoves :: String -> (Map Position Field, [Move])
@@ -254,7 +253,7 @@ parseInput input =
     let lines' = lines input
         indexedLines = zip [0 ..] lines'
         cells = concatMap (\(y, line) -> zipWith (\x cell -> ((x, y), parseCell cell)) [0 ..] line) indexedLines
-     in fromList $ mapMaybe (\(x, m) -> fmap (\y -> (x, y)) m) cells
+     in fromList $ mapMaybe (\(x, m) -> fmap (x,) m) cells
 
 parseMoves :: String -> [Move]
 parseMoves [] = []

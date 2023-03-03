@@ -26,15 +26,15 @@ nodeAtDistanceLeft n 0 _ = n
 nodeAtDistanceLeft n d ns = nodeAtDistanceLeft nl (d + 1) ns
   where
     nl = findEid (left n) ns
-constrainIndex i ns = (signum i) * (mod (abs i) (length ns - 1))
-stepsToMove n ns = constrainIndex (value n) ns
+constrainIndex i ns = signum i * mod (abs i) (length ns - 1)
+stepsToMove n = constrainIndex (value n)
 extractNode n ns = ns'
   where
     nl = findEid (left n) ns
     nr = findEid (right n) ns
     nl' = nl{right = eid nr}
     nr' = nr{left = eid nl}
-    ns' = filterWithKey (\k _ -> k /= (eid n)) $ union (fromList [(eid nl', nl'), (eid nr', nr')]) ns -- [nl', nr'] ++ (filter ((`notElem` (fmap eid [nl, nr, n])) . eid) ns)
+    ns' = filterWithKey (\k _ -> k /= eid n) $ union (fromList [(eid nl', nl'), (eid nr', nr')]) ns -- [nl', nr'] ++ (filter ((`notElem` (fmap eid [nl, nr, n])) . eid) ns)
 
 insertNodeToRight :: Node -> Node -> IntMap Node -> IntMap Node
 insertNodeToRight n t ns = ns'
@@ -44,7 +44,7 @@ insertNodeToRight n t ns = ns'
     tl' = tl{right = eid n}
     tr' = tr{left = eid n}
     n' = n{left = eid tl', right = eid tr'}
-    ns' = union (fromList [(eid tl', tl'), (eid tr', tr'), (eid n', n')]) ns -- [tl', tr', n'] ++ (filter ((`notElem` (fmap eid [tl, tr, n])) . eid) ns)
+    ns' = fromList [(eid tl', tl'), (eid tr', tr'), (eid n', n')] `union` ns -- [tl', tr', n'] ++ (filter ((`notElem` (fmap eid [tl, tr, n])) . eid) ns)
 
 insertNodeToLeft :: Node -> Node -> IntMap Node -> IntMap Node
 insertNodeToLeft n t ns = ns'
@@ -54,7 +54,7 @@ insertNodeToLeft n t ns = ns'
     tr' = tr{left = eid n}
     tl' = tl{right = eid n}
     n' = n{left = eid tl', right = eid tr'}
-    ns' = union (fromList [(eid tl', tl'), (eid tr', tr'), (eid n', n')]) ns --[tl', tr', n'] ++ (filter ((`notElem` (fmap eid [tl, tr, n])) . eid) ns)
+    ns' = fromList [(eid tl', tl'), (eid tr', tr'), (eid n', n')] `union` ns --[tl', tr', n'] ++ (filter ((`notElem` (fmap eid [tl, tr, n])) . eid) ns)
 
 moveNode :: Node -> IntMap Node -> IntMap Node
 moveNode n ns
@@ -134,6 +134,6 @@ parseInput input =
   where
     total = (length . lines) input
     buildNode i v
-        | i == 0 = (i, Node{eid = i, left = total - 1, right = i + 1, value = (read v :: Int)})
-        | i == total - 1 = (i, Node{eid = i, left = i - 1, right = 0, value = (read v :: Int)})
-        | otherwise = (i, Node{eid = i, left = i - 1, right = i + 1, value = (read v :: Int)})
+        | i == 0 = (i, Node{eid = i, left = total - 1, right = i + 1, value = read v :: Int})
+        | i == total - 1 = (i, Node{eid = i, left = i - 1, right = 0, value = read v :: Int})
+        | otherwise = (i, Node{eid = i, left = i - 1, right = i + 1, value = read v :: Int})
