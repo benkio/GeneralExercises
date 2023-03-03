@@ -2,10 +2,10 @@ module TwentyTwentyTwo.TwentySecondDecember where
 
 import Data.Bifunctor (bimap, first, second)
 import Data.Char (isDigit)
-import Data.List (find, groupBy, nub, sort, (\\))
+import Data.List (elemIndex, find, groupBy, nub, sort, (\\))
 import Data.Map (Map, alter, empty, fromList, keys, toList, (!))
 import qualified Data.Map as M (filter, lookup, member, notMember)
-import Data.Maybe (catMaybes, fromJust, isJust, mapMaybe)
+import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, listToMaybe, mapMaybe)
 import Debug.Trace
 import Text.Printf
 
@@ -51,8 +51,8 @@ applyMovesHelper fieldMap wrapFunc (move : rest) curPos dir =
         L -> applyMovesHelper fieldMap wrapFunc rest curPos (rotateLeft dir)
         R -> applyMovesHelper fieldMap wrapFunc rest curPos (rotateRight dir)
         Move n ->
-            let newPos = moveSteps fieldMap wrapFunc curPos curPos dir n
-             in applyMovesHelper fieldMap wrapFunc rest newPos dir
+            let (newPos, newDir) = moveSteps fieldMap wrapFunc (curPos, dir) curPos dir n
+             in applyMovesHelper fieldMap wrapFunc rest newPos newDir
   where
     rotateLeft :: Position -> Position
     rotateLeft (x, y) = (-y, x)
@@ -60,12 +60,12 @@ applyMovesHelper fieldMap wrapFunc (move : rest) curPos dir =
     rotateRight :: Position -> Position
     rotateRight (x, y) = (y, -x)
 
-moveSteps :: Map Position Field -> (Position -> Position -> (Position, Position)) -> Position -> Position -> Position -> Int -> Position
-moveSteps fieldMap wrapFunction prevPos pos dir n
-    | val == Just Wall = prevPos
-    | val == Nothing = moveSteps fieldMap wrapFunction prevPos posWrapped newDir n
-    | n == 0 = pos
-    | otherwise = moveSteps fieldMap wrapFunction pos (addPos pos dir) dir (n - 1)
+moveSteps :: Map Position Field -> (Position -> Position -> (Position, Position)) -> (Position, Position) -> Position -> Position -> Int -> (Position, Position)
+moveSteps fieldMap wrapFunction (prevPos, prevDir) pos dir n
+    | val == Just Wall = (prevPos, prevDir)
+    | val == Nothing = moveSteps fieldMap wrapFunction (prevPos, prevDir) posWrapped newDir n
+    | n == 0 = (pos, dir)
+    | otherwise = moveSteps fieldMap wrapFunction (pos, dir) (addPos pos dir) dir (n - 1)
   where
     val = M.lookup pos fieldMap
     (posWrapped, newDir) = (wrapFunction pos dir)
@@ -109,10 +109,12 @@ solution (mf, ms) wrapFunc = uncurry calculatePassword $ applyMoves mf wrapFunc 
 twentySecondDecemberSolution1 :: IO Int
 twentySecondDecemberSolution1 = (\(mf, ms) -> solution (mf, ms) (wrapAround mf)) <$> input
 
-data Edge = E1 {e1 :: Position} | E2 {e1 :: Position, e2 :: Position} deriving (Show)
+data Edge = E {e1 :: Position, e2 :: Position}
 
 instance Eq Edge where
     (==) e1 e2 = (sort . edgeToPosition) e1 == (sort . edgeToPosition) e2
+instance Show Edge where
+    show (E{e1, e2}) = printf "E %s - %s" (show e1) (show e2)
 
 data Cube = Cube
     { edges :: [Edge]
@@ -124,19 +126,18 @@ emptyCube :: Cube
 emptyCube = Cube{edges = [], zips = []}
 
 edgeToPosition :: Edge -> [Position]
-edgeToPosition (E1{e1}) = [e1]
-edgeToPosition (E2{e1, e2}) = [e1, e2]
+edgeToPosition (E{e1, e2}) = [e1, e2]
 
-findEdge :: Int -> Map Position Field -> Position -> Maybe Edge
-findEdge near mf (x, y) =
+findByNeighboors :: Int -> Map Position Field -> Position -> Maybe Position
+findByNeighboors near mf (x, y) =
     if length (neighboors mf (x, y)) == near
-        then Just $ E1{e1 = (x, y)}
+        then Just (x, y)
         else Nothing
 
-isAngleEdge = findEdge 8 -- edge that needs 1 zips to complete
-isFlatEdge = findEdge 6 -- edge that needs 2 zips to complete
-isFloatingEdge = findEdge 4 -- edge that needs 3 zips to complete
-isEdge mf p = (any isJust . fmap (\f -> f mf p)) [isFloatingEdge, isFlatEdge, isAngleEdge, findEdge 7]
+isAngleEdge = findByNeighboors 8 -- edge that needs 1 zips to complete
+isFlatEdge = findByNeighboors 6 -- edge that needs 2 zips to complete
+isFloatingEdge = findByNeighboors 4 -- edge that needs 3 zips to complete
+isEdge mf p = (any isJust . fmap (\f -> f mf p)) [isFloatingEdge, isFlatEdge, isAngleEdge, findByNeighboors 7]
 
 perimeter mf = (filter (isEdge mf) . keys) mf
 cubeZips :: Cube -> [Position]
@@ -146,81 +147,92 @@ neighboors mf (x, y) = filter (`M.member` mf) [(a, b) | a <- [x - 1 .. x + 1], b
 missingNeighboors mf (x, y) = filter (`M.notMember` mf) [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]
 
 searchEdges :: Map Position Field -> [Edge]
-searchEdges mf = (mapMaybe (isAngleEdge mf) . keys) mf
+searchEdges mf = (fmap buildEdge . mapMaybe (isAngleEdge mf) . keys) mf
+  where
+    buildEdge :: Position -> Edge
+    buildEdge (x, y) =
+        let (nx, ny) = (bimap (\a -> a - x) (\b -> b - y) . head) $ missingNeighboors mf (x, y)
+         in E{e1 = (x, y + ny), e2 = (x + nx, y)}
 
 buildCube :: Map Position Field -> Int -> Cube -> [Edge] -> Cube
 buildCube mf faceSize c [] = c
 buildCube mf faceSize c (e : es) =
-    maybe
-        (buildCube mf faceSize c es)
-        ( \(e', zs) ->
-            let cube' =
-                    c
-                        { edges = edges c ++ [e]
-                        , zips = zips c ++ [zs]
-                        }
-             in if e' `notElem` edges cube'
-                    then buildCube mf faceSize cube' (es ++ [e'])
-                    else buildCube mf faceSize cube' es
-        )
+    maybe (buildCube mf faceSize c es) loop mayEdge
+  where
+    mayEdge =
+        -- trace (printf "debug: %s - %s" (show e) (show (edges c))) $ traceShowId $
         (zipFromEdge mf faceSize (edges c) e)
+    buildCube' zs = c{edges = edges c ++ [e], zips = zips c ++ [zs]}
+    recurseIf e' c' =
+        if e' `notElem` edges c
+            then buildCube mf faceSize c' (es ++ [e'])
+            else buildCube mf faceSize c' es
+    loop (e', zs) = recurseIf e' $ buildCube' zs
 
 zipFromEdge :: Map Position Field -> Int -> [Edge] -> Edge -> Maybe (Edge, ([Position], [Position]))
-zipFromEdge mf faceSize es e@(E1{e1 = p}) = do
-    nemaybe <- neighboorEdges mf faceSize es e
-    let [ne1, ne2] = nemaybe
-        zipEdges p' = [(x, y) | x <- [min (fst p) (fst p') .. max (fst p) (fst p')], y <- [min (snd p) (snd p') .. max (snd p) (snd p')]]
-        orderZip zs = if last zs == p then zs else reverse zs
-    return (E2{e1 = ne1, e2 = ne2}, ((orderZip . zipEdges) ne1, (orderZip . zipEdges) ne2))
-zipFromEdge mf faceSize es e@(E2{e1 = p, e2 = p'}) = do
-    nemaybe <- neighboorEdges mf faceSize es e
-    let [ne1, ne2] = nemaybe
-        zipEdges a b = [(x, y) | x <- [min (fst a) (fst b) .. max (fst a) (fst b)], y <- [min (snd a) (snd b) .. max (snd a) (snd b)]]
-        orderZip end zs = if last zs == end then zs else reverse zs
-    return
-        ( E2{e1 = ne1, e2 = ne2}
-        , ((orderZip p . zipEdges p) ne1, (orderZip p' . zipEdges p') ne2)
-        )
+zipFromEdge mf faceSize es e@(E{e1 = p, e2 = p'}) =
+    do
+        (inner1, mayOuter1) <- calculateEdges mf faceSize es p
+        (inner2, mayOuter2) <- calculateEdges mf faceSize es p'
+        let nextEdge = E{e1 = fromMaybe inner1 mayOuter1, e2 = fromMaybe inner2 mayOuter2}
+            zipEdges a b = [(x, y) | x <- [min (fst a) (fst b) .. max (fst a) (fst b)], y <- [min (snd a) (snd b) .. max (snd a) (snd b)]]
+            orderZip end zs = if last zs == end then zs else reverse zs
+        return (nextEdge, ((orderZip p . zipEdges p) inner1, (orderZip p' . zipEdges p') inner2))
 
-neighboorEdges :: Map Position Field -> Int -> [Edge] -> Edge -> Maybe [Position]
-neighboorEdges mf faceSize es (E1{e1}) =
-    ( -- (\xs -> if length xs == 2 then Just xs else Nothing)
-      Just
-        . filter (\p -> p `notElem` (concatMap (\(x, y) -> [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]) . concatMap edgeToPosition) es && M.member p mf)
-        . concatMap
-            ( \(x, y) ->
-                let offsetX = fst e1 + ((x - (fst e1)) * faceSize)
-                    offsetY = snd e1 + ((y - (snd e1)) * faceSize)
-                 in [(fst e1, offsetY), (offsetX, snd e1)]
-            )
-        . filter (\(x, y) -> x /= fst e1 && y /= snd e1)
-        . missingNeighboors mf
-    )
-        e1
-neighboorEdges mf faceSize es (E2{e1, e2}) = do
-    ps1' <- neighboorEdges mf faceSize es (E1{e1 = e1})
-    ps2' <- neighboorEdges mf faceSize es (E1{e1 = e2})
-    ps1 <- if null ps1' then neighboorEdges mf (faceSize - 1) es (E1{e1 = e1}) else Just ps1'
-    ps2 <- if null ps2' then neighboorEdges mf (faceSize - 1) es (E1{e1 = e2}) else Just ps2'
-    if (length . nub) (ps1 ++ ps2) /= 2
-        then Nothing -- error ("erroooor: " ++ (show (ps1 ++ ps2)) ++ " e1 " ++ show e1 ++ " e2 " ++ show e2)
-        else Just $ nub $ ps1 ++ ps2
+calculateEdges :: Map Position Field -> Int -> [Edge] -> Position -> Maybe (Position, Maybe Position)
+calculateEdges mf faceSize es e1 =
+    (\e -> (e, edges faceSize)) <$> edges (faceSize - 1)
+  where
+    diagonalMissingNeighboors = (filter (\(x, y) -> x /= fst e1 && y /= snd e1) . missingNeighboors mf) e1
+    computeEdgesFromDiagonalNeighboors step (x, y) =
+        let offsetX = ((x - (fst e1)) * step)
+            offsetY = ((y - (snd e1)) * step)
+         in [((fst e1, snd e1 + offsetY)), ((fst e1 + offsetX, snd e1))]
+    cleanUnwantedEdges filterEdgeF = (listToMaybe . filter filterEdgeF)
+    filterEdgeF p =
+        p `notElem` (concatMap (\(x, y) -> [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]) . concatMap edgeToPosition) es
+            && isEdge mf p
+    edges step = cleanUnwantedEdges filterEdgeF $ computeEdgesFromDiagonalNeighboors step =<< diagonalMissingNeighboors
 
 test = (buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
+test2 = ((\mf -> calculateEdges mf 50 [] (49, 150)) . fst) <$> input
 test1 = do
     (mf, ms) <- input
     let edges = searchEdges mf
         cube = buildCube mf 50 emptyCube edges
         ps = perimeter mf
-    return $ (cubeZips cube) \\ ps
-test2 = ((\mf -> neighboorEdges mf 50 [] E1{e1 = (49, 149)}) . fst) <$> input
-test3 = ((\\ perimeter (fst testInput)) . cubeZips . buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
+    return $ ps \\ (cubeZips cube)
+test3 = ((perimeter (fst testInput) \\) . cubeZips . buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
 
 twentySecondDecemberSolution2 :: IO Int
-twentySecondDecemberSolution2 = undefined
+twentySecondDecemberSolution2 = solution2 50 <$> input
 
---wrapAroundCube :: Map Position Field -> Cube -> Position -> Position -> (Position, Position)
-wrapAroundCube mf cube pos dir = undefined
+solution2 :: Int -> (Map Position Field, [Move]) -> Int
+solution2 faceSize (mf, ms) =
+    let edges = searchEdges mf
+        cube = buildCube mf faceSize emptyCube edges
+     in solution (mf, ms) (wrapAroundCube mf cube)
+
+wrapAroundCube :: Map Position Field -> Cube -> Position -> Position -> (Position, Position)
+wrapAroundCube mf cube pos dir =
+    (jumpToCubeFace, newDir)
+  where
+    prevPos = (fst pos - fst dir, snd pos + snd dir)
+    jumpToCubeFace' = mapMaybe selectElem (zips cube)
+    jumpToCubeFace = if null jumpToCubeFace' then error (printf "pos: %s - prevPos: %s - dir: %s" (show pos) (show prevPos) (show dir)) else head jumpToCubeFace'
+    newDir = ortogonalDirection mf jumpToCubeFace
+    selectElem (xs, ys)
+        | prevPos `elem` xs = (ys !!) <$> elemIndex prevPos xs
+        | prevPos `elem` ys = (xs !!) <$> elemIndex prevPos ys
+        | otherwise = Nothing
+
+ortogonalDirection :: Map Position Field -> Position -> Position
+ortogonalDirection mf (x, y)
+    | M.lookup (x + 1, y) mf == Nothing = (-1, 0)
+    | M.lookup (x - 1, y) mf == Nothing = (1, 0)
+    | M.lookup (x, y + 1) mf == Nothing = (0, 1)
+    | M.lookup (x, y - 1) mf == Nothing = (0, -1)
+    | otherwise = error $ "no blank space near " ++ show (x, y)
 
 parseInputWithMoves :: String -> (Map Position Field, [Move])
 parseInputWithMoves input =
