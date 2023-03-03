@@ -164,7 +164,7 @@ buildCube mf faceSize c (e : es) =
         (zipFromEdge mf faceSize (edges c) e)
     buildCube' zs = c{edges = edges c ++ [e], zips = zips c ++ [zs]}
     recurseIf e' c' =
-        if e' `notElem` edges c
+        if e' `notElem` edges c && not (isJust (isFloatingEdge mf (e1 e')) && (isJust (isFloatingEdge mf (e2 e'))))
             then buildCube mf faceSize c' (es ++ [e'])
             else buildCube mf faceSize c' es
     loop (e', zs) = recurseIf e' $ buildCube' zs
@@ -204,6 +204,7 @@ test1 = do
     return $ ps \\ (cubeZips cube)
 test3 = ((perimeter (fst testInput) \\) . cubeZips . buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
 
+-- 119103 too low
 twentySecondDecemberSolution2 :: IO Int
 twentySecondDecemberSolution2 = solution2 50 <$> input
 
