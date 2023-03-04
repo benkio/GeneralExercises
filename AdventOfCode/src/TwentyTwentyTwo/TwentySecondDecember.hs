@@ -1,18 +1,78 @@
 module TwentyTwentyTwo.TwentySecondDecember where
 
-import Data.Bifunctor (bimap, first, second)
+import Control.Arrow ((&&&))
 import Data.Char (isDigit)
-import Data.List (elemIndex, find, groupBy, intersperse, nub, sort, (\\))
-import Data.List.Split
-import Data.Map (Map, alter, empty, fromList, keys, toList, (!))
-import qualified Data.Map as M (filter, lookup, member, notMember)
-import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
+import Data.List (find)
+import Data.Map (Map, fromList, keys, member, (!?))
+import Data.Maybe (mapMaybe)
 import Debug.Trace
 import Text.Printf
 
 data Field = Empty | Wall deriving (Eq, Show)
 type Position = (Int, Int)
-data Move = L | R | Move Int deriving (Eq, Show)
+data Move = ML | MR | M Int deriving (Eq, Show)
+data Direction = R | D | L | U deriving (Show, Enum)
+
+directionPassword :: Direction -> Int
+directionPassword R = 0
+directionPassword D = 1
+directionPassword L = 2
+directionPassword U = 3
+
+moveInDirection :: Position -> Direction -> Position
+moveInDirection (x, y) R = (x + 1, y)
+moveInDirection (x, y) L = (x - 1, y)
+moveInDirection (x, y) U = (x, y - 1)
+moveInDirection (x, y) D = (x, y + 1)
+
+startingPoint :: Map Position Field -> (Position, Direction)
+startingPoint mf = head $ mapMaybe (\x -> const ((x, 0), R) <$> mf !? (x, 0)) [0 ..]
+
+applyMoves :: Map Position Field -> [Move] -> (Position -> Direction -> (Position, Direction)) -> Position -> Direction -> (Position, Direction)
+applyMoves _ [] wrapF pos dir = (pos, dir)
+applyMoves mf (m : ms) wrapF pos dir = applyMoves mf ms wrapF newPos newDir
+  where
+    (newPos, newDir) =
+        applyMove mf m wrapF pos dir
+
+applyMove :: Map Position Field -> Move -> (Position -> Direction -> (Position, Direction)) -> Position -> Direction -> (Position, Direction)
+applyMove _ ML wrapF pos R = (pos, U)
+applyMove _ MR wrapF pos U = (pos, R)
+applyMove _ ML wrapF pos dir = (pos, pred dir)
+applyMove _ MR wrapF pos dir = (pos, succ dir)
+applyMove mf (M steps) wrapF pos dir
+    | steps == 0 || (checkCollision . fst) nextStep = (pos, dir)
+    | otherwise = uncurry (applyMove mf (M (steps - 1)) wrapF) $ nextStep
+  where
+    nextStep = uncurry wrapF (moveInDirection pos dir, dir)
+    checkCollision p = mf !? p == Just Wall
+
+wrapPos :: Map Position Field -> Position -> Direction -> (Position, Direction)
+wrapPos mf p R = maybe (((fst . (`rowBounds` mf) . snd) p, snd p), R) (const (p, R)) $ mf !? p
+wrapPos mf p L = maybe (((snd . (`rowBounds` mf) . snd) p, snd p), L) (const (p, L)) $ mf !? p
+wrapPos mf p D = maybe ((fst p, (fst . (`colBounds` mf) . fst) p), D) (const (p, D)) $ mf !? p
+wrapPos mf p U = maybe ((fst p, (snd . (`colBounds` mf) . fst) p), U) (const (p, U)) $ mf !? p
+
+rowBounds :: Int -> Map Position Field -> (Int, Int)
+rowBounds row = (minimum &&& maximum) . fmap fst . filter ((== row) . snd) . keys
+colBounds :: Int -> Map Position Field -> (Int, Int)
+colBounds col = (minimum &&& maximum) . fmap snd . filter ((== col) . fst) . keys
+
+calculatePassword :: Position -> Direction -> Int
+calculatePassword (x, y) d = directionPassword d + 4 * (x + 1) + 1000 * (y + 1)
+
+solution :: (Position -> Direction -> (Position, Direction)) -> Map Position Field -> [Move] -> Int
+solution wrapF mf ms = uncurry calculatePassword $ applyMoves mf ms wrapF sp d
+  where
+    (sp, d) = startingPoint mf
+
+twentySecondDecemberSolution1 :: IO Int
+twentySecondDecemberSolution1 = (\(mf, ms) -> solution (wrapPos mf) mf ms) <$> input
+
+-- 119103 too low
+-- 129339 correct - final tile (83,128)
+twentySecondDecemberSolution2 :: IO Int
+twentySecondDecemberSolution2 = undefined
 
 input :: IO (Map Position Field, [Move])
 input = parseInputWithMoves <$> readFile "input/2022/22December.txt"
@@ -35,212 +95,6 @@ testInput =
         \\n\
         \10R5L5R10L4R5L5"
 
-applyMoves :: Map Position Field -> (Position -> Position -> (Position, Position)) -> [Move] -> (Position, Position)
-applyMoves fieldMap wrapFunc moves =
-    let startPos = findStartPos fieldMap
-     in applyMovesHelper fieldMap wrapFunc moves startPos (1, 0)
-
-findStartPos :: Map Position Field -> Position
-findStartPos fieldMap =
-    let ((minX, _), (maxX, _)) = bounds fieldMap
-     in fromJust $ find (isJust . (`M.lookup` fieldMap)) [(x, 0) | x <- [minX .. maxX]]
-
-applyMovesHelper :: Map Position Field -> (Position -> Position -> (Position, Position)) -> [Move] -> Position -> Position -> (Position, Position)
-applyMovesHelper fieldMap wrapFunc [] curPos dir = (curPos, dir)
-applyMovesHelper fieldMap wrapFunc (move : rest) curPos dir =
-    case move of
-        L -> applyMovesHelper fieldMap wrapFunc rest curPos (rotateLeft dir)
-        R -> applyMovesHelper fieldMap wrapFunc rest curPos (rotateRight dir)
-        Move n ->
-            let (newPos, newDir) = moveSteps fieldMap wrapFunc (curPos, dir) curPos dir n
-             in applyMovesHelper fieldMap wrapFunc rest newPos newDir
-  where
-    rotateLeft :: Position -> Position
-    rotateLeft (x, y) = (-y, x)
-
-    rotateRight :: Position -> Position
-    rotateRight (x, y) = (y, -x)
-
-moveSteps :: Map Position Field -> (Position -> Position -> (Position, Position)) -> (Position, Position) -> Position -> Position -> Int -> (Position, Position)
-moveSteps fieldMap wrapFunction (prevPos, prevDir) pos dir n
-    | val == Just Wall = (prevPos, prevDir)
-    | isNothing val = moveSteps fieldMap wrapFunction (prevPos, prevDir) posWrapped newDir n
-    | n == 0 = (pos, dir)
-    | otherwise = moveSteps fieldMap wrapFunction (pos, dir) (addPos pos dir) dir (n - 1)
-  where
-    val = M.lookup pos fieldMap
-    (posWrapped, newDir) =
-        -- trace (printf "prevPos: %s %"s (show pos) (show dir)) $ traceShowId $
-        wrapFunction pos dir
-    addPos :: Position -> Position -> Position
-    addPos (x1, y1) (x2, y2) = (x1 + x2, y1 - y2)
-
-wrapAround :: Map Position Field -> Position -> Position -> (Position, Position)
-wrapAround fm (_, y) dir@(1, 0) = ((fst (boundsByRow y fm), y), dir)
-wrapAround fm (_, y) dir@(-1, 0) = ((snd (boundsByRow y fm), y), dir)
-wrapAround fm (x, _) dir@(0, 1) = ((x, snd (boundsByColumn x fm)), dir)
-wrapAround fm (x, _) dir@(0, -1) = ((x, fst (boundsByColumn x fm)), dir)
-
-bounds :: Map Position Field -> ((Int, Int), (Int, Int))
-bounds fieldMap =
-    let xs = map fst $ keys fieldMap
-        ys = map snd $ keys fieldMap
-     in ((minimum xs, minimum ys), (maximum xs, maximum ys))
-
-boundsByRow :: Int -> Map Position Field -> (Int, Int)
-boundsByRow row = boundsBy (\(x, y) -> y == row) fst
-
-boundsByColumn :: Int -> Map Position Field -> (Int, Int)
-boundsByColumn column = boundsBy (\(x, y) -> x == column) snd
-
-boundsBy :: (Position -> Bool) -> (Position -> Int) -> Map Position Field -> (Int, Int)
-boundsBy fil sel fieldMap =
-    let rowPositions = filter fil $ keys fieldMap
-        minPos = minimum rowPositions
-        maxPos = maximum rowPositions
-     in (sel minPos, sel maxPos)
-
-solution :: (Map Position Field, [Move]) -> (Position -> Position -> (Position, Position)) -> Int
-solution (mf, ms) wrapFunc = uncurry calculatePassword $ applyMoves mf wrapFunc ms
-  where
-    calculatePassword (x, y) dir = trace (printf "finalTile: %s" (show (x, y))) $ (y + 1) * 1000 + (x + 1) * 4 + directionValue dir
-    directionValue (1, 0) = 0
-    directionValue (-1, 0) = 2
-    directionValue (0, 1) = 3
-    directionValue (0, -1) = 1
-
-twentySecondDecemberSolution1 :: IO Int
-twentySecondDecemberSolution1 = (\(mf, ms) -> solution (mf, ms) (wrapAround mf)) <$> input
-
-data Edge = E {e1 :: Position, e2 :: Position}
-
-instance Eq Edge where
-    (==) e1 e2 = (sort . edgeToPosition) e1 == (sort . edgeToPosition) e2
-instance Show Edge where
-    show (E{e1 = e, e2 = e'}) = printf "E %s - %s" (show e) (show e')
-
-data Cube = Cube
-    { edges :: [Edge]
-    , zips :: [([Position], [Position])]
-    }
-    deriving (Show)
-
-emptyCube :: Cube
-emptyCube = Cube{edges = [], zips = []}
-
-edgeToPosition :: Edge -> [Position]
-edgeToPosition (E{e1, e2}) = [e1, e2]
-
-findByNeighboors :: Int -> Map Position Field -> Position -> Maybe Position
-findByNeighboors near mf (x, y) =
-    if length (neighboors mf (x, y)) == near
-        then Just (x, y)
-        else Nothing
-
-isAngleEdge = findByNeighboors 8 -- edge that needs 1 zips to complete
-isFlatEdge = findByNeighboors 6 -- edge that needs 2 zips to complete
-isFloatingEdge = findByNeighboors 4 -- edge that needs 3 zips to complete
-isEdge mf p = (any isJust . fmap (\f -> f mf p)) [isFloatingEdge, isFlatEdge, isAngleEdge, findByNeighboors 7]
-
-perimeter mf = (filter (isEdge mf) . keys) mf
-cubeZips :: Cube -> [Position]
-cubeZips = nub . concat . uncurry (++) . unzip . zips
-
-neighboors mf (x, y) = filter (`M.member` mf) [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]
-missingNeighboors mf (x, y) = filter (`M.notMember` mf) [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]
-
-searchEdges :: Map Position Field -> [Edge]
-searchEdges mf = (fmap buildEdge . mapMaybe (isAngleEdge mf) . keys) mf
-  where
-    buildEdge :: Position -> Edge
-    buildEdge (x, y) =
-        let (nx, ny) = (bimap (\a -> a - x) (\b -> b - y) . head) $ missingNeighboors mf (x, y)
-         in E{e1 = (x, y + ny), e2 = (x + nx, y)}
-
-buildCube :: Map Position Field -> Int -> Cube -> [Edge] -> Cube
-buildCube mf faceSize c [] = c
-buildCube mf faceSize c (e : es) =
-    maybe (buildCube mf faceSize c es) loop mayEdge
-  where
-    mayEdge =
-        -- trace (printf "debug: %s - %s" (show e) (show (edges c))) $ traceShowId $
-        zipFromEdge mf faceSize (edges c) e
-    buildCube' zs = c{edges = edges c ++ [e], zips = zips c ++ [zs]}
-    recurseIf e' c' =
-        if e' `notElem` edges c && not (isJust (isFloatingEdge mf (e1 e')) && isJust (isFloatingEdge mf (e2 e')))
-            then buildCube mf faceSize c' (es ++ [e'])
-            else buildCube mf faceSize c' es
-    loop (e', zs) = recurseIf e' $ buildCube' zs
-
-zipFromEdge :: Map Position Field -> Int -> [Edge] -> Edge -> Maybe (Edge, ([Position], [Position]))
-zipFromEdge mf faceSize es e@(E{e1 = p, e2 = p'}) =
-    do
-        (inner1, mayOuter1) <- calculateEdges mf faceSize es p
-        (inner2, mayOuter2) <- calculateEdges mf faceSize es p'
-        let nextEdge = E{e1 = fromMaybe inner1 mayOuter1, e2 = fromMaybe inner2 mayOuter2}
-            zipEdges a b = [(x, y) | x <- [min (fst a) (fst b) .. max (fst a) (fst b)], y <- [min (snd a) (snd b) .. max (snd a) (snd b)]]
-            orderZip end zs = if last zs == end then zs else reverse zs
-        return (nextEdge, ((orderZip p . zipEdges p) inner1, (orderZip p' . zipEdges p') inner2))
-
-calculateEdges :: Map Position Field -> Int -> [Edge] -> Position -> Maybe (Position, Maybe Position)
-calculateEdges mf faceSize es e1 =
-    (,edges faceSize) <$> edges (faceSize - 1)
-  where
-    diagonalMissingNeighboors = (filter (\(x, y) -> x /= fst e1 && y /= snd e1) . missingNeighboors mf) e1
-    computeEdgesFromDiagonalNeighboors step (x, y) =
-        let offsetX = ((x - fst e1) * step)
-            offsetY = ((y - snd e1) * step)
-         in [(fst e1, snd e1 + offsetY), (fst e1 + offsetX, snd e1)]
-    filterEdgeF p =
-        p `notElem` (concatMap (\(x, y) -> [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1]]) . concatMap edgeToPosition) es
-            && isEdge mf p
-    edges step = find filterEdgeF $ computeEdgesFromDiagonalNeighboors step =<< diagonalMissingNeighboors
-
-test = (buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
-test2 = (\mf -> calculateEdges mf 50 [] (49, 150)) . fst <$> input
-test1 = do
-    (mf, ms) <- input
-    let edges = searchEdges mf
-        cube = buildCube mf 50 emptyCube edges
-        ps = perimeter mf
-    return $ ps \\ cubeZips cube
-test3 = ((perimeter (fst testInput) \\) . cubeZips . buildCube (fst testInput) 4 emptyCube . searchEdges . fst) testInput
-
--- 119103 too low
--- 129339 correct - final tile (83,128)
-twentySecondDecemberSolution2 :: IO Int
-twentySecondDecemberSolution2 = solution2 50 <$> input
-
-solution2 :: Int -> (Map Position Field, [Move]) -> Int
-solution2 faceSize (mf, ms) =
-    let edges = searchEdges mf
-        cube = traceShowId $ buildCube mf faceSize emptyCube edges
-     in solution (mf, ms) (wrapAroundCube mf cube)
-
-wrapAroundCube :: Map Position Field -> Cube -> Position -> Position -> (Position, Position)
-wrapAroundCube mf cube pos dir =
-    (jumpToCubeFace, newDir)
-  where
-    prevPos = bimap (fst pos -) (snd pos +) dir
-    jumpToCubeFace' = mapMaybe selectElem (zips cube)
-    jumpToCubeFace =
-        if null jumpToCubeFace' -- length jumpToCubeFace' /= 1
-            then error (printf "pos: %s - prevPos: %s - dir: %s" (show pos) (show prevPos) (show dir))
-            else head jumpToCubeFace'
-    newDir = ortogonalDirection mf jumpToCubeFace
-    selectElem (xs, ys)
-        | prevPos `elem` xs = (ys !!) <$> elemIndex prevPos xs
-        | prevPos `elem` ys = (xs !!) <$> elemIndex prevPos ys
-        | otherwise = Nothing
-
-ortogonalDirection :: Map Position Field -> Position -> Position
-ortogonalDirection mf (x, y)
-    | isNothing (M.lookup (x + 1, y) mf) = (-1, 0)
-    | isNothing (M.lookup (x - 1, y) mf) = (1, 0)
-    | isNothing (M.lookup (x, y + 1) mf) = (0, 1)
-    | isNothing (M.lookup (x, y - 1) mf) = (0, -1)
-    | otherwise = error $ "no blank space near " ++ show (x, y)
-
 parseInputWithMoves :: String -> (Map Position Field, [Move])
 parseInputWithMoves input =
     let (inputLines, _) = break null (lines input)
@@ -259,32 +113,15 @@ parseMoves :: String -> [Move]
 parseMoves [] = []
 parseMoves (x : xs) =
     case x of
-        'L' -> L : parseMoves xs
-        'R' -> R : parseMoves xs
+        'L' -> ML : parseMoves xs
+        'R' -> MR : parseMoves xs
         _ ->
             let (numStr, rest) = span isDigit (x : xs)
                 num = read numStr
-             in Move num : parseMoves rest
+             in M num : parseMoves rest
 
 parseCell :: Char -> Maybe Field
 parseCell '.' = Just Empty
 parseCell '#' = Just Wall
 parseCell ' ' = Nothing
 parseCell _ = error "Invalid character in input"
-
-cellToChar :: Field -> Char
-cellToChar Empty = '.'
-cellToChar Wall = '#'
-
-reconstructInput :: Map Position Field -> String
-reconstructInput fieldMap =
-    let maxX = maximum $ map fst $ keys fieldMap
-        maxY = maximum $ map snd $ keys fieldMap
-        charForPosition pos@(x, y) =
-            if M.member pos fieldMap
-                then case fieldMap ! pos of
-                    Empty -> '.'
-                    Wall -> '#'
-                else ' '
-        lines' = [[charForPosition (x, y) | x <- [0 .. maxX]] | y <- [0 .. maxY]]
-     in unlines lines'
