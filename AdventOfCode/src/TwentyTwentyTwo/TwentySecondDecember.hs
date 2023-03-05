@@ -1,17 +1,23 @@
 module TwentyTwentyTwo.TwentySecondDecember where
 
+import Control.Applicative (Alternative ((<|>)))
 import Control.Arrow ((&&&))
+import Data.Bifunctor (bimap)
 import Data.Char (isDigit)
-import Data.List (find)
-import Data.Map (Map, fromList, keys, member, (!?))
-import Data.Maybe (mapMaybe)
+import Data.Functor ((<&>))
+import Data.List (cycle, delete, elemIndex, find, minimumBy, nub, nubBy, partition, (\\))
+import Data.Map (Map, fromList, keys, member, notMember, (!), (!?))
+import Data.Maybe (fromJust, isJust, mapMaybe, maybeToList)
 import Debug.Trace
 import Text.Printf
 
 data Field = Empty | Wall deriving (Eq, Show)
 type Position = (Int, Int)
 data Move = ML | MR | M Int deriving (Eq, Show)
-data Direction = R | D | L | U deriving (Show, Enum)
+data Direction = R | D | L | U deriving (Show, Enum, Eq, Ord)
+
+directions :: [Direction]
+directions = enumFrom R
 
 directionPassword :: Direction -> Int
 directionPassword R = 0
@@ -68,6 +74,115 @@ solution wrapF mf ms = uncurry calculatePassword $ applyMoves mf ms wrapF sp d
 
 twentySecondDecemberSolution1 :: IO Int
 twentySecondDecemberSolution1 = (\(mf, ms) -> solution (wrapPos mf) mf ms) <$> input
+
+data AnglePosition = TL | TR | BL | BR
+
+data Vertex = Vertex {v1 :: Position, v2 :: Position, v3 :: Position} | IncompleteVertex {v1 :: Position, v2 :: Position} deriving (Show)
+newtype Face = Face {angles :: [Position]} deriving (Show)
+data Cube = Cube {faces :: [Face], vertexes :: [Vertex]} deriving (Show)
+
+instance Eq Face where
+    (==) f1 f2 = all (`elem` angles f2) (angles f1) && all (`elem` angles f1) (angles f2)
+instance Eq Vertex where
+    (==) v1 v2 = all (`elem` vertexToPoint v2) (vertexToPoint v1) && all (`elem` vertexToPoint v1) (vertexToPoint v2)
+
+vertexToPoint (Vertex{v1 = v', v2 = v'', v3 = v'''}) = [v', v'', v''']
+vertexToPoint (IncompleteVertex{v1 = v', v2 = v''}) = [v', v'']
+vertexIsIncomplete (IncompleteVertex{}) = True
+vertexIsIncomplete _ = False
+findKey :: Map Position Field -> Position -> Maybe Position
+findKey mf k = mf !? k <&> const k
+
+mergeIncompleteVertexes cvs [] = cvs
+mergeIncompleteVertexes cvs (v : vs)
+    | any (\cv -> all (`elem` (vertexToPoint cv)) (vertexToPoint v)) cvs = mergeIncompleteVertexes cvs vs
+    | isJust findOverlap =
+        let newVertexPositions = (fromJust . fmap (\x -> nub (vertexToPoint x ++ vertexToPoint v))) findOverlap
+            newVertex = Vertex{v1 = newVertexPositions !! 0, v2 = newVertexPositions !! 1, v3 = newVertexPositions !! 2}
+            vs' = ((\x -> delete x vs) . fromJust) findOverlap
+         in newVertex : mergeIncompleteVertexes cvs vs'
+    | otherwise = v : mergeIncompleteVertexes cvs vs
+  where
+    findOverlap = find (\x -> any (`elem` vertexToPoint x) (vertexToPoint v)) vs
+
+findEdge :: Map Position Field -> Int -> Position -> Bool
+findEdge mf target (x, y) = ((== target) . length) $ keyAnglePattern
+  where
+    keyAnglePattern = filter (`member` mf) [(a, b) | a <- [(x - 1) .. (x + 1)], b <- [(y - 1) .. (y + 1)]]
+
+buildPartialCubes :: Map Position Field -> Int -> [Cube]
+buildPartialCubes mf faceSize = (fmap toPartialCube . filter (findEdge mf 8) . keys) mf
+  where
+    toPartialCube (x, y)
+        | (x - 1, y - 1) `notMember` mf = Cube{vertexes = buildVertexes (x, y) ((-1), (-1)), faces = [buildFace faceSize (x, y) TL, buildFace faceSize (x - 1, y) TR, buildFace faceSize (x, y - 1) BL]}
+        | (x + 1, y - 1) `notMember` mf = Cube{vertexes = buildVertexes (x, y) (1, (-1)), faces = [buildFace faceSize (x, y) TR, buildFace faceSize (x + 1, y) TL, buildFace faceSize (x, y - 1) BR]}
+        | (x - 1, y + 1) `notMember` mf = Cube{vertexes = buildVertexes (x, y) ((-1), 1), faces = [buildFace faceSize (x, y) BL, buildFace faceSize (x - 1, y) BR, buildFace faceSize (x, y + 1) TL]}
+        | (x + 1, y + 1) `notMember` mf = Cube{vertexes = buildVertexes (x, y) (1, 1), faces = [buildFace faceSize (x, y) BR, buildFace faceSize (x + 1, y) BL, buildFace faceSize (x, y + 1) TR]}
+    buildVertexes (x, y) (dx, dy) =
+        [ Vertex{v1 = (x, y), v2 = (x + (signum dx), y), v3 = (x, y + (signum dy))}
+        , IncompleteVertex{v1 = (x, y + (faceSize - 1) * (negate (signum dy))), v2 = (x + (signum dx), y + (faceSize - 1) * (negate (signum dy)))}
+        , IncompleteVertex{v1 = (x + (faceSize - 1) * (negate (signum dx)), y), v2 = (x + (faceSize - 1) * (negate (signum dx)), y + (signum dy))}
+        ]
+            ++ checkAdjacentVertex (dx, dy) (IncompleteVertex{v1 = (x + (faceSize * signum dx), y), v2 = (x, y + (faceSize * signum dy))})
+    checkAdjacentVertex :: Position -> Vertex -> [Vertex]
+    checkAdjacentVertex _ v@(Vertex{}) = [v]
+    checkAdjacentVertex (dx, dy) v@(IncompleteVertex{v1 = (v1x, v1y), v2 = (v2x, v2y)})
+        | isJust adjectVertex1 =
+            let (nvx1, nvy1) = fromJust adjectVertex1
+                complete = Vertex{v1 = (v1x, v1y), v2 = (v2x, v2y), v3 = (nvx1, nvy1)}
+                nextIncomplete = IncompleteVertex{v1 = (nvx1 + ((faceSize - 1) * signum dx), nvy1), v2 = (v2x + ((faceSize - 1) * negate (signum dx)), v2y)}
+             in [complete, nextIncomplete]
+        | isJust adjectVertex2 =
+            let (nvx2, nvy2) = fromJust adjectVertex2
+                complete = Vertex{v1 = (v1x, v1y), v2 = (v2x, v2y), v3 = (nvx2, nvy2)}
+                nextIncomplete = IncompleteVertex{v1 = (v1x, v1y + ((faceSize - 1) * negate (signum dy))), v2 = (nvx2, nvy2 + ((faceSize - 1) * signum dy))}
+             in [complete, nextIncomplete]
+        | otherwise = [v]
+      where
+        adjectVertex1 = (mf `findKey` (v1x + dx, v1y)) <|> (mf `findKey` (v1x, v1y + dy))
+        adjectVertex2 = (mf `findKey` (v2x + dx, v2y)) <|> (mf `findKey` (v2x, v2y + dy))
+
+buildFaceAngles :: Int -> Position -> AnglePosition -> [Position]
+buildFaceAngles faceSize (x, y) TL = [(x, y), (x + (faceSize - 1), y), (x + (faceSize - 1), y + (faceSize - 1)), (x, y + (faceSize - 1))]
+buildFaceAngles faceSize (x, y) TR = [(x - (faceSize - 1), y), (x, y), (x, y + (faceSize - 1)), (x - (faceSize - 1), y + (faceSize - 1))]
+buildFaceAngles faceSize (x, y) BR = [(x - (faceSize - 1), y - (faceSize - 1)), (x, y - (faceSize - 1)), (x, y), (x - (faceSize - 1), y)]
+buildFaceAngles faceSize (x, y) BL = [(x, y - (faceSize - 1)), (x + (faceSize - 1), y - (faceSize - 1)), (x + (faceSize - 1), y), (x, y)]
+
+buildFace :: Int -> Position -> AnglePosition -> Face
+buildFace faceSize p pos = Face{angles = [tr, tl, br, bl]}
+  where
+    [tl, tr, br, bl] = buildFaceAngles faceSize p pos
+
+mergeCubes :: Cube -> [Cube] -> Cube
+mergeCubes c [] = c
+mergeCubes cube (c : cs) = mergeCubes c' cs
+  where
+    mergedFaces = nub $ faces cube ++ faces c
+    (incompleteVertexes, completeVertexes) = partition vertexIsIncomplete $ vertexes cube ++ vertexes c
+    c' = Cube{vertexes = mergeIncompleteVertexes completeVertexes (nub incompleteVertexes), faces = mergedFaces}
+
+findLastVertex :: Cube -> Cube
+findLastVertex c =
+    if ((== 7) . length) completeVertexes
+        then c{vertexes = lostVertex : ((filter (not . vertexIsIncomplete) . vertexes) c)}
+        else c
+  where
+    es = (concatMap angles . faces) c
+    completeVertexes = (filter (not . vertexIsIncomplete) . vertexes) c
+    vs = concatMap vertexToPoint completeVertexes
+    [v', v'', v'''] = es \\ vs
+    lostVertex = Vertex{v1 = v', v2 = v'', v3 = v'''}
+
+test = cube
+  where
+    faceSize = 4
+    partialCube = (!! 1) $ buildPartialCubes (fst testInput) faceSize
+    cube = (\cs -> mergeCubes (head cs) (tail cs)) $ buildPartialCubes (fst testInput) faceSize
+test2 = do
+    (mf, ms) <- input
+    let faceSize = 50
+        cube = ((\cs -> mergeCubes (head cs) (tail cs))) (buildPartialCubes mf faceSize)
+    return $ findLastVertex cube -- (buildPartialCubes mf faceSize)
 
 -- 119103 too low
 -- 129339 correct - final tile (83,128)
