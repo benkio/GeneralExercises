@@ -34,14 +34,14 @@ moveInDirection (x, y) D = (x, y + 1)
 startingPoint :: Map Position Field -> (Position, Direction)
 startingPoint mf = head $ mapMaybe (\x -> const ((x, 0), R) <$> mf !? (x, 0)) [0 ..]
 
-applyMoves :: Map Position Field -> [Move] -> (Position -> Direction -> (Position, Direction)) -> Position -> Direction -> (Position, Direction)
+applyMoves :: Map Position Field -> [Move] -> (Position -> Position -> Direction -> (Position, Direction)) -> Position -> Direction -> (Position, Direction)
 applyMoves _ [] wrapF pos dir = (pos, dir)
 applyMoves mf (m : ms) wrapF pos dir = applyMoves mf ms wrapF newPos newDir
   where
     (newPos, newDir) =
         applyMove mf m wrapF pos dir
 
-applyMove :: Map Position Field -> Move -> (Position -> Direction -> (Position, Direction)) -> Position -> Direction -> (Position, Direction)
+applyMove :: Map Position Field -> Move -> (Position -> Position -> Direction -> (Position, Direction)) -> Position -> Direction -> (Position, Direction)
 applyMove _ ML wrapF pos R = (pos, U)
 applyMove _ MR wrapF pos U = (pos, R)
 applyMove _ ML wrapF pos dir = (pos, pred dir)
@@ -50,14 +50,14 @@ applyMove mf (M steps) wrapF pos dir
     | steps == 0 || (checkCollision . fst) nextStep = (pos, dir)
     | otherwise = uncurry (applyMove mf (M (steps - 1)) wrapF) $ nextStep
   where
-    nextStep = uncurry wrapF (moveInDirection pos dir, dir)
+    nextStep = uncurry (wrapF pos) (moveInDirection pos dir, dir)
     checkCollision p = mf !? p == Just Wall
 
-wrapPos :: Map Position Field -> Position -> Direction -> (Position, Direction)
-wrapPos mf p R = maybe (((fst . (`rowBounds` mf) . snd) p, snd p), R) (const (p, R)) $ mf !? p
-wrapPos mf p L = maybe (((snd . (`rowBounds` mf) . snd) p, snd p), L) (const (p, L)) $ mf !? p
-wrapPos mf p D = maybe ((fst p, (fst . (`colBounds` mf) . fst) p), D) (const (p, D)) $ mf !? p
-wrapPos mf p U = maybe ((fst p, (snd . (`colBounds` mf) . fst) p), U) (const (p, U)) $ mf !? p
+wrapPos :: Map Position Field -> Position -> Position -> Direction -> (Position, Direction)
+wrapPos mf _ p R = maybe (((fst . (`rowBounds` mf) . snd) p, snd p), R) (const (p, R)) $ mf !? p
+wrapPos mf _ p L = maybe (((snd . (`rowBounds` mf) . snd) p, snd p), L) (const (p, L)) $ mf !? p
+wrapPos mf _ p D = maybe ((fst p, (fst . (`colBounds` mf) . fst) p), D) (const (p, D)) $ mf !? p
+wrapPos mf _ p U = maybe ((fst p, (snd . (`colBounds` mf) . fst) p), U) (const (p, U)) $ mf !? p
 
 rowBounds :: Int -> Map Position Field -> (Int, Int)
 rowBounds row = (minimum &&& maximum) . fmap fst . filter ((== row) . snd) . keys
@@ -67,7 +67,7 @@ colBounds col = (minimum &&& maximum) . fmap snd . filter ((== col) . fst) . key
 calculatePassword :: Position -> Direction -> Int
 calculatePassword (x, y) d = directionPassword d + 4 * (x + 1) + 1000 * (y + 1)
 
-solution :: (Position -> Direction -> (Position, Direction)) -> Map Position Field -> [Move] -> Int
+solution :: (Position -> Position -> Direction -> (Position, Direction)) -> Map Position Field -> [Move] -> Int
 solution wrapF mf ms = uncurry calculatePassword $ applyMoves mf ms wrapF sp d
   where
     (sp, d) = startingPoint mf
@@ -239,6 +239,15 @@ connectFaces c cfront@(CompleteFace{tr = ftr, tl = ftl, br = fbr, bl = fbl}) =
     cleft = CompleteFace{tl = clefttl, tr = ftl, br = fbl, bl = cleftbl}
     cback = CompleteFace{tl = cbottomtl, tr = cbottomtr, br = ctoptr, bl = ctoptl}
 
+wrapPosCube :: CompleteCube -> Map Position Field -> Position -> Position -> Direction -> (Position, Direction)
+wrapPosCube c mf prevP p d = maybe (wrapAroundCube c prevP d) (const (p, d)) $ mf !? p
+
+wrapAroundCube :: CompleteCube -> Position -> Direction -> (Position, Direction)
+wrapAroundCube c prevP R = undefined
+wrapAroundCube c prevP L = undefined
+wrapAroundCube c prevP D = undefined
+wrapAroundCube c prevP U = undefined
+
 test = connectFaces cube cfront
   where
     faceSize = 4
@@ -255,7 +264,13 @@ test2 = do
 -- 119103 too low
 -- 129339 correct - final tile (83,128)
 twentySecondDecemberSolution2 :: IO Int
-twentySecondDecemberSolution2 = undefined
+twentySecondDecemberSolution2 = do
+    (mf, ms) <- input
+    let faceSize = 50
+        cube = (findLastVertex . (\cs -> mergeCubes (head cs) (tail cs))) (buildPartialCubes mf faceSize)
+        cfront = completeFace cube (head (faces cube))
+        completeCube = connectFaces cube cfront
+    return $ solution (wrapPosCube completeCube mf) mf ms
 
 input :: IO (Map Position Field, [Move])
 input = parseInputWithMoves <$> readFile "input/2022/22December.txt"
