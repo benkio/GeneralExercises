@@ -2,12 +2,12 @@ module TwentyTwentyTwo.TwentySecondDecember where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Arrow ((&&&))
-import Data.Bifunctor (bimap)
+import Data.Bifunctor (bimap, first)
 import Data.Char (isDigit)
 import Data.Functor ((<&>))
-import Data.List (cycle, delete, elemIndex, find, minimumBy, nub, nubBy, partition, (\\))
+import Data.List (cycle, delete, elemIndex, find, minimumBy, notElem, nub, nubBy, partition, (\\))
 import Data.Map (Map, fromList, keys, member, notMember, (!), (!?))
-import Data.Maybe (fromJust, isJust, mapMaybe, maybeToList)
+import Data.Maybe (fromJust, fromMaybe, isJust, listToMaybe, mapMaybe, maybeToList)
 import Debug.Trace
 import Text.Printf
 
@@ -81,10 +81,10 @@ data Vertex = Vertex {v1 :: Position, v2 :: Position, v3 :: Position} | Incomple
 newtype Face = Face {angles :: [Position]} deriving (Show)
 data Cube = Cube {faces :: [Face], vertexes :: [Vertex]} deriving (Show)
 data CompleteFace = CompleteFace -- tl, tr, br, bl
-    { tl :: Vertex
-    , tr :: Vertex
-    , br :: Vertex
-    , bl :: Vertex
+    { tl :: (Position, Vertex)
+    , tr :: (Position, Vertex)
+    , br :: (Position, Vertex)
+    , bl :: (Position, Vertex)
     }
     deriving (Show)
 data CompleteCube = CompleteCube
@@ -108,6 +108,13 @@ vertexIsIncomplete (IncompleteVertex{}) = True
 vertexIsIncomplete _ = False
 findKey :: Map Position Field -> Position -> Maybe Position
 findKey mf k = mf !? k <&> const k
+completeFaceAngles cf = [(fst . tl) cf, (fst . tr) cf, (fst . br) cf, (fst . bl) cf]
+completeFaceVertexes cf = [(snd . tl) cf, (snd . tr) cf, (snd . br) cf, (snd . bl) cf]
+completeFaceEdges = genEdges . completeFaceAngles
+  where
+    genEdges [] = []
+    genEdges ((x, y) : xs) = ((fmap (\(x', y') -> [(a, b) | a <- [min x x' .. max x x'], b <- [min y y' .. max y y']]) . filter (\(x', y') -> x == x' || y == y')) xs) ++ genEdges xs
+completeCubeFaces c = [front c, top c, right c, bottom c, left c, back c]
 
 mergeIncompleteVertexes cvs [] = cvs
 mergeIncompleteVertexes cvs (v : vs)
@@ -200,10 +207,10 @@ completeFace c f =
         }
   where
     as = angles f
-    vs = fmap (\a -> fromJust (find ((a `elem`) . vertexToPos) (vertexes c))) as
+    vs = fmap (\a -> (a, fromJust (find ((a `elem`) . vertexToPos) (vertexes c)))) as
 
 connectFaces :: Cube -> CompleteFace -> CompleteCube
-connectFaces c cfront@(CompleteFace{tr = ftr, tl = ftl, br = fbr, bl = fbl}) =
+connectFaces c cfront@(CompleteFace{tr = (pftr, ftr), tl = (pftl, ftl), br = (pfbr, fbr), bl = (pfbl, fbl)}) =
     CompleteCube
         { front = cfront
         , back = cback
@@ -213,42 +220,80 @@ connectFaces c cfront@(CompleteFace{tr = ftr, tl = ftl, br = fbr, bl = fbl}) =
         , bottom = cbottom
         }
   where
-    findOtherTwoVertex :: (Vertex, Vertex) -> (Vertex, Vertex) -> (Vertex, Vertex)
-    findOtherTwoVertex (ov1, ov2) (v1, v2) =
-        let allVertexes = concatMap vertexToPos [ov1, ov2, v1, v2]
-            targetVetexes = concatMap vertexToPos [v1, v2]
+    findOtherTwoVertex :: [Position] -> (Vertex, Vertex) -> ((Position, Vertex), (Position, Vertex), (Position, Vertex), (Position, Vertex))
+    findOtherTwoVertex currentFaceOtherPositions (v1, v2) =
+        let targetVetexes = concatMap vertexToPos [v1, v2]
             findVertex a = (head . filter ((a `elem`) . vertexToPos) . vertexes) c
-            [nv1, nv2] =
-                -- tl, tr, br, bl
-                ( fmap findVertex
-                    . (\\ targetVetexes)
-                    . fromJust
-                    . find (\fas -> length (fas \\ allVertexes) == 2 && length (fas \\ targetVetexes) == 2)
+            [tl, tr, br, bl] =
+                ( fromJust
+                    . find (\fas -> length (fas \\ (targetVetexes ++ currentFaceOtherPositions)) == 2)
                     . fmap angles
                     . faces
                 )
                     c
-         in (nv1, nv2)
-    (ctoptl, ctoptr) = findOtherTwoVertex (fbr, fbl) (ftr, ftl)
-    (cbottomtr, cbottomtl) = findOtherTwoVertex (ftr, ftl) (fbr, fbl)
-    (crighttr, crightbr) = findOtherTwoVertex (fbl, ftl) (fbr, ftr)
-    (clefttl, cleftbl) = findOtherTwoVertex (ftr, fbr) (fbl, ftl)
-    ctop = CompleteFace{tl = ctoptl, tr = ctoptr, br = ftr, bl = ftl}
-    cright = CompleteFace{tl = ftr, tr = crighttr, br = crightbr, bl = fbr}
-    cbottom = CompleteFace{tl = cbottomtl, tr = cbottomtr, br = fbr, bl = fbl}
-    cleft = CompleteFace{tl = clefttl, tr = ftl, br = fbl, bl = cleftbl}
-    cback = CompleteFace{tl = cbottomtl, tr = cbottomtr, br = ctoptr, bl = ctoptl}
+         in ((tl, findVertex tl), (tr, findVertex tr), (br, findVertex br), (bl, findVertex bl))
+    findBackFace (ps, vs) =
+        let facesPoints = (fmap angles . faces) c
+            maybeMissingFace = (listToMaybe . filter (any (`notElem` ps))) facesPoints
+            [tl, tr, br, bl] = fromMaybe findBackByVertex maybeMissingFace
+            findBackByVertex :: [Position]
+            findBackByVertex = ((\\ (concat facesPoints)) . nub . concatMap vertexToPos) vs
+            findVertex a = (head . filter ((a `elem`) . vertexToPos) . vertexes) c
+         in ((tl, findVertex tl), (tr, findVertex tr), (br, findVertex br), (bl, findVertex bl))
+    (ctoptl, ctoptr, ctopbr, ctopbl) = findOtherTwoVertex [pfbr, pfbl] (ftr, ftl)
+    (cbottomtl, cbottomtr, cbottombr, cbottombl) = findOtherTwoVertex [pftr, pftl] (fbr, fbl)
+    (crighttl, crighttr, crightbr, crightbl) = findOtherTwoVertex [pfbl, pftl] (fbr, ftr)
+    (clefttl, clefttr, cleftbr, cleftbl) = findOtherTwoVertex [pftr, pfbr] (fbl, ftl)
+    allStuff = [(pftr, ftr), (pftl, ftl), (pfbr, fbr), (pfbl, fbl), ctoptl, ctoptr, ctopbr, ctopbl, cbottomtl, cbottomtr, cbottombr, cbottombl, crighttl, crighttr, crightbr, crightbl, clefttl, clefttr, cleftbr, cleftbl]
+    (cbacktl, cbacktr, cbackbr, cbackbl) = findBackFace $ unzip allStuff
+
+    ctop = CompleteFace{tl = ctoptl, tr = ctoptr, br = ctopbr, bl = ctopbl}
+    cright = CompleteFace{tl = crighttl, tr = crighttr, br = crightbr, bl = crightbl}
+    cbottom = CompleteFace{tl = cbottomtl, tr = cbottomtr, br = cbottombr, bl = cbottombl}
+    cleft = CompleteFace{tl = clefttl, tr = clefttr, br = cleftbr, bl = cleftbl}
+    cback = CompleteFace{tl = cbacktl, tr = cbacktr, br = cbackbr, bl = cbackbl}
 
 wrapPosCube :: CompleteCube -> Map Position Field -> Position -> Position -> Direction -> (Position, Direction)
-wrapPosCube c mf prevP p d = maybe (wrapAroundCube c prevP d) (const (p, d)) $ mf !? p
+wrapPosCube c mf prevP p d
+    | isVertex prevP = wrapAroundCubeVertex c mf prevP p d -- idea, I move side from the vertex by one, then apply this function again and reapply the movement back to the result
+    | otherwise = maybe ((\newP -> (newP, findNewDirection mf newP)) (wrapAroundCube c prevP d)) (const (p, d)) $ mf !? p
+  where
+    isVertex p = all id $ fmap (\x -> findEdge mf x p) [8, 7, 4]
 
-wrapAroundCube :: CompleteCube -> Position -> Direction -> (Position, Direction)
-wrapAroundCube c prevP R = undefined
-wrapAroundCube c prevP L = undefined
-wrapAroundCube c prevP D = undefined
-wrapAroundCube c prevP U = undefined
+wrapAroundCubeVertex :: CompleteCube -> Map Position Field -> Position -> Position -> Direction -> (Position, Direction)
+wrapAroundCubeVertex c mf prevP p d = first decrementFuncton $ wrapPosCube c mf (incrementFunction prevP) p d
+  where
+    startingFace = (fromJust . find ((prevP `elem`) . concat . completeFaceEdges) . completeCubeFaces) c
+    edges = (filter ((prevP `elem`)) . completeFaceEdges) startingFace
+    (incrementFunction, decrementFuncton) = genIncrementFunc edges prevP d
 
-test = connectFaces cube cfront
+genIncrementFunc :: [[Position]] -> Position -> Direction -> ((Position -> Position), (Position -> Position))
+genIncrementFunc edges p d = undefined
+
+wrapAroundCube :: CompleteCube -> Position -> Direction -> Position
+wrapAroundCube c prevP dir = result
+  where
+    startingFace = (fromJust . find ((prevP `elem`) . concat . completeFaceEdges) . completeCubeFaces) c
+    startingEdge = (fromJust . find ((prevP `elem`)) . completeFaceEdges) startingFace
+    indexFromVertex = fromJust $ elemIndex prevP startingEdge
+    v1 = (fromJust . find ((head startingEdge `elem`) . vertexToPos) . completeFaceVertexes) startingFace
+    v2 = (fromJust . find ((last startingEdge `elem`) . vertexToPos) . completeFaceVertexes) startingFace
+    targetFace = (fromJust . find ((== 2) . length . (\\ ((concatMap vertexToPos [v1, v2]) ++ completeFaceAngles startingFace)) . completeFaceAngles) . completeCubeFaces) c
+    (x, y) = (head . filter (`elem` (completeFaceAngles targetFace)) . vertexToPos) v1
+    (x', y') = (head . filter (`elem` (completeFaceAngles targetFace)) . vertexToPos) v2
+    targetEdge = [(a, b) | a <- [min x x' .. max x x'], b <- [min y y' .. max y y']]
+    result = if head targetEdge == (x, y) then targetEdge !! indexFromVertex else (reverse targetEdge) !! indexFromVertex
+
+findNewDirection :: Map Position Field -> Position -> Direction
+findNewDirection mf (x, y)
+    | neighboorOut == [True, False, False, False] = L
+    | neighboorOut == [False, True, False, False] = R
+    | neighboorOut == [False, False, True, False] = U
+    | neighboorOut == [False, False, False, True] = D
+  where
+    neighboorOut = fmap (`member` mf) [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+
+test = completeCubeFaces $ connectFaces cube cfront
   where
     faceSize = 4
     partialCube = (!! 1) $ buildPartialCubes (fst testInput) faceSize
@@ -259,7 +304,7 @@ test2 = do
     let faceSize = 50
         cube = (findLastVertex . (\cs -> mergeCubes (head cs) (tail cs))) (buildPartialCubes mf faceSize)
         cfront = completeFace cube (head (faces cube))
-    return $ connectFaces cube cfront
+    return $ fmap completeFaceAngles $ completeCubeFaces $ connectFaces cube cfront
 
 -- 119103 too low
 -- 129339 correct - final tile (83,128)
