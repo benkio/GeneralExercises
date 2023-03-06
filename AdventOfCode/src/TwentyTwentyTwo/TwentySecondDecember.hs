@@ -80,14 +80,30 @@ data AnglePosition = TL | TR | BL | BR
 data Vertex = Vertex {v1 :: Position, v2 :: Position, v3 :: Position} | IncompleteVertex {v1 :: Position, v2 :: Position} deriving (Show)
 newtype Face = Face {angles :: [Position]} deriving (Show)
 data Cube = Cube {faces :: [Face], vertexes :: [Vertex]} deriving (Show)
+data CompleteFace = CompleteFace -- tl, tr, br, bl
+    { tl :: Vertex
+    , tr :: Vertex
+    , br :: Vertex
+    , bl :: Vertex
+    }
+    deriving (Show)
+data CompleteCube = CompleteCube
+    { front :: CompleteFace
+    , back :: CompleteFace
+    , left :: CompleteFace
+    , right :: CompleteFace
+    , top :: CompleteFace
+    , bottom :: CompleteFace
+    }
+    deriving (Show)
 
 instance Eq Face where
     (==) f1 f2 = all (`elem` angles f2) (angles f1) && all (`elem` angles f1) (angles f2)
 instance Eq Vertex where
-    (==) v1 v2 = all (`elem` vertexToPoint v2) (vertexToPoint v1) && all (`elem` vertexToPoint v1) (vertexToPoint v2)
+    (==) v1 v2 = all (`elem` vertexToPos v2) (vertexToPos v1) && all (`elem` vertexToPos v1) (vertexToPos v2)
 
-vertexToPoint (Vertex{v1 = v', v2 = v'', v3 = v'''}) = [v', v'', v''']
-vertexToPoint (IncompleteVertex{v1 = v', v2 = v''}) = [v', v'']
+vertexToPos (Vertex{v1 = v', v2 = v'', v3 = v'''}) = [v', v'', v''']
+vertexToPos (IncompleteVertex{v1 = v', v2 = v''}) = [v', v'']
 vertexIsIncomplete (IncompleteVertex{}) = True
 vertexIsIncomplete _ = False
 findKey :: Map Position Field -> Position -> Maybe Position
@@ -95,15 +111,15 @@ findKey mf k = mf !? k <&> const k
 
 mergeIncompleteVertexes cvs [] = cvs
 mergeIncompleteVertexes cvs (v : vs)
-    | any (\cv -> all (`elem` (vertexToPoint cv)) (vertexToPoint v)) cvs = mergeIncompleteVertexes cvs vs
+    | any (\cv -> all (`elem` (vertexToPos cv)) (vertexToPos v)) cvs = mergeIncompleteVertexes cvs vs
     | isJust findOverlap =
-        let newVertexPositions = (fromJust . fmap (\x -> nub (vertexToPoint x ++ vertexToPoint v))) findOverlap
+        let newVertexPositions = (fromJust . fmap (\x -> nub (vertexToPos x ++ vertexToPos v))) findOverlap
             newVertex = Vertex{v1 = newVertexPositions !! 0, v2 = newVertexPositions !! 1, v3 = newVertexPositions !! 2}
             vs' = ((\x -> delete x vs) . fromJust) findOverlap
          in newVertex : mergeIncompleteVertexes cvs vs'
     | otherwise = v : mergeIncompleteVertexes cvs vs
   where
-    findOverlap = find (\x -> any (`elem` vertexToPoint x) (vertexToPoint v)) vs
+    findOverlap = find (\x -> any (`elem` vertexToPos x) (vertexToPos v)) vs
 
 findEdge :: Map Position Field -> Int -> Position -> Bool
 findEdge mf target (x, y) = ((== target) . length) $ keyAnglePattern
@@ -149,7 +165,7 @@ buildFaceAngles faceSize (x, y) BR = [(x - (faceSize - 1), y - (faceSize - 1)), 
 buildFaceAngles faceSize (x, y) BL = [(x, y - (faceSize - 1)), (x + (faceSize - 1), y - (faceSize - 1)), (x + (faceSize - 1), y), (x, y)]
 
 buildFace :: Int -> Position -> AnglePosition -> Face
-buildFace faceSize p pos = Face{angles = [tr, tl, br, bl]}
+buildFace faceSize p pos = Face{angles = [tl, tr, br, bl]}
   where
     [tl, tr, br, bl] = buildFaceAngles faceSize p pos
 
@@ -169,20 +185,72 @@ findLastVertex c =
   where
     es = (concatMap angles . faces) c
     completeVertexes = (filter (not . vertexIsIncomplete) . vertexes) c
-    vs = concatMap vertexToPoint completeVertexes
+    vs = concatMap vertexToPos completeVertexes
     [v', v'', v'''] = es \\ vs
     lostVertex = Vertex{v1 = v', v2 = v'', v3 = v'''}
 
-test = cube
+completeFace :: Cube -> Face -> CompleteFace
+completeFace c f =
+    -- tl, tr, br, bl
+    CompleteFace
+        { tr = vs !! 1
+        , tl = vs !! 0
+        , br = vs !! 2
+        , bl = vs !! 3
+        }
+  where
+    as = angles f
+    vs = fmap (\a -> fromJust (find ((a `elem`) . vertexToPos) (vertexes c))) as
+
+connectFaces :: Cube -> CompleteFace -> CompleteCube
+connectFaces c cfront@(CompleteFace{tr = ftr, tl = ftl, br = fbr, bl = fbl}) =
+    CompleteCube
+        { front = cfront
+        , back = cback
+        , left = cleft
+        , right = cright
+        , top = ctop
+        , bottom = cbottom
+        }
+  where
+    findOtherTwoVertex :: (Vertex, Vertex) -> (Vertex, Vertex) -> (Vertex, Vertex)
+    findOtherTwoVertex (ov1, ov2) (v1, v2) =
+        let allVertexes = concatMap vertexToPos [ov1, ov2, v1, v2]
+            targetVetexes = concatMap vertexToPos [v1, v2]
+            findVertex a = (head . filter ((a `elem`) . vertexToPos) . vertexes) c
+            [nv1, nv2] =
+                -- tl, tr, br, bl
+                ( fmap findVertex
+                    . (\\ targetVetexes)
+                    . fromJust
+                    . find (\fas -> length (fas \\ allVertexes) == 2 && length (fas \\ targetVetexes) == 2)
+                    . fmap angles
+                    . faces
+                )
+                    c
+         in (nv1, nv2)
+    (ctoptl, ctoptr) = findOtherTwoVertex (fbr, fbl) (ftr, ftl)
+    (cbottomtr, cbottomtl) = findOtherTwoVertex (ftr, ftl) (fbr, fbl)
+    (crighttr, crightbr) = findOtherTwoVertex (fbl, ftl) (fbr, ftr)
+    (clefttl, cleftbl) = findOtherTwoVertex (ftr, fbr) (fbl, ftl)
+    ctop = CompleteFace{tl = ctoptl, tr = ctoptr, br = ftr, bl = ftl}
+    cright = CompleteFace{tl = ftr, tr = crighttr, br = crightbr, bl = fbr}
+    cbottom = CompleteFace{tl = cbottomtl, tr = cbottomtr, br = fbr, bl = fbl}
+    cleft = CompleteFace{tl = clefttl, tr = ftl, br = fbl, bl = cleftbl}
+    cback = CompleteFace{tl = cbottomtl, tr = cbottomtr, br = ctoptr, bl = ctoptl}
+
+test = connectFaces cube cfront
   where
     faceSize = 4
     partialCube = (!! 1) $ buildPartialCubes (fst testInput) faceSize
     cube = (\cs -> mergeCubes (head cs) (tail cs)) $ buildPartialCubes (fst testInput) faceSize
+    cfront = completeFace cube (head (faces cube))
 test2 = do
     (mf, ms) <- input
     let faceSize = 50
-        cube = ((\cs -> mergeCubes (head cs) (tail cs))) (buildPartialCubes mf faceSize)
-    return $ findLastVertex cube -- (buildPartialCubes mf faceSize)
+        cube = (findLastVertex . (\cs -> mergeCubes (head cs) (tail cs))) (buildPartialCubes mf faceSize)
+        cfront = completeFace cube (head (faces cube))
+    return $ connectFaces cube cfront
 
 -- 119103 too low
 -- 129339 correct - final tile (83,128)
