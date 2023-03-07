@@ -8,16 +8,12 @@ import Data.Functor ((<&>))
 import Data.List (cycle, delete, elemIndex, find, minimumBy, notElem, nub, nubBy, partition, (\\))
 import Data.Map (Map, fromList, keys, member, notMember, (!), (!?))
 import Data.Maybe (fromJust, fromMaybe, isJust, listToMaybe, mapMaybe, maybeToList)
-import Debug.Trace
 import Text.Printf
 
 data Field = Empty | Wall deriving (Eq, Show)
 type Position = (Int, Int)
 data Move = ML | MR | M Int deriving (Eq, Show)
-data Direction = R | D | L | U deriving (Show, Enum, Eq, Ord)
-
-directions :: [Direction]
-directions = enumFrom R
+data Direction = R | D | L | U deriving (Show, Eq, Ord)
 
 directionPassword :: Direction -> Int
 directionPassword R = 0
@@ -41,16 +37,20 @@ applyMoves mf (m : ms) wrapF pos dir = applyMoves mf ms wrapF newPos newDir
     (newPos, newDir) =
         applyMove mf m wrapF pos dir
 
-applyMove :: Map Position Field -> Move -> (Position -> Position -> Direction -> (Position, Direction)) -> Position -> Direction -> (Position, Direction)
-applyMove _ ML wrapF pos R = (pos, U)
-applyMove _ MR wrapF pos U = (pos, R)
-applyMove _ ML wrapF pos dir = (pos, pred dir)
-applyMove _ MR wrapF pos dir = (pos, succ dir)
-applyMove mf (M steps) wrapF pos dir
-    | steps == 0 || (checkCollision . fst) nextStep = (pos, dir)
-    | otherwise = uncurry (applyMove mf (M (steps - 1)) wrapF) $ nextStep
+changeDir :: Int -> Direction -> Direction
+changeDir increment d = ds !! ((i + increment) `mod` length ds)
   where
-    nextStep = uncurry (wrapF pos) (moveInDirection pos dir, dir)
+    ds = [R, D, L, U]
+    i = fromJust $ elemIndex d ds
+
+applyMove :: Map Position Field -> Move -> (Position -> Position -> Direction -> (Position, Direction)) -> Position -> Direction -> (Position, Direction)
+applyMove _ ML wrapF pos dir = (pos, changeDir (-1) dir)
+applyMove _ MR wrapF pos dir = (pos, changeDir 1 dir)
+applyMove mf (M steps) wrapF pos dir
+    | steps == 0 || checkCollision newP = (pos, dir)
+    | otherwise = applyMove mf (M (steps - 1)) wrapF newP newDir
+  where
+    (newP, newDir) = uncurry (wrapF pos) (moveInDirection pos dir, dir)
     checkCollision p = mf !? p == Just Wall
 
 wrapPos :: Map Position Field -> Position -> Position -> Direction -> (Position, Direction)
@@ -80,7 +80,7 @@ data AnglePosition = TL | TR | BL | BR
 data Vertex = Vertex {v1 :: Position, v2 :: Position, v3 :: Position} | IncompleteVertex {v1 :: Position, v2 :: Position} deriving (Show)
 newtype Face = Face {angles :: [Position]} deriving (Show)
 data Cube = Cube {faces :: [Face], vertexes :: [Vertex]} deriving (Show)
-data CompleteFace = CompleteFace -- tl, tr, br, bl
+data CompleteFace = CompleteFace
     { tl :: (Position, Vertex)
     , tr :: (Position, Vertex)
     , br :: (Position, Vertex)
@@ -198,7 +198,6 @@ findLastVertex c =
 
 completeFace :: Cube -> Face -> CompleteFace
 completeFace c f =
-    -- tl, tr, br, bl
     CompleteFace
         { tr = vs !! 1
         , tl = vs !! 0
@@ -255,20 +254,26 @@ connectFaces c cfront@(CompleteFace{tr = (pftr, ftr), tl = (pftl, ftl), br = (pf
 
 wrapPosCube :: CompleteCube -> Map Position Field -> Position -> Position -> Direction -> (Position, Direction)
 wrapPosCube c mf prevP p d
-    | isVertex prevP = wrapAroundCubeVertex c mf prevP p d -- idea, I move side from the vertex by one, then apply this function again and reapply the movement back to the result
+    | isVertex prevP && p `notMember` mf = wrapAroundCubeVertex c mf prevP p d
     | otherwise = maybe ((\newP -> (newP, findNewDirection mf newP)) (wrapAroundCube c prevP d)) (const (p, d)) $ mf !? p
   where
-    isVertex p = all id $ fmap (\x -> findEdge mf x p) [8, 7, 4]
+    isVertex p = p `elem` (nub . concatMap completeFaceAngles . completeCubeFaces) c
 
 wrapAroundCubeVertex :: CompleteCube -> Map Position Field -> Position -> Position -> Direction -> (Position, Direction)
-wrapAroundCubeVertex c mf prevP p d = first decrementFuncton $ wrapPosCube c mf (incrementFunction prevP) p d
+wrapAroundCubeVertex c mf prevP p d = first (fromJust . find isVertex . decrementFuncton) $ wrapPosCube c mf (incrementFunction prevP) p d
   where
     startingFace = (fromJust . find ((prevP `elem`) . concat . completeFaceEdges) . completeCubeFaces) c
     edges = (filter ((prevP `elem`)) . completeFaceEdges) startingFace
+    isVertex p = p `elem` (nub . concatMap completeFaceAngles . completeCubeFaces) c
     (incrementFunction, decrementFuncton) = genIncrementFunc edges prevP d
 
-genIncrementFunc :: [[Position]] -> Position -> Direction -> ((Position -> Position), (Position -> Position))
-genIncrementFunc edges p d = undefined
+genIncrementFunc :: [[Position]] -> Position -> Direction -> ((Position -> Position), (Position -> [Position]))
+genIncrementFunc edges p d
+    | d == R || d == L = (const nextY, \(x, y) -> [(x, y + 1), (x + 1, y), (x, y - 1), (x - 1, y)])
+    | d == U || d == D = (const nextX, \(x, y) -> [(x, y + 1), (x + 1, y), (x, y - 1), (x - 1, y)])
+  where
+    nextY = ((!! 1) . fromJust . find (\e -> abs (snd (e !! 1) - snd p) == 1) . fmap (\e -> if head e == p then e else reverse e)) edges
+    nextX = ((!! 1) . fromJust . find (\e -> abs (fst (e !! 1) - fst p) == 1) . fmap (\e -> if head e == p then e else reverse e)) edges
 
 wrapAroundCube :: CompleteCube -> Position -> Direction -> Position
 wrapAroundCube c prevP dir = result
@@ -286,28 +291,28 @@ wrapAroundCube c prevP dir = result
 
 findNewDirection :: Map Position Field -> Position -> Direction
 findNewDirection mf (x, y)
-    | neighboorOut == [True, False, False, False] = L
-    | neighboorOut == [False, True, False, False] = R
-    | neighboorOut == [False, False, True, False] = U
-    | neighboorOut == [False, False, False, True] = D
+    | neighboorOut == [False, True, True, True] = L
+    | neighboorOut == [True, False, True, True] = R
+    | neighboorOut == [True, True, False, True] = U
+    | neighboorOut == [True, True, True, False] = D
   where
     neighboorOut = fmap (`member` mf) [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
 
-test = completeCubeFaces $ connectFaces cube cfront
+test = solution (wrapPosCube completeCube mf) mf ms
   where
     faceSize = 4
-    partialCube = (!! 1) $ buildPartialCubes (fst testInput) faceSize
-    cube = (\cs -> mergeCubes (head cs) (tail cs)) $ buildPartialCubes (fst testInput) faceSize
+    (mf, ms) = testInput
+    partialCube = (!! 1) $ buildPartialCubes mf faceSize
+    cube = (\cs -> mergeCubes (head cs) (tail cs)) $ buildPartialCubes mf faceSize
     cfront = completeFace cube (head (faces cube))
+    completeCube = connectFaces cube cfront
 test2 = do
     (mf, ms) <- input
     let faceSize = 50
         cube = (findLastVertex . (\cs -> mergeCubes (head cs) (tail cs))) (buildPartialCubes mf faceSize)
         cfront = completeFace cube (head (faces cube))
-    return $ fmap completeFaceAngles $ completeCubeFaces $ connectFaces cube cfront
+    return $ completeCubeFaces $ connectFaces cube cfront
 
--- 119103 too low
--- 129339 correct - final tile (83,128)
 twentySecondDecemberSolution2 :: IO Int
 twentySecondDecemberSolution2 = do
     (mf, ms) <- input
