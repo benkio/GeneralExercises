@@ -2,7 +2,7 @@
 module TwentyTwentyTwo.TwentyThirdDecember where
 
 import Data.List (find, (\\))
-import Data.Map (Map, adjust, elems, empty, fromList, keys, member, toList, (!))
+import Data.Map (Map, adjust, elems, empty, fromList, keys, member, (!))
 import qualified Data.Map as M (lookup)
 import Data.Maybe (mapMaybe)
 import Debug.Trace
@@ -69,7 +69,7 @@ elvesRoundsTillStady :: Map Elf Position -> Int
 elvesRoundsTillStady m =
     (\(_, _, _, x) -> x) $
         until
-            (\(prevM, currM, _, _) -> (toList prevM) == (toList currM))
+            (\(prevM, currM, _, _) -> prevM == currM)
             (\(_, currM, dirs, c) -> (currM, elfRound currM (head dirs), tail dirs, c + 1))
             (empty, m, directions, 0)
 
