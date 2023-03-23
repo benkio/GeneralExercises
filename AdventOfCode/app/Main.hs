@@ -3,4 +3,4 @@ module Main where
 import TwentyTwentyTwo.TwentyFourthDecember
 
 main :: IO ()
-main = twentyFourthDecemberSolution1 >>= print
+main = twentyFourthDecemberSolution2 >>= print

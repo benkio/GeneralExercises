@@ -1,8 +1,8 @@
 module TwentyTwentyTwo.TwentyFourthDecember where
 
+import Data.Bifunctor (first)
 import Data.List (find, maximumBy, nubBy)
 import Data.Maybe (fromJust)
-import Debug.Trace
 import Text.Printf
 
 data Blizzard = NB Position | SB Position | EB Position | WB Position deriving (Show, Eq)
@@ -26,8 +26,6 @@ data Env = Env {valleys :: [[Blizzard]], target :: Position, start :: Position, 
 input :: IO Valley
 input = parseInput <$> readFile "input/2022/24December.txt"
 
-test = searchTillTargetFromValley testInput
-
 searchTillTargetFromValley :: Valley -> ([State], Env)
 searchTillTargetFromValley v = searchTillTarget [s] e
   where
@@ -38,12 +36,13 @@ searchTillTarget s e = search s e exitCondition
   where
     exitCondition = any ((== (target e)) . currPos)
 
-getMinutes s e = (minute . fromJust . find ((== (target e)) . currPos)) s
+getResult :: [State] -> Env -> State
+getResult s e = (fromJust . find ((== (target e)) . currPos)) s
 
 search :: [State] -> Env -> ([State] -> Bool) -> ([State], Env)
 search ss e f
     | f ss = (ss, e)
-    | otherwise = trace (printf "debug: %s" (show (length ns))) $ search ns e f
+    | otherwise = search ns e f
   where
     ns = nubBy (eqState ((length . valleys) e)) $ concatMap (`nextStates` e) ss
 
@@ -52,9 +51,7 @@ nextStates :: State -> Env -> [State]
 nextStates s@(State{currPos = crp, minute = m}) (Env{valleys = vss, target = ext, start = str, vBounds = vbs}) = ns
   where
     bl = vss !! ((m + 1) `mod` (length vss))
-    ns =
-        -- filter (\s -> not (any (eqState (length vss) s) vis)) $
-        expeditionMove s bl vbs ext str
+    ns = expeditionMove s bl vbs ext str
 
 -- Generate new states based on where expedition can go, or just wait where it is
 -- The Blizzard in input should be the next configuration since the expedition and the blizzards act simultaneously
@@ -103,12 +100,21 @@ wrap (vbx, vby) (x, y)
     | otherwise = (x, y)
 
 twentyFourthDecemberSolution1 :: IO Int
-twentyFourthDecemberSolution1 = uncurry getMinutes . searchTillTargetFromValley <$> input
+twentyFourthDecemberSolution1 = minute . uncurry getResult . searchTillTargetFromValley <$> input
 
--- twentyFourthDecemberSolution2 :: IO Int
--- twentyFourthDecemberSolution2 = do
---   v <- input
---   let (s1, e) = searchTillTargetFromValley v
+solution2 :: Valley -> Int
+solution2 v = minute s1 + minute s2 + minute s3
+  where
+    (s1, e) = (\(ss, x) -> (getResult ss x, x)) $ searchTillTargetFromValley v
+    b = valleys e !! (minute s1 `mod` (length (valleys e)))
+    v' = Valley{valleyBlizzards = b, entrance = target e, valleyBounds = valleyBounds v, exit = start e}
+    (s2, e') = (\(ss, x) -> (getResult ss x, x)) $ searchTillTargetFromValley v'
+    b' = valleys e' !! (minute s2 `mod` (length (valleys e')))
+    v'' = Valley{valleyBlizzards = b', entrance = target e', valleyBounds = valleyBounds v, exit = start e'}
+    (s3, _) = (\(ss, x) -> (getResult ss x, x)) $ searchTillTargetFromValley v''
+
+twentyFourthDecemberSolution2 :: IO Int
+twentyFourthDecemberSolution2 = solution2 <$> input
 
 parseInput :: String -> Valley
 parseInput s =
@@ -165,6 +171,8 @@ testInput =
         \#>v.><>#\n\
         \#<^v^^>#\n\
         \######.#"
+
+test = solution2 testInput
 
 testSmall :: Valley
 testSmall =
