@@ -21,35 +21,40 @@ data Valley = Valley
 data State = State {currPos :: Position, minute :: Int} deriving (Show)
 
 -- Used when generating the tree of states in search of the goal
-data Env = Env {valleys :: [[Blizzard]], target :: Position, start :: Position, visited :: [State], vBounds :: Position}
+data Env = Env {valleys :: [[Blizzard]], target :: Position, start :: Position, vBounds :: Position}
 
 input :: IO Valley
 input = parseInput <$> readFile "input/2022/24December.txt"
 
-test = searchTillTarget testInput
+test = searchTillTargetFromValley testInput
 
-searchTillTarget :: Valley -> Int
-searchTillTarget v = getMinutes . fst $ search [s] e exitCondition
+searchTillTargetFromValley :: Valley -> ([State], Env)
+searchTillTargetFromValley v = searchTillTarget [s] e
   where
     (s, e) = valleyToSearchInit v
+
+searchTillTarget :: [State] -> Env -> ([State], Env)
+searchTillTarget s e = search s e exitCondition
+  where
     exitCondition = any ((== (target e)) . currPos)
-    getMinutes = minute . fromJust . find ((== (target e)) . currPos)
+
+getMinutes s e = (minute . fromJust . find ((== (target e)) . currPos)) s
 
 search :: [State] -> Env -> ([State] -> Bool) -> ([State], Env)
 search ss e f
     | f ss = (ss, e)
-    | otherwise = trace (printf "debug: %s" (show (length (visited e)))) $ search ns e' f
+    | otherwise = trace (printf "debug: %s" (show (length ns))) $ search ns e f
   where
     ns = nubBy (eqState ((length . valleys) e)) $ concatMap (`nextStates` e) ss
-    e' = e{visited = nubBy (eqState ((length . valleys) e)) (visited e ++ ns)}
 
 -- Generate the next states by generating the next possible positions given the current blizzard
--- and filters by the visited states
 nextStates :: State -> Env -> [State]
-nextStates s@(State{currPos = crp, minute = m}) (Env{valleys = vss, target = ext, start = str, visited = vis, vBounds = vbs}) = ns
+nextStates s@(State{currPos = crp, minute = m}) (Env{valleys = vss, target = ext, start = str, vBounds = vbs}) = ns
   where
     bl = vss !! ((m + 1) `mod` (length vss))
-    ns = filter (\s -> not (any (eqState (length vss) s) vis)) $ expeditionMove s bl vbs ext str
+    ns =
+        -- filter (\s -> not (any (eqState (length vss) s) vis)) $
+        expeditionMove s bl vbs ext str
 
 -- Generate new states based on where expedition can go, or just wait where it is
 -- The Blizzard in input should be the next configuration since the expedition and the blizzards act simultaneously
@@ -70,7 +75,7 @@ eqState valleyNum (State{currPos = cr1, minute = m1}) (State{currPos = cr2, minu
 valleyToSearchInit :: Valley -> (State, Env)
 valleyToSearchInit v@(Valley{entrance = ent, valleyBounds = vbs, exit = ext}) =
     ( State{currPos = ent, minute = 0}
-    , Env{valleys = allValleys v, target = ext, start = ent, visited = [], vBounds = vbs}
+    , Env{valleys = allValleys v, target = ext, start = ent, vBounds = vbs}
     )
 
 -- blizzard configurations are cyclic, so we can think about generating all the configs once and for all.
@@ -98,10 +103,12 @@ wrap (vbx, vby) (x, y)
     | otherwise = (x, y)
 
 twentyFourthDecemberSolution1 :: IO Int
-twentyFourthDecemberSolution1 = searchTillTarget <$> input
+twentyFourthDecemberSolution1 = uncurry getMinutes . searchTillTargetFromValley <$> input
 
-twentyFourthDecemberSolution2 :: IO Int
-twentyFourthDecemberSolution2 = undefined
+-- twentyFourthDecemberSolution2 :: IO Int
+-- twentyFourthDecemberSolution2 = do
+--   v <- input
+--   let (s1, e) = searchTillTargetFromValley v
 
 parseInput :: String -> Valley
 parseInput s =
