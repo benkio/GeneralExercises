@@ -1,5 +1,10 @@
 module TwentyTwentyTwo.TwentyFourthDecember where
 
+import Data.Maybe (fromJust)
+import Data.List (find, maximumBy, nubBy)
+import Debug.Trace
+import Text.Printf
+
 data Blizzard = NB Position | SB Position | EB Position | WB Position deriving (Show, Eq)
 data Move = NM | SM | EM | WM | W deriving (Show)
 type Position = (Int, Int)
@@ -13,22 +18,49 @@ data Valley = Valley
 
 -- This indetifies a configuration fully, the minute is the index of the valleys in the env
 -- Eq intance. State with the same position and minute % valleys should be the same!!!
-data State = State {currPos :: Position, minute :: Int}
+data State = State {currPos :: Position, minute :: Int} deriving Show
 
 -- Used when generating the tree of states in search of the goal
-data Env = Env {valleys :: [[Blizzard]], target :: Position, visited :: [State], vBounds :: Position}
+data Env = Env {valleys :: [[Blizzard]], target :: Position, start :: Position, visited :: [State], vBounds :: Position}
 
 input :: IO Valley
 input = parseInput <$> readFile "input/2022/24December.txt"
 
+test = searchTillTarget testInput
+
+searchTillTarget :: Valley -> Int
+searchTillTarget v = getMinutes . fst $ search [s] e exitCondition
+  where (s, e) = valleyToSearchInit v
+        exitCondition = any ((== (target e)) . currPos)
+        getMinutes = minute . fromJust . find ((== (target e)) . currPos)
+
+search :: [State] -> Env -> ([State] -> Bool) -> ([State], Env)
+search ss e f
+  | f ss = (ss, e)
+  | otherwise = trace (printf "debug: %s" (show (length (visited e))) ) $ search ns e' f
+  where
+    ns = nubBy (eqState ((length . valleys) e)) $ concatMap (`nextStates` e) ss
+    e' = e { visited = nubBy (eqState ((length . valleys) e)) (visited e ++ ns)}
+
 -- Generate the next states by generating the next possible positions given the current blizzard
 -- and filters by the visited states
 nextStates :: State -> Env -> [State]
-nextStates (State{currPos = crp, minute = m}) (Env{valleys = vss, target = ext, visited = vis, vBounds = vbs}) = undefined
+nextStates s@(State{currPos = crp, minute = m}) (Env{valleys = vss, target = ext, start = str, visited = vis, vBounds = vbs}) = ns
+  where
+    bl = vss !! ((m + 1) `mod` (length vss))
+    ns = filter (\s -> not (any (eqState (length vss) s) vis)) $ expeditionMove s bl vbs ext str
 
 -- Generate new states based on where expedition can go, or just wait where it is
-expeditionMove :: State -> [Blizzard] -> [State]
-expeditionMove (State{currPos = crp, minute = m}) bs = undefined
+-- The Blizzard in input should be the next configuration since the expedition and the blizzards act simultaneously
+expeditionMove :: State -> [Blizzard] -> Position -> Position -> Position -> [State]
+expeditionMove (State{currPos = (x, y), minute = m}) bs (vbsx, vbsy) entrance exit =
+    fmap (\p -> State{currPos = p, minute = m + 1}) freePos
+  where
+    notOutOfBounds (x, y) =
+      (x >= 0 && y >= 0 && x <= vbsx && y <= vbsy) || (x,y) == entrance || (x,y) == exit
+    ps = filter (notOutOfBounds) [(x, y), (x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    ns = filter ((`elem` ps) . blizzardPos) bs
+    freePos = filter (`notElem` (fmap blizzardPos ns)) ps
 
 eqState :: Int -> State -> State -> Bool
 eqState valleyNum (State{currPos = cr1, minute = m1}) (State{currPos = cr2, minute = m2}) =
@@ -37,7 +69,7 @@ eqState valleyNum (State{currPos = cr1, minute = m1}) (State{currPos = cr2, minu
 valleyToSearchInit :: Valley -> (State, Env)
 valleyToSearchInit v@(Valley{entrance = ent, valleyBounds = vbs, exit = ext}) =
     ( State{currPos = ent, minute = 0}
-    , Env{valleys = allValleys v, target = ext, visited = [], vBounds = vbs}
+    , Env{valleys = allValleys v, target = ext, start = ent, visited = [], vBounds = vbs}
     )
 
 -- blizzard configurations are cyclic, so we can think about generating all the configs once and for all.
@@ -64,10 +96,8 @@ wrap (vbx, vby) (x, y)
     | y > vby = (x, 0)
     | otherwise = (x, y)
 
-test = (!! 5) $ iterate valleyMove testSmall -- (!! 1000) . iterate valleyMove <$> input
-
 twentyFourthDecemberSolution1 :: IO Int
-twentyFourthDecemberSolution1 = undefined
+twentyFourthDecemberSolution1 = searchTillTarget <$> input
 
 twentyFourthDecemberSolution2 :: IO Int
 twentyFourthDecemberSolution2 = undefined
