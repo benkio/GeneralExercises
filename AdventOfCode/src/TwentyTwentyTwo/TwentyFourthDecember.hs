@@ -1,7 +1,7 @@
 module TwentyTwentyTwo.TwentyFourthDecember where
 
-import Data.Maybe (fromJust)
 import Data.List (find, maximumBy, nubBy)
+import Data.Maybe (fromJust)
 import Debug.Trace
 import Text.Printf
 
@@ -18,7 +18,7 @@ data Valley = Valley
 
 -- This indetifies a configuration fully, the minute is the index of the valleys in the env
 -- Eq intance. State with the same position and minute % valleys should be the same!!!
-data State = State {currPos :: Position, minute :: Int} deriving Show
+data State = State {currPos :: Position, minute :: Int} deriving (Show)
 
 -- Used when generating the tree of states in search of the goal
 data Env = Env {valleys :: [[Blizzard]], target :: Position, start :: Position, visited :: [State], vBounds :: Position}
@@ -30,17 +30,18 @@ test = searchTillTarget testInput
 
 searchTillTarget :: Valley -> Int
 searchTillTarget v = getMinutes . fst $ search [s] e exitCondition
-  where (s, e) = valleyToSearchInit v
-        exitCondition = any ((== (target e)) . currPos)
-        getMinutes = minute . fromJust . find ((== (target e)) . currPos)
+  where
+    (s, e) = valleyToSearchInit v
+    exitCondition = any ((== (target e)) . currPos)
+    getMinutes = minute . fromJust . find ((== (target e)) . currPos)
 
 search :: [State] -> Env -> ([State] -> Bool) -> ([State], Env)
 search ss e f
-  | f ss = (ss, e)
-  | otherwise = trace (printf "debug: %s" (show (length (visited e))) ) $ search ns e' f
+    | f ss = (ss, e)
+    | otherwise = trace (printf "debug: %s" (show (length (visited e)))) $ search ns e' f
   where
     ns = nubBy (eqState ((length . valleys) e)) $ concatMap (`nextStates` e) ss
-    e' = e { visited = nubBy (eqState ((length . valleys) e)) (visited e ++ ns)}
+    e' = e{visited = nubBy (eqState ((length . valleys) e)) (visited e ++ ns)}
 
 -- Generate the next states by generating the next possible positions given the current blizzard
 -- and filters by the visited states
@@ -57,7 +58,7 @@ expeditionMove (State{currPos = (x, y), minute = m}) bs (vbsx, vbsy) entrance ex
     fmap (\p -> State{currPos = p, minute = m + 1}) freePos
   where
     notOutOfBounds (x, y) =
-      (x >= 0 && y >= 0 && x <= vbsx && y <= vbsy) || (x,y) == entrance || (x,y) == exit
+        (x >= 0 && y >= 0 && x <= vbsx && y <= vbsy) || (x, y) == entrance || (x, y) == exit
     ps = filter (notOutOfBounds) [(x, y), (x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
     ns = filter ((`elem` ps) . blizzardPos) bs
     freePos = filter (`notElem` (fmap blizzardPos ns)) ps
