@@ -1,5 +1,7 @@
 module TwentyTwentyTwo.TwentyFifthDecember where
 
+import Data.List (find)
+
 input :: IO [String]
 input = lines <$> readFile "input/2022/25December.txt"
 
@@ -22,16 +24,33 @@ testInput =
 
 snafuToNum :: String -> Int
 snafuToNum = sum . fmap (\(p, x) -> p * singleSnafuToNum x) . zip power5 . reverse
+
+power5 = fmap (\p -> 5 ^ p) [0 ..]
+
+numToSnafu :: Int -> Int -> String
+numToSnafu i x = if i' == 0 then [c] else c : numToSnafu (i' - 1) r
   where
-    power5 = fmap (\p -> 5 ^ p) [0 ..]
+    (c, r, i') = powerToSinafu (i, x)
 
-test = sum $ fmap snafuToNum testInput
+powerToSinafu :: (Int, Int) -> (Char, Int, Int)
+powerToSinafu (i, x)
+    | d > 2 = powerToSinafu (i + 1, x)
+    | (d == 0 && m >= (p - hp)) || (d == 1 && m <= hp) = (adjustSignum '1', x + (((* (-1)) . signum) x * p), i)
+    | (d == 1 && m >= (p - hp)) || (d == 2 && m <= hp) = (adjustSignum '2', x + (((* (-1)) . signum) x * p * 2), i)
+    | otherwise = ('0', x, i)
+  where
+    p = power5 !! i
+    d = (abs x) `div` p
+    m = (abs x) `mod` p
+    hp = p `div` 2
+    adjustSignum '1' = if signum x < 0 then '-' else '1'
+    adjustSignum '2' = if signum x < 0 then '=' else '2'
 
-twentyFifthDecemberSolution1 :: IO Int
-twentyFifthDecemberSolution1 = undefined
+solution :: [String] -> String
+solution = numToSnafu 0 . sum . fmap snafuToNum
 
-twentyFifthDecemberSolution2 :: IO Int
-twentyFifthDecemberSolution2 = undefined
+twentyFifthDecemberSolution1 :: IO String
+twentyFifthDecemberSolution1 = solution <$> inputed
 
 singleSnafuToNum '2' = 2
 singleSnafuToNum '1' = 1
@@ -44,3 +63,4 @@ singleNumToSnafu 1 = '1'
 singleNumToSnafu 0 = '0'
 singleNumToSnafu (-1) = '-'
 singleNumToSnafu (-2) = '='
+singleNumToSnafu x = error $ "Invalid input: " ++ show x
