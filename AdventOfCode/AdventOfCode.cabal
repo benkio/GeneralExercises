@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -119,6 +119,31 @@ library
       TwentyTwentyOne.TwentySecondDecember
       TwentyTwentyOne.TwentyThirdDecemberP1
       TwentyTwentyOne.TwentyThirdDecemberP2
+      TwentyTwentyThree.EighteenthDecember
+      TwentyTwentyThree.EighthDecember
+      TwentyTwentyThree.EleventhDecember
+      TwentyTwentyThree.FifteenthDecember
+      TwentyTwentyThree.FifthDecember
+      TwentyTwentyThree.FirstDecember
+      TwentyTwentyThree.FourteenthDecember
+      TwentyTwentyThree.FourthDecember
+      TwentyTwentyThree.NineteenthDecember
+      TwentyTwentyThree.NinthDecember
+      TwentyTwentyThree.SecondDecember
+      TwentyTwentyThree.SeventeenthDecember
+      TwentyTwentyThree.SeventhDecember
+      TwentyTwentyThree.SixteenthDecember
+      TwentyTwentyThree.SixthDecember
+      TwentyTwentyThree.TenthDecember
+      TwentyTwentyThree.ThirdDecember
+      TwentyTwentyThree.ThirteenthDecember
+      TwentyTwentyThree.TwelfthDecember
+      TwentyTwentyThree.TwentiethDecember
+      TwentyTwentyThree.TwentyFifthDecember
+      TwentyTwentyThree.TwentyFirstDecember
+      TwentyTwentyThree.TwentyFourthDecember
+      TwentyTwentyThree.TwentySecondDecember
+      TwentyTwentyThree.TwentyThirdDecember
       TwentyTwentyTwo.EighteenthDecember
       TwentyTwentyTwo.EighthDecember
       TwentyTwentyTwo.EleventhDecember
