@@ -19,17 +19,17 @@ countJoltDifferences differenceToCount = length . filter (differenceToCount ==)
 
 arrangementsBySequentValues :: [Int]
 arrangementsBySequentValues =
-    1 :
-    1 :
-    2 :
-    fmap
-        sum
-        ( transpose
-            [ arrangementsBySequentValues
-            , tail arrangementsBySequentValues
-            , (tail . tail) arrangementsBySequentValues
-            ]
-        )
+    1
+        : 1
+        : 2
+        : fmap
+            sum
+            ( transpose
+                [ arrangementsBySequentValues
+                , tail arrangementsBySequentValues
+                , (tail . tail) arrangementsBySequentValues
+                ]
+            )
 
 groupByDifferences :: [Int] -> [[Int]]
 groupByDifferences xs = foldl go [[]] joltDifferencesZip

@@ -54,7 +54,7 @@ insertNodeToLeft n t ns = ns'
     tr' = tr{left = eid n}
     tl' = tl{right = eid n}
     n' = n{left = eid tl', right = eid tr'}
-    ns' = fromList [(eid tl', tl'), (eid tr', tr'), (eid n', n')] `union` ns --[tl', tr', n'] ++ (filter ((`notElem` (fmap eid [tl, tr, n])) . eid) ns)
+    ns' = fromList [(eid tl', tl'), (eid tr', tr'), (eid n', n')] `union` ns -- [tl', tr', n'] ++ (filter ((`notElem` (fmap eid [tl, tr, n])) . eid) ns)
 
 moveNode :: Node -> IntMap Node -> IntMap Node
 moveNode n ns

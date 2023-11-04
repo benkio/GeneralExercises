@@ -62,7 +62,7 @@ groupByThree xs = do
     if null rest''
         then
             return
-                [ (firstGroup, secondGroup, thirdGroup) --not generating all, only the first group is relevant
+                [ (firstGroup, secondGroup, thirdGroup) -- not generating all, only the first group is relevant
                 , (secondGroup, firstGroup, thirdGroup)
                 , (thirdGroup, firstGroup, secondGroup)
                 ]

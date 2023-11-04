@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+
 module TwentyTwentyTwo.TwentySecondDecember where
 
 import Control.Applicative (Alternative ((<|>)))

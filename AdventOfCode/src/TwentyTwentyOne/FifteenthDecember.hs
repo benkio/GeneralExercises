@@ -26,17 +26,19 @@ neighboorsWeighted m (c, vc) = mapMaybe (\nc -> fmap (\nvc -> (nc, vc + nvc)) (M
 buildWeightedMap :: Map Coord Int -> [(Coord, Int)] -> Map Coord Int -> Map Coord Int
 buildWeightedMap v [] _ = v
 buildWeightedMap v es m =
-    let -- neighboors(ns) of all es filtered not member of v or minimum
+    let
+        -- neighboors(ns) of all es filtered not member of v or minimum
         -- foreach ns calc the weight based on the element of es
         ns = (filter (\(c, x) -> foldl (\_ x' -> x < x') True (M.lookup c v)) . concatMap (neighboorsWeighted m)) es
         -- sort ns -> group -> minimum
         ns' = (fmap (minimumBy (\(_, y) (_, y') -> y `compare` y')) . groupBy (\(c, _) (c', _) -> c == c') . sort) ns
         -- add them to v
         v' = foldl (\acc (c, y) -> M.insert c y acc) v ns'
-     in -- recurse with the new edge and v'
+     in
+        -- recurse with the new edge and v'
         buildWeightedMap v' ns' m
 
---step v ns m = iterate (\(x, y) -> buildWeightedMap x y m) (v,ns)
+-- step v ns m = iterate (\(x, y) -> buildWeightedMap x y m) (v,ns)
 
 solution :: Map Coord Int -> Int
 solution =

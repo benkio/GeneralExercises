@@ -28,7 +28,7 @@ changePerspective bs =
                     , y <- [by, -by]
                     , z <- [bz, -bz]
                     , -- definitely too much
-                    v <- [(x, y, z), (y, x, z), (z, y, x), (y, z, x), (z, x, y), (x, z, y)] --[(x, y, z), (y, z, x), (z, x, y), ]
+                    v <- [(x, y, z), (y, x, z), (z, y, x), (y, z, x), (z, x, y), (x, z, y)] -- [(x, y, z), (y, z, x), (z, x, y), ]
                     ]
                 )
                 bs
@@ -99,7 +99,8 @@ buildPairs (s : ss) = [(s, x) | x <- ss] ++ buildPairs ss
 
 calculateScannerPosition :: [(Coord, Coord)] -> (Int, Coord)
 calculateScannerPosition =
-    second head . fromJust
+    second head
+        . fromJust
         . find (\(i, xs) -> and (uncurry (==) <$> xs `zip` tail xs))
         . ( \(b, b') ->
                 ( \(i, xs) ->

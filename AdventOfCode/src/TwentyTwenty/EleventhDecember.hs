@@ -28,7 +28,7 @@ gridY = 92
 gridX :: Int
 gridX = 94
 
-getSeat :: Grid -> Coordinate -> Seat --take advantage of the ordering
+getSeat :: Grid -> Coordinate -> Seat -- take advantage of the ordering
 getSeat grid (x, y) = grid !! (y * (gridX + 1) + x)
 
 showGrid :: Grid -> String

@@ -43,7 +43,7 @@ instance Parsable Packet where
                                     ( \(i, ps) ->
                                         let (p, i'') = parse i :: (Packet, String)
                                          in (i'', ps ++ [p])
-                                        --((\(p, i'') -> (i'', ps ++ [p])) . parse) i
+                                        -- ((\(p, i'') -> (i'', ps ++ [p])) . parse) i
                                     )
                                     (c, [])
                          in (Operator{header = header, subPackets = packages}, s'')

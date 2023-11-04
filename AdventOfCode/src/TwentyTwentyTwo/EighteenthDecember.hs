@@ -67,7 +67,7 @@ eighteenthDecemberSolution1 :: IO Int
 eighteenthDecemberSolution1 = solution1 <$> input
 
 -- 2440 too low
---eighteenthDecemberSolution2 :: IO Int
+-- eighteenthDecemberSolution2 :: IO Int
 eighteenthDecemberSolution2 = solution2 <$> input
 
 connectFace :: ObsidianFace -> [ObsidianFace] -> [ObsidianFace] -> ([ObsidianFace], [ObsidianFace])

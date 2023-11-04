@@ -173,4 +173,4 @@ interpretInstructionV2 (MUL r1 r2) is pointer regs =
 twentythirdDecemberSolution2 :: IO Int
 twentythirdDecemberSolution2 = input2 >>= (`solution` registers2)
 
---479009040
+-- 479009040

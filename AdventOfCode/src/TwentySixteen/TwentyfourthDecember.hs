@@ -25,7 +25,8 @@ parseGrid = fst . foldl foldLine (Map.empty, 0)
   where
     foldLine :: (Grid, Int) -> String -> (Grid, Int)
     foldLine (grid, y) =
-        (,y + 1) . fst
+        (,y + 1)
+            . fst
             . foldl
                 ( \(g, x) c -> case c of
                     '.' -> (Map.insert (x, y) Open g, x + 1)

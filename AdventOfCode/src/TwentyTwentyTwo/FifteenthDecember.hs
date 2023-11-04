@@ -1,11 +1,11 @@
 module TwentyTwentyTwo.FifteenthDecember where
 
+import Data.Bifunctor (bimap)
 import Data.Map (Map, fromList, lookup)
 import Data.Maybe (mapMaybe)
 import Debug.Trace
 import Text.Printf
 import Prelude hiding (lookup)
-import Data.Bifunctor (bimap)
 
 type Position = (Int, Int)
 type SensorList = [(Position, Position)]

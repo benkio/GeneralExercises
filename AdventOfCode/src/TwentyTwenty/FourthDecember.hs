@@ -167,8 +167,8 @@ input = do
     concatInput :: [String] -> [String]
     concatInput [] = []
     concatInput xs =
-        (unwords . takeWhile ("" /=)) xs :
-        concatInput (safeTail (dropWhile ("" /=) xs))
+        (unwords . takeWhile ("" /=)) xs
+            : concatInput (safeTail (dropWhile ("" /=) xs))
 
 safeTail :: [a] -> [a]
 safeTail [] = []

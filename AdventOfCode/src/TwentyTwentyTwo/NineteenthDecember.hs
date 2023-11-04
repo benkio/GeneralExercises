@@ -1,11 +1,11 @@
 module TwentyTwentyTwo.NineteenthDecember where
 
+import Control.Parallel.Strategies
 import Data.Maybe (mapMaybe)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Debug.Trace
 import Text.Read
-import Control.Parallel.Strategies
 
 newtype OreRobotCost = OreRobotCost {oreCost :: Int} deriving (Show)
 newtype ClayRobotCost = ClayRobotCost {clayOreCost :: Int} deriving (Show)
@@ -80,7 +80,7 @@ evolveState t s =
         { ore = ore s + r_ore s * t
         , clay = clay s + r_clay s * t
         , obsidian = obsidian s + r_obsidian s * t
-        --, geode = geode s + r_geode s * t
+        -- , geode = geode s + r_geode s * t
         }
 
 -- return the states with new robots and the time when those are operational
@@ -88,7 +88,7 @@ newRobotStates :: State -> Int -> Int -> Blueprint -> [(Int, State)]
 newRobotStates s time totalTime b =
     ( filter ((<= totalTime) . fst)
         . mapMaybe (fmap (\(t, s) -> (t + time, s)) . newRobotState s time b totalTime)
-        . filter (\r -> (not . enoughRobot s b) r && (not . enoughResource s time totalTime b) r) --do I need to buy this bot
+        . filter (\r -> (not . enoughRobot s b) r && (not . enoughResource s time totalTime b) r) -- do I need to buy this bot
     )
         robots
 
@@ -154,7 +154,7 @@ newRobotTime s b r = case r of
         | otherwise = Just 1
 
 bfs :: [(Int, State)] -> Set State -> Int -> Blueprint -> Int -> Int
-bfs [] _ result _ _  = result
+bfs [] _ result _ _ = result
 bfs ((t, s) : sts) visited result b totalTime = trace ((show . length) sts) $ bfs (sts ++ nextStates) visited' (max (geode finalState) result) b totalTime
   where
     finalState = evolveState (totalTime - t) s

@@ -50,7 +50,7 @@ solution :: [String] -> String
 solution = numToSnafu 0 . sum . fmap snafuToNum
 
 twentyFifthDecemberSolution1 :: IO String
-twentyFifthDecemberSolution1 = solution <$> inputed
+twentyFifthDecemberSolution1 = solution <$> input
 
 singleSnafuToNum '2' = 2
 singleSnafuToNum '1' = 1

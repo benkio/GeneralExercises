@@ -77,7 +77,7 @@ cropCuboid c@Cuboid{maxX = cMaxX, minX = cMinX, maxY = cMaxY, minY = cMinY, maxZ
         cropMinZ = if cMinZ >= cMinZ' && cMinZ <= cMaxZ' then Just (c'{minX = minX ci + 1, maxX = maxX ci - 1, maxY = maxY ci - 1, minY = minY ci + 1, maxZ = minZ ci}) else Nothing
      in catMaybes [cropMaxX, cropMinX, cropMaxY, cropMinY, cropMaxZ, cropMinZ]
 
---Test use
+-- Test use
 cubesInCuboid' c = [(x, y, z) | x <- [minX c .. maxX c], y <- [minY c .. maxY c], z <- [minZ c .. maxZ c]]
 
 bruteForceCubeCount :: [(Int, Int, Int)] -> [Cuboid] -> Int

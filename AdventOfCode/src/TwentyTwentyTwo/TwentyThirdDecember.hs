@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+
 module TwentyTwentyTwo.TwentyThirdDecember where
 
 import Data.List (find, (\\))
