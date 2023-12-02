@@ -1,8 +1,7 @@
-{-# LANGUAGE TupleSections #-}
-
 module TwentyTwentyThree.FirstDecember where
 
 import Data.Char
+import Data.Functor
 import Data.List
 import Data.Maybe
 
@@ -26,24 +25,38 @@ solution1 ls = sum $ (\x -> read x :: Int) . (\x -> [head x, last x]) . filter i
 firstDecemberSolution1 :: IO Int
 firstDecemberSolution1 = solution1 <$> input
 
-stringDigit :: [(String, Int)]
-stringDigit = [("one", 1), ("two", 2), ("three", 3), ("four", 4), ("five", 5), ("six", 6), ("seven", 7), ("eight", 8), ("nine", 9)]
+stringDigit :: [(String, Char)]
+stringDigit = [("one", '1'), ("two", '2'), ("three", '3'), ("four", '4'), ("five", '5'), ("six", '6'), ("seven", '7'), ("eight", '8'), ("nine", '9')]
 
-parsingStringDigit :: String -> Either (Int, String) String
+testInput2 =
+    parseInput
+        "two1nine\n\
+        \eightwothree\n\
+        \abcone2threexyz\n\
+        \xtwone3four\n\
+        \4nineeightseven2\n\
+        \zoneight234\n\
+        \7pqrstsixteen"
+
+parsingStringDigit :: String -> Either (Char, String) String
 parsingStringDigit xs = if null parsingList then Right (tail xs) else Left (head parsingList)
   where
-    checkDigitString :: String -> (String, Int) -> Maybe (String, Int)
-    checkDigitString xs (cs, i) = (,i) <$> stripPrefix cs xs
-    parsingList = mapMaybe xs stringDigit
+    checkDigitString :: String -> (String, Char) -> Maybe (Char, String)
+    checkDigitString xs (cs, i) = stripPrefix cs xs $> (i, tail xs)
+    parsingList = mapMaybe (checkDigitString xs) stringDigit
 
-parsingCalibration :: String -> [Int]
+parsingCalibration :: String -> [Char]
+parsingCalibration [] = []
 parsingCalibration (x : xs)
-    | isDigit x = (read "x" :: Int) : parsingCalibration xs
+    | isDigit x = x : parsingCalibration xs
     | otherwise = case parsingStringDigit (x : xs) of
         Left (y, ys) -> y : parsingCalibration ys
         Right ys -> parsingCalibration ys
 
-solution2 = undefined
+solution2 :: [String] -> Int
+solution2 ls =
+    sum $
+        (\x -> read x :: Int) . (\x -> [head x, last x]) . parsingCalibration <$> ls
 
 firstDecemberSolution2 :: IO Int
-firstDecemberSolution2 = undefined
+firstDecemberSolution2 = solution2 <$> input
