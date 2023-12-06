@@ -10,7 +10,7 @@ input = parseInput <$> readFile "input/2023/4December.txt"
 data Card = C {cId :: Int, winningNums :: [Int], nums :: [Int]}
 
 parseInput :: String -> [Card]
-parseInput = fmap (\(i, l) -> (parseCard i . drop 2 . dropWhile (not . (== ':'))) l) . zip [1 ..] . lines
+parseInput = fmap (\(i, l) -> (parseCard i . drop 2 . dropWhile (/= ':')) l) . zip [1 ..] . lines
   where
     parseCard i s = C{cId = i, winningNums = (fmap (\x -> read x :: Int) . takeWhile (/= "|") . words) s, nums = (fmap (\x -> read x :: Int) . tail . dropWhile (/= "|") . words) s}
 
