@@ -8,7 +8,7 @@ input :: IO [RaceRecord]
 input = parseInput <$> readFile "input/2023/6December.txt"
 
 parseInput :: String -> [RaceRecord]
-parseInput = fmap (\[t, d] -> RR{time = (read t) :: Int, distance = (read d) :: Int}) . transpose . fmap (tail . words) . lines
+parseInput = fmap (\[t, d] -> RR{time = read t :: Int, distance = read d :: Int}) . transpose . fmap (tail . words) . lines
 
 testInput :: [RaceRecord]
 testInput =
@@ -32,7 +32,7 @@ input' :: IO RaceRecord
 input' = parseInput' <$> readFile "input/2023/6December.txt"
 
 parseInput' :: String -> RaceRecord
-parseInput' = (\[t, d] -> RR{time = (read t) :: Int, distance = (read d) :: Int}) . fmap (concat . tail . words) . lines
+parseInput' = (\[t, d] -> RR{time = read t :: Int, distance = read d :: Int}) . fmap (concat . tail . words) . lines
 
 testInput' :: RaceRecord
 testInput' =
