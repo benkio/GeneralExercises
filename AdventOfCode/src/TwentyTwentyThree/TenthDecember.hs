@@ -29,12 +29,12 @@ startingPoint = fst . head . toList . M.filter (== A)
 search :: FieldMap -> [(Coordinate, AnimalMove)]
 search fm = head $ nubBy sameLoop $ animalPath fm st
   where
-    st = fmap (\d -> [(startingPoint fm, d)]) $ enumFrom N
+    st = (\d -> [(startingPoint fm, d)]) <$> enumFrom N
     sameLoop :: [(Coordinate, AnimalMove)] -> [(Coordinate, AnimalMove)] -> Bool
     sameLoop p p' = all ((`elem` fmap fst p') . fst) p
 
 isLoop :: FieldMap -> [(Coordinate, AnimalMove)] -> Bool
-isLoop fm = ((`elem` (fmap (stepCoordinate (startingPoint fm)) (enumFrom N))) . fst) . last
+isLoop fm = ((`elem` fmap (stepCoordinate (startingPoint fm)) (enumFrom N)) . fst) . last
 
 animalPath :: FieldMap -> [[(Coordinate, AnimalMove)]] -> [[(Coordinate, AnimalMove)]]
 animalPath fm [] = []
@@ -46,7 +46,7 @@ animalPath fm (p : ps)
     nextP = animalMove (concat (p : ps)) fm (last p)
 
 animalMove :: [(Coordinate, AnimalMove)] -> FieldMap -> (Coordinate, AnimalMove) -> [(Coordinate, AnimalMove)]
-animalMove path fm (c, am) = filter ((`notElem` (fmap fst path)) . fst) . mapMaybe (\x -> animalStep fm (stepCoordinate c x) x) . filter (/= oppositeDirection am) $ enumFrom N
+animalMove path fm (c, am) = filter ((`notElem` fmap fst path) . fst) . mapMaybe (\x -> animalStep fm (stepCoordinate c x) x) . filter (/= oppositeDirection am) $ enumFrom N
 
 animalStep :: FieldMap -> Coordinate -> AnimalMove -> Maybe (Coordinate, AnimalMove)
 animalStep fm nc am = M.lookup nc fm >>= pipeAccess am <&> (nc,)

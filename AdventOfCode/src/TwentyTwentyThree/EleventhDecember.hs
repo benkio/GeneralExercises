@@ -12,25 +12,26 @@ instance Show Sky where
     show G = "#"
 
 instance Read Sky where
-    readsPrec _ = \(c : s) -> case c of
-        '.' -> [(E, s)]
-        '#' -> [(G, s)]
-        otherwise -> []
+    readsPrec _ (c : s) =
+        case c of
+            '.' -> [(E, s)]
+            '#' -> [(G, s)]
+            _ -> []
 
 input :: IO [[Sky]]
 input = parseInput <$> readFile "input/2023/11December.txt"
 
 parseInput :: String -> [[Sky]]
-parseInput = (fmap . fmap) (\x -> (read [x]) :: Sky) . lines
+parseInput = (fmap . fmap) (\x -> read [x] :: Sky) . lines
 
-expandUniverse :: Int -> [[Sky]] -> [[Sky]]
-expandUniverse expRate = transpose . expandUniverseRow expRate . transpose . expandUniverseRow expRate
+expandUniverse :: [[Sky]] -> ([Int], [Int])
+expandUniverse xs = (emptyLines 0 xs, (emptyLines 0 . transpose) xs)
 
-expandUniverseRow :: Int -> [[Sky]] -> [[Sky]]
-expandUniverseRow _ [] = []
-expandUniverseRow expRate (x : xs)
-    | all (== E) x = replicate expRate x ++ expandUniverseRow expRate xs
-    | otherwise = x : expandUniverseRow expRate xs
+emptyLines :: Int -> [[Sky]] -> [Int]
+emptyLines _ [] = []
+emptyLines i (x : xs)
+    | all (== E) x = i : emptyLines (i + 1) xs
+    | otherwise = emptyLines (i + 1) xs
 
 galaxyCoordinates :: [[Sky]] -> [(Int, Int)]
 galaxyCoordinates = foldl (\gs (y, r) -> foldl (\gs' (x, sky) -> if sky == G then (x, y) : gs' else gs') gs r) [] . fmap (second (zip [0 ..])) . zip [0 ..]
@@ -39,8 +40,15 @@ galaxyPairs :: [(Int, Int)] -> [((Int, Int), (Int, Int))]
 galaxyPairs [] = []
 galaxyPairs (g : gs) = fmap (g,) gs ++ galaxyPairs gs
 
-manhattanDistance :: (Int, Int) -> (Int, Int) -> Int
-manhattanDistance (x, y) (x', y') = abs (x - x') + abs (y - y')
+manhattanDistance :: [Int] -> [Int] -> Int -> (Int, Int) -> (Int, Int) -> Int
+manhattanDistance rs cs expRate (x, y) (x', y') =
+    abs (x - x')
+        + abs (y - y')
+        + (enclosedRows * (expRate - 1))
+        + (enclosedColumns * (expRate - 1))
+  where
+    enclosedRows = (length . filter (\z -> z < max y y' && z > min y y')) rs
+    enclosedColumns = (length . filter (\z -> z < max x x' && z > min x x')) cs
 
 testInput :: [[Sky]]
 testInput =
@@ -56,12 +64,11 @@ testInput =
         \.......#..\n\
         \#...#....."
 
-solution1 expRate = sum . fmap (uncurry manhattanDistance) . galaxyPairs . galaxyCoordinates . expandUniverse expRate
-
+solution expRate xs = (sum . fmap (uncurry (manhattanDistance emptyRows emptyColumns expRate)) . galaxyPairs . galaxyCoordinates) xs
+  where
+    (emptyRows, emptyColumns) = expandUniverse xs
 eleventhDecemberSolution1 :: IO Int
-eleventhDecemberSolution1 = solution1 2 <$> input
-
-solution2 = undefined
+eleventhDecemberSolution1 = solution 2 <$> input
 
 eleventhDecemberSolution2 :: IO Int
-eleventhDecemberSolution2 = solution1 1000000 <$> input
+eleventhDecemberSolution2 = solution 1000000 <$> input
