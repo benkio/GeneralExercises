@@ -4,9 +4,10 @@ module TwentyTwentyThree.TenthDecember where
 
 import Data.Functor ((<&>))
 import Data.List (nubBy)
-import Data.Map (Map, fromList, toList)
+import Data.Map (Map, fromList, mapWithKey, toList)
 import qualified Data.Map as M (filter, lookup)
-import Data.Maybe (mapMaybe)
+import Data.Maybe (fromJust, mapMaybe)
+import Data.Set (Set)
 import Debug.Trace
 
 type Coordinate = (Int, Int)
@@ -69,6 +70,39 @@ solution1 = (`div` 2) . (+ 1) . length . search
 
 tenthDecemberSolution1 :: IO Int
 tenthDecemberSolution1 = solution1 <$> input
+
+cleanNonLoopPipes :: FieldMap -> [(Coordinate, AnimalMove)] -> FieldMap
+cleanNonLoopPipes fm l = mapWithKey (\c f -> if c `elem` fmap fst l then f else D) fm
+
+-- walk the path, fix a convention for what's in and out:
+-- going est in EW, then North in In, south is out etc
+-- foreach pipe select the rows/cols of in and out and add them to the sets
+selectInOut :: FieldMap -> [(Coordinate, AnimalMove)] -> (Set Coordinate, Set Coordinate) -> (Set Coordinate, Set Coordinate)
+selectInOut _ [] (sin, sout) = (sin, sout)
+selectInOut fm (l : ls) (sin, sout) = undefined
+
+-- Populate the 2 sets including what's in and out by convention
+selectInOutSingle :: FieldMap -> (Coordinate, AnimalMove) -> (Set Coordinate, Set Coordinate) -> (Set Coordinate, Set Coordinate)
+selectInOutSingle fm (c, am) (sin, sout) = undefined
+  where
+    (inDirections, outDirections) = inOutConvention ((fromJust . M.lookup c) fm) am
+    -- select all the elements not in loop and not out of the map in the directions from the coordinate c
+    (inCoordinates, outCoordinates) = undefined
+
+inOutConvention :: Field -> AnimalMove -> ([AnimalMove], [AnimalMove])
+inOutConvention (P NS) N = ([E], [W])
+inOutConvention (P NS) S = ([W], [E])
+inOutConvention (P EW) E = ([S], [N])
+inOutConvention (P EW) W = ([N], [S])
+inOutConvention (P NE) N = ([], [S, W])
+inOutConvention (P NE) E = ([S, W], [])
+inOutConvention (P NW) N = ([E, S], [])
+inOutConvention (P NW) W = ([], [E, S])
+inOutConvention (P SW) S = ([], [N, E])
+inOutConvention (P SW) W = ([N, E], [])
+inOutConvention (P SE) S = ([N, W], [])
+inOutConvention (P SE) E = ([], [N, W])
+inOutConvention x y = error $ "expected a pipe, got: " ++ (show (x, y))
 
 solution2 = undefined
 
