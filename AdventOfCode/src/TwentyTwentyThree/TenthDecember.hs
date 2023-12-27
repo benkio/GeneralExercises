@@ -5,9 +5,9 @@ module TwentyTwentyThree.TenthDecember where
 import Data.Functor ((<&>))
 import Data.List (nubBy)
 import Data.Map (Map, fromList, mapWithKey, toList)
-import qualified Data.Map as M (filter, lookup)
-import Data.Maybe (fromJust, mapMaybe)
-import Data.Set (Set)
+import qualified Data.Map as M (filter, insert, lookup)
+import Data.Maybe (fromJust, isNothing, mapMaybe)
+import Data.Set (Set, empty, insert, size)
 import Debug.Trace
 
 type Coordinate = (Int, Int)
@@ -27,8 +27,17 @@ input = parseInput <$> readFile "input/2023/10December.txt"
 startingPoint :: FieldMap -> Coordinate
 startingPoint = fst . head . toList . M.filter (== A)
 
-search :: FieldMap -> [(Coordinate, AnimalMove)]
-search fm = head $ nubBy sameLoop $ animalPath fm st
+amendStartingPointAnimalMove :: FieldMap -> [(Coordinate, AnimalMove)] -> (FieldMap, [(Coordinate, AnimalMove)])
+amendStartingPointAnimalMove fm xs = (fm', (fst s, sAnimalMove) : tail xs)
+  where
+    s = head xs
+    ns = xs !! 1
+    l = last xs
+    (sfield, sAnimalMove) = fixStartingPointAnimalMove (fst s) (fst l) (fst ns)
+    fm' = M.insert (fst s) sfield fm
+
+search :: FieldMap -> (FieldMap, [(Coordinate, AnimalMove)])
+search fm = amendStartingPointAnimalMove fm $ head $ nubBy sameLoop $ animalPath fm st
   where
     st = (\d -> [(startingPoint fm, d)]) <$> enumFrom N
     sameLoop :: [(Coordinate, AnimalMove)] -> [(Coordinate, AnimalMove)] -> Bool
@@ -77,17 +86,35 @@ cleanNonLoopPipes fm l = mapWithKey (\c f -> if c `elem` fmap fst l then f else 
 -- walk the path, fix a convention for what's in and out:
 -- going est in EW, then North in In, south is out etc
 -- foreach pipe select the rows/cols of in and out and add them to the sets
-selectInOut :: FieldMap -> [(Coordinate, AnimalMove)] -> (Set Coordinate, Set Coordinate) -> (Set Coordinate, Set Coordinate)
-selectInOut _ [] (sin, sout) = (sin, sout)
-selectInOut fm (l : ls) (sin, sout) = undefined
+selectInOut :: FieldMap -> [Coordinate] -> [(Coordinate, AnimalMove)] -> (Set Coordinate, Set Coordinate) -> (Set Coordinate, Set Coordinate)
+selectInOut _ _ [] (sin, sout) = (sin, sout)
+selectInOut fm loop ((c, am) : ls) (sin, sout) = selectInOut fm loop ls (sin', sout')
+  where
+    (sin', sout') = selectInOutSingle fm loop (c, am) (sin, sout)
 
 -- Populate the 2 sets including what's in and out by convention
-selectInOutSingle :: FieldMap -> (Coordinate, AnimalMove) -> (Set Coordinate, Set Coordinate) -> (Set Coordinate, Set Coordinate)
-selectInOutSingle fm (c, am) (sin, sout) = undefined
+selectInOutSingle :: FieldMap -> [Coordinate] -> (Coordinate, AnimalMove) -> (Set Coordinate, Set Coordinate) -> (Set Coordinate, Set Coordinate)
+selectInOutSingle fm loop (c, am) (sin, sout) =
+    (foldl (flip insert) sin inCoordinates, foldl (flip insert) sout outCoordinates)
   where
     (inDirections, outDirections) = inOutConvention ((fromJust . M.lookup c) fm) am
     -- select all the elements not in loop and not out of the map in the directions from the coordinate c
-    (inCoordinates, outCoordinates) = undefined
+    inCoordinates = concatMap (\am' -> rowColumnInOut fm loop c am') inDirections
+    outCoordinates = concatMap (\am' -> rowColumnInOut fm loop c am') outDirections
+
+rowColumnInOut :: FieldMap -> [Coordinate] -> Coordinate -> AnimalMove -> [Coordinate]
+rowColumnInOut fm loop c am
+    | isNothing maybeField || nextCoord `elem` loop = []
+    | otherwise = nextCoord : rowColumnInOut fm loop nextCoord am
+  where
+    nextCoord = stepCoordinate c am
+    maybeField = M.lookup nextCoord fm
+
+solution2 :: FieldMap -> Int
+solution2 fm = min (size s1) (size s2)
+  where
+    (fm', loop) = search fm
+    (s1, s2) = selectInOut fm' (fmap fst loop) loop (empty, empty)
 
 inOutConvention :: Field -> AnimalMove -> ([AnimalMove], [AnimalMove])
 inOutConvention (P NS) N = ([E], [W])
@@ -104,10 +131,29 @@ inOutConvention (P SE) S = ([N, W], [])
 inOutConvention (P SE) E = ([], [N, W])
 inOutConvention x y = error $ "expected a pipe, got: " ++ (show (x, y))
 
-solution2 = undefined
-
 tenthDecemberSolution2 :: IO Int
-tenthDecemberSolution2 = undefined
+tenthDecemberSolution2 = solution2 <$> input
+
+fixStartingPointAnimalMove :: Coordinate -> Coordinate -> Coordinate -> (Field, AnimalMove)
+fixStartingPointAnimalMove (x, y) (px, py) (nx, ny)
+    | px == nx && py == (ny - 2) = (P NS, N)
+    | px == nx && py == (ny + 2) = (P NS, S)
+    -- -
+    | px == (nx - 2) && py == ny = (P EW, E)
+    | px == (nx + 2) && py == ny = (P EW, W)
+    -- L
+    | px == (nx - 1) && py == (ny - 1) && px == x && py == (y - 1) = (P NE, E)
+    | px == (nx + 1) && py == (ny + 1) && px == (x + 1) && py == y = (P NE, N)
+    -- J
+    | px == (nx - 1) && py == (ny + 1) && px == (x - 1) && py == y = (P NW, N)
+    | px == (nx + 1) && py == (ny - 1) && px == x && py == (y - 1) = (P NW, W)
+    -- 7
+    | px == (nx - 1) && py == (ny - 1) && px == (x - 1) && py == y = (P SW, S)
+    | px == (nx + 1) && py == (ny + 1) && px == x && py == (y - 1) = (P SW, W)
+    -- F
+    | px == (nx - 1) && py == (ny + 1) && px == x && py == (y + 1) = (P SE, E)
+    | px == (nx + 1) && py == (ny - 1) && px == (x - 1) && py == y = (P SE, S)
+    | otherwise = error $ "pattern not expected: " ++ (show (x, y)) ++ " , " ++ (show (px, py)) ++ " , " ++ (show (nx, ny)) ++ " , "
 
 parseInput :: String -> FieldMap
 parseInput = fromList . concatMap (\(y, c) -> (fmap (parseField y) . zip [0 ..]) c) . zip [0 ..] . lines
@@ -139,6 +185,33 @@ testInput' =
         \SJ.L7\n\
         \|F--J\n\
         \LJ..."
+
+testInput'' :: FieldMap
+testInput'' =
+    parseInput
+        "...........\n\
+        \.S-------7.\n\
+        \.|F-----7|.\n\
+        \.||.....||.\n\
+        \.||.....||.\n\
+        \.|L-7.F-J|.\n\
+        \.|..|.|..|.\n\
+        \.L--J.L--J.\n\
+        \..........."
+
+testInput''' :: FieldMap
+testInput''' =
+    parseInput
+        ".F----7F7F7F7F-7....\n\
+        \.|F--7||||||||FJ....\n\
+        \.||.FJ||||||||L7....\n\
+        \FJL7L7LJLJ||LJ.L-7..\n\
+        \L--J.L7...LJS7F-7L7.\n\
+        \....F-J..F7FJ|L7L7L7\n\
+        \....L7.F7||L7|.L7L7|\n\
+        \.....|FJLJ|FJ|F7|.LJ\n\
+        \....FJL-7.||.||||...\n\
+        \....L---J.LJ.LJLJ..."
 
 oppositeDirection :: AnimalMove -> AnimalMove
 oppositeDirection N = S
