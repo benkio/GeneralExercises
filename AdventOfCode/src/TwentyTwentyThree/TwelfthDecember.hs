@@ -2,6 +2,7 @@ module TwentyTwentyThree.TwelfthDecember where
 
 import Data.List (intersperse, isPrefixOf, nub, permutations)
 import Data.List.Split (splitOn)
+import Data.Tree (Tree, foldTree, unfoldTree)
 import Debug.Trace
 
 data SpringRows = SR {damagedRecord :: String, damagedGroups :: [Int]} deriving (Show)
@@ -14,45 +15,60 @@ parseInput = fmap parseSpringRow . lines
   where
     parseSpringRow = (\[dr, dg] -> SR{damagedRecord = dr, damagedGroups = (fmap (\x -> read x :: Int) . splitOn ",") dg}) . words
 
-fixRecords :: [String] -> [Int] -> String -> [String]
-fixRecords rs expectedGroup ('?' : xs) =
-    let
-        rs' = if null rs then ["#", "."] else concatMap (\r -> [r ++ ['#'], r ++ ['.']]) rs
-        nextRecords = filter ((filterValidRecord expectedGroup) . recordToGroup) rs'
-     in
-        fixRecords
-            ( -- traceShowId
-              nextRecords
-            )
-            expectedGroup
-            xs
-fixRecords rs expectedGroup (x : xs) =
-    let
-        rs' = if null rs then [[x]] else fmap (\r -> r ++ [x]) rs
-        nextRecords = filter ((filterValidRecord expectedGroup) . recordToGroup) rs'
-     in
-        fixRecords
-            ( -- traceShowId
-              nextRecords
-            )
-            expectedGroup
-            xs
-fixRecords rs expectedGroup [] = filter (((==) expectedGroup) . recordToGroup) rs
+generateSpringsTree :: [Int] -> String -> Tree String
+generateSpringsTree expectedGroup s = unfoldTree (generateSprings expectedGroup) s
+
+generateSprings :: [Int] -> String -> (String, [String])
+generateSprings _ [] = ([], [])
+generateSprings expectedGroup s = (prefix, children)
+  where
+    (prefix, rest) = break (== '?') s
+    childrenPrefix = filter filterChildren $ if null rest then [] else [prefix ++ "#", prefix ++ "."]
+    filterChildren g = filterValidRecord expectedGroup $ (recordToGroup g)
+    hasQuestions = (> 0) . length . filter (== '?')
+    children = (filter (\g -> if hasQuestions g then True else recordToGroup g == expectedGroup) . fmap (++ drop 1 rest)) childrenPrefix
+
+-- fixRecords :: [String] -> [Int] -> String -> [String]
+-- fixRecords rs expectedGroup ('?' : xs) =
+--     let
+--         rs' = if null rs then ["#", "."] else concatMap (\r -> [r ++ ['#'], r ++ ['.']]) rs
+--         nextRecords = filter ((filterValidRecord expectedGroup) . recordToGroup) rs'
+--      in
+--         fixRecords
+--             ( -- traceShowId
+--               nextRecords
+--             )
+--             expectedGroup
+--             xs
+-- fixRecords rs expectedGroup (x : xs) =
+--     let
+--         rs' = if null rs then [[x]] else fmap (\r -> r ++ [x]) rs
+--         nextRecords = filter ((filterValidRecord expectedGroup) . recordToGroup) rs'
+--      in
+--         fixRecords
+--             ( -- traceShowId
+--               nextRecords
+--             )
+--             expectedGroup
+--             xs
+-- fixRecords rs expectedGroup [] = filter (((==) expectedGroup) . recordToGroup) rs
 
 filterValidRecord :: [Int] -> [Int] -> Bool
 filterValidRecord es [] = True
-filterValidRecord [] (x : []) = False
+filterValidRecord [] (x : xs) = False
 filterValidRecord (e : es) (x : []) = x <= e
 filterValidRecord (e : es) (x : xs) = e == x && filterValidRecord es xs
+
+-- filterValidRecord x y = error $ "WTF: " ++ (show x) ++ " - " ++ (show y)
 
 recordToGroup :: String -> [Int]
 recordToGroup = fmap length . filter (not . null) . splitOn "."
 
 howManyValidCombinations :: [Int] -> String -> Int
-howManyValidCombinations expectedGroup record = length $ fixRecords [] expectedGroup record
+howManyValidCombinations expectedGroup record = foldTree (\s cs -> if length s == length record && null cs then 1 else sum cs) $ generateSpringsTree expectedGroup record
 
 solution :: ([Int] -> String -> Int) -> [SpringRows] -> Int
-solution alg = sum . fmap (trace "next" solutionSpringRow)
+solution alg = sum . fmap solutionSpringRow
   where
     solutionSpringRow (SR{damagedRecord = dr, damagedGroups = dg}) =
         alg dg (removeConsecutiveDots dr)
