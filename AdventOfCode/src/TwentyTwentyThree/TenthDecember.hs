@@ -99,8 +99,8 @@ selectInOutSingle fm loop (c, am) (sin, sout) =
   where
     (inDirections, outDirections) = inOutConvention ((fromJust . M.lookup c) fm) am
     -- select all the elements not in loop and not out of the map in the directions from the coordinate c
-    inCoordinates = concatMap (\am' -> rowColumnInOut fm loop c am') inDirections
-    outCoordinates = concatMap (\am' -> rowColumnInOut fm loop c am') outDirections
+    inCoordinates = concatMap  (rowColumnInOut fm loop c) inDirections
+    outCoordinates = concatMap (rowColumnInOut fm loop c) outDirections
 
 rowColumnInOut :: FieldMap -> [Coordinate] -> Coordinate -> AnimalMove -> [Coordinate]
 rowColumnInOut fm loop c am
@@ -129,7 +129,7 @@ inOutConvention (P SW) S = ([], [N, E])
 inOutConvention (P SW) W = ([N, E], [])
 inOutConvention (P SE) S = ([N, W], [])
 inOutConvention (P SE) E = ([], [N, W])
-inOutConvention x y = error $ "expected a pipe, got: " ++ (show (x, y))
+inOutConvention x y = error $ "expected a pipe, got: " ++ show (x, y)
 
 tenthDecemberSolution2 :: IO Int
 tenthDecemberSolution2 = solution2 <$> input
@@ -153,7 +153,7 @@ fixStartingPointAnimalMove (x, y) (px, py) (nx, ny)
     -- F
     | px == (nx - 1) && py == (ny + 1) && px == x && py == (y + 1) = (P SE, E)
     | px == (nx + 1) && py == (ny - 1) && px == (x - 1) && py == y = (P SE, S)
-    | otherwise = error $ "pattern not expected: " ++ (show (x, y)) ++ " , " ++ (show (px, py)) ++ " , " ++ (show (nx, ny)) ++ " , "
+    | otherwise = error $ "pattern not expected: " ++ show (x, y) ++ " , " ++ show (px, py) ++ " , " ++ show (nx, ny) ++ " , "
 
 parseInput :: String -> FieldMap
 parseInput = fromList . concatMap (\(y, c) -> (fmap (parseField y) . zip [0 ..]) c) . zip [0 ..] . lines
