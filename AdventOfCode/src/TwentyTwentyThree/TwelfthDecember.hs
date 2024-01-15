@@ -1,20 +1,29 @@
 module TwentyTwentyThree.TwelfthDecember where
 
-import Data.List.Split (splitOn)
 import Data.Bifunctor (second)
-import Data.List (intersperse, group)
+import Data.List (group, intersperse, intercalate)
+import Data.List.Split (splitOn)
+import Data.Map (Map, empty, insert)
+import qualified Data.Map as M (lookup)
 import Debug.Trace
 
 data SpringRows = SR {damagedRecord :: String, damagedGroups :: [Int]} deriving (Show)
 
 solution :: [SpringRows] -> Int
-solution = length . concatMap (\sr -> groupCheck "" (damagedRecord sr) (damagedGroups sr))
+solution =
+    snd
+        . foldl
+            ( \(mem, v) sr ->
+                let (mem', v') = trace ("next " ++ show (damagedRecord sr) ++ " - " ++ show (damagedGroups sr)) groupCheck mem (damagedRecord sr) (damagedGroups sr)
+                 in (mem', v + v')
+            )
+            (empty, 0)
 
 twelfthDecemberSolution1 :: IO Int
 twelfthDecemberSolution1 = solution <$> input
 
 factorByFive :: SpringRows -> SpringRows
-factorByFive s = s { damagedRecord = (intersperse '?' . concat . replicate 5) (damagedRecord s), damagedGroups = (concat . replicate 5) (damagedGroups s) }
+factorByFive s = s{damagedRecord = (intercalate "?" . replicate 5) (damagedRecord s), damagedGroups = (concat . replicate 5) (damagedGroups s)}
 
 solution2 = solution . fmap factorByFive
 
@@ -39,29 +48,36 @@ testInput =
         \????.######..#####. 1,6,5\n\
         \?###???????? 3,2,1"
 
-groupCheck :: String -> String -> [Int] -> [String]
-groupCheck m [] [] = [m]
-groupCheck _ [] _ = []
-groupCheck m s [] = if any (=='#') s then [] else [m ++ replicate (length s) '.']
-groupCheck m s xs = filter (not . null)  $ concatMap (\(m', rs) -> groupCheck (addMatch m') rs (tail xs)) matchesAndRests
+groupCheck :: Map (String, [Int]) Int -> String -> [Int] -> (Map (String, [Int]) Int, Int)
+groupCheck mem [] [] = (mem, 1)
+groupCheck mem [] _ = (mem, 0)
+groupCheck mem s [] = if '#' `elem` s then (mem, 0) else (mem, 1)
+groupCheck mem s xs =
+    case M.lookup (s, xs) mem of
+        Nothing -> (\(m, v) -> (insert (s, xs) v m, v)) (foldl foldlMemF (mem, 0) matchesAndRests)
+        Just v -> (mem, v)
   where
     recordStripDot = stripDot s
     matchesAndRests = singleGroupCheck recordStripDot xs
-    addMatch x = if null m then x else m ++ "." ++ x
+    foldlMemF (mem', v') (_, rs) =
+        let (mem'', result) = groupCheck mem' rs (tail xs)
+         in (insert (rs, tail xs) result mem'', v' + result)
+
+-- addMatch x = if null m then x else m ++ "." ++ x
 
 singleGroupCheck :: String -> [Int] -> [(String, String)]
-singleGroupCheck s [] = if any (=='#') s then [] else [(replicate (length s) '.', "")]
+singleGroupCheck s [] = [(replicate (length s) '.', "") | '#' `notElem` s]
 singleGroupCheck s xs = matchesAndRests
   where
     (matchingRecord, rest) = cropToMatchingSpringRegion s xs
-    (s':_) = groupToSpring xs
-    matchesAndRests = fmap (second (drop 1)) $ filter (\(_, ys) -> null ys || (head ys `elem` ".?" && length ys >= minimalGroupLength (tail xs))) $ fmap (second (++ rest))$ matchSpringRecord matchingRecord s'
+    (s' : _) = groupToSpring xs
+    matchesAndRests = second (drop 1) <$> filter (\(_, ys) -> null ys || (head ys `elem` ".?" && length ys >= minimalGroupLength (tail xs))) (second (++ rest) <$> matchSpringRecord matchingRecord s')
 
 minimalGroupLength :: [Int] -> Int
-minimalGroupLength (x:[]) = x + 1
+minimalGroupLength [x] = x + 1
 minimalGroupLength xs = ((+ (length xs - 1)) . sum) xs
 cropToMatchingSpringRegion :: String -> [Int] -> (String, String)
-cropToMatchingSpringRegion s xs = splitAt (length s - (minimalGroupLength (tail xs))) s
+cropToMatchingSpringRegion s xs = splitAt (length s - minimalGroupLength (tail xs)) s
 
 groupToSpring :: [Int] -> [String]
 groupToSpring = intersperse "." . fmap (`replicate` '#')
@@ -75,8 +91,8 @@ paddingRightWithDotsTillLength l s = s ++ replicate (l - length s) '.'
 matchSpringRecord :: String -> String -> [(String, String)]
 matchSpringRecord r s = result
   where
-    matchF x = all id $ zipWith compareSpring r x
-    matches = filter matchF $ fmap (`paddingLeftWithDots` s) [0..(length r - length s)]
+    matchF x = and $ zipWith compareSpring r x
+    matches = filter matchF $ fmap (`paddingLeftWithDots` s) [0 .. (length r - length s)]
     result = fmap (\m -> (m, drop (length m) r)) matches
 
 compareSpring :: Char -> Char -> Bool
