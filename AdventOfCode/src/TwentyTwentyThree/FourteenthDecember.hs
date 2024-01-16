@@ -6,7 +6,6 @@ import Data.List (group, transpose)
 import Data.Map (Map, empty, insert)
 import qualified Data.Map as M (lookup)
 import Data.Maybe (fromMaybe, isJust, isNothing)
-import Debug.Trace
 
 type Platform = [String]
 
@@ -82,20 +81,21 @@ findRepetition = go 0 empty
     go i m p =
         let p' = tiltCycle p
             i' = i + 1
-         in maybe (go i' (insert (platformToKey p') i' m) p') ((,i')) $ M.lookup (platformToKey p') m
+         in maybe (go i' (insert (platformToKey p') i' m) p') (,i') $ M.lookup (platformToKey p') m
 
-solution2 :: Platform -> [Int]
+solution2 :: Platform -> Int
 solution2 p =
-    -- solution1 endPlatform
-    (fmap solution1 . take 50) (iterate tiltCycle p)
+    northLoad endPlatform
+    -- (fmap northLoad . take 50) (iterate tiltCycle p)
   where
     (startRep, endRep) = (\(a, b) -> (a - 1, b - 1)) $ findRepetition p
     cycleLength = endRep - startRep
     remainingCycles = (1000000000 - endRep) `mod` cycleLength
-    endPlatform = cycleLoop (traceShowId remainingCycles) p
+    endPlatform = cycleLoop (remainingCycles + startRep) p
+    northLoad = sum . fmap calculateLoad . rotateLeft
 
 fourteenthDecemberSolution2 :: IO Int
-fourteenthDecemberSolution2 = undefined
+fourteenthDecemberSolution2 = solution2 <$> input
 
 rotateLeft :: [[a]] -> [[a]]
 rotateLeft = reverse . transpose
