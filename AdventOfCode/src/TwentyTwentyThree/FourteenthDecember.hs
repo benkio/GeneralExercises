@@ -1,7 +1,12 @@
+{-# LANGUAGE TupleSections #-}
+
 module TwentyTwentyThree.FourteenthDecember where
 
 import Data.List (group, transpose)
+import Data.Map (Map, empty, insert)
+import qualified Data.Map as M (lookup)
 import Data.Maybe (fromMaybe, isJust, isNothing)
+import Debug.Trace
 
 type Platform = [String]
 
@@ -65,8 +70,29 @@ solution1 = sum . fmap (calculateLoad . tiltHorizontal True) . rotateLeft
 fourteenthDecemberSolution1 :: IO Int
 fourteenthDecemberSolution1 = solution1 <$> input
 
-solution2 :: Int -> Platform -> Platform
-solution2 i = (!! i) . iterate tiltCycle
+cycleLoop :: Int -> Platform -> Platform
+cycleLoop i = (!! i) . iterate tiltCycle
+
+-- return when the repetition starts and ends
+findRepetition :: Platform -> (Int, Int)
+findRepetition = go 0 empty
+  where
+    platformToKey = concat
+    go :: Int -> Map String Int -> Platform -> (Int, Int)
+    go i m p =
+        let p' = tiltCycle p
+            i' = i + 1
+         in maybe (go i' (insert (platformToKey p') i' m) p') ((,i')) $ M.lookup (platformToKey p') m
+
+solution2 :: Platform -> [Int]
+solution2 p =
+    -- solution1 endPlatform
+    (fmap solution1 . take 50) (iterate tiltCycle p)
+  where
+    (startRep, endRep) = (\(a, b) -> (a - 1, b - 1)) $ findRepetition p
+    cycleLength = endRep - startRep
+    remainingCycles = (1000000000 - endRep) `mod` cycleLength
+    endPlatform = cycleLoop (traceShowId remainingCycles) p
 
 fourteenthDecemberSolution2 :: IO Int
 fourteenthDecemberSolution2 = undefined
