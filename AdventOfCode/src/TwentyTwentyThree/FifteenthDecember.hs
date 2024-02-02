@@ -1,6 +1,7 @@
 module TwentyTwentyThree.FifteenthDecember where
 
-import Data.Map (Map)
+import Data.Map (Map, foldrWithKey)
+import qualified Data.Map as M (alter, empty)
 
 import Data.Bifunctor (bimap, first, second)
 
@@ -11,7 +12,7 @@ data LensesOp
     = LA {labelA :: String, focal :: Int}
     | LR {labelR :: String}
     deriving (Show)
-data Lens = L {l :: String, v :: Int}
+data Lens = L {l :: String, v :: Int} deriving (Show)
 type Box = [Lens]
 type Boxes = Map Int Box
 
@@ -60,11 +61,24 @@ opLens (b : bs) (LA{labelA = label'', focal = f}) = if l b == label'' then L{l =
 opLens [] (LR{}) = []
 opLens [] (LA{labelA = label'', focal = f}) = [L{l = label'', v = f}]
 
-executeLensOp :: Boxes -> LensesOp -> Boxes
-executeLensOp = undefined
+getLabel :: LensesOp -> String
+getLabel (LR{labelR = label''}) = label''
+getLabel (LA{labelA = label'', focal = f}) = label''
 
--- solution2 :: 
--- solution2 = foldl ()
+executeLensOp :: Boxes -> LensesOp -> Boxes
+executeLensOp bs lop = M.alter (pure . maybe (opLens [] lop) (`opLens` lop)) opBoxNum bs
+  where
+    opBoxNum = (hashAlgorithmS . getLabel) lop
+
+calculateFocusingPower :: Boxes -> Int
+calculateFocusingPower = foldrWithKey calculateFocusingPowerBox 0
+  where
+    calculateFocusingPowerBox :: Int -> Box -> Int -> Int
+    calculateFocusingPowerBox boxindex box acc =
+        ((acc +) . sum) $ (\(i, l) -> product [(1 + boxindex), i, v l]) <$> zip [1 ..] box
+
+solution2 :: [LensesOp] -> Int
+solution2 = calculateFocusingPower . foldl executeLensOp M.empty
 
 fifteenthDecemberSolution2 :: IO Int
-fifteenthDecemberSolution2 = undefined
+fifteenthDecemberSolution2 = solution2 <$> input'
