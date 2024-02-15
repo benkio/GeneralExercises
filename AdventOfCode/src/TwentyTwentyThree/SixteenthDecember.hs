@@ -2,14 +2,15 @@
 
 module TwentyTwentyThree.SixteenthDecember where
 
-import Data.Map (Map, fromList)
-import qualified Data.Map as M (lookup)
-import Data.Set (Set, insert, notMember, empty, size, elems)
-import Data.List (nubBy)
 import Data.Bifunctor (bimap)
+import Data.List (nubBy)
+import Data.Map (Map, findMax, fromList)
+import qualified Data.Map as M (lookup)
+import Data.Set (Set, elems, empty, insert, notMember, size)
 
+type PositionDirection = ((Int, Int), Direction)
 type Cave = Map (Int, Int) Tile
-type Visited = Set ((Int, Int), Direction)
+type Visited = Set PositionDirection
 data Direction = U | D | R | L deriving (Show, Eq, Ord)
 data Tile
     = E
@@ -74,27 +75,35 @@ newCoord (x, y) D = (x, y + 1)
 newCoord (x, y) L = (x - 1, y)
 newCoord (x, y) R = (x + 1, y)
 
-newTiles :: Cave -> (Int, Int) -> Direction -> [((Int, Int), Direction)]
+newTiles :: Cave -> (Int, Int) -> Direction -> [PositionDirection]
 newTiles cs c d = (nextCord,) <$> nextDirs
   where
     nextCord = newCoord c d
     nextTile = M.lookup nextCord cs
     nextDirs = maybe [] (newDirections d) nextTile
 
-lightBeamBounce :: Visited -> Cave -> [((Int, Int), Direction)] -> Visited
+lightBeamBounce :: Visited -> Cave -> [PositionDirection] -> Visited
 lightBeamBounce vs _ [] = vs
-lightBeamBounce vs cave ((c,d):cs) = lightBeamBounce (insert (c,d) vs') cave (cs++nts)
+lightBeamBounce vs cave ((c, d) : cs) = lightBeamBounce (insert (c, d) vs') cave (cs ++ nts)
   where
     nts = filter ((`notMember` vs)) $ newTiles cave c d
     vs' = foldr insert vs nts
 
---solution1 :: Cave -> Int
-solution1 cs =
-  (\x -> x-1) . length . nubBy (\(a, _) (b, _) -> a == b) . elems $ lightBeamBounce empty cs [((-1,0), R)]
-  --fmap (fst) . elems $ lightBeamBounce empty cs [((0,0), R)]
+solution1 :: PositionDirection -> Cave -> Int
+solution1 p cs =
+    (\x -> x - 1) . length . nubBy (\(a, _) (b, _) -> a == b) . elems $ lightBeamBounce empty cs [p]
 
---sixteenthDecemberSolution1 :: IO Int
-sixteenthDecemberSolution1 = solution1 <$> input
+sixteenthDecemberSolution1 :: IO Int
+sixteenthDecemberSolution1 = solution1 ((-1, 0), R) <$> input
+
+startingPoints :: Cave -> [PositionDirection]
+startingPoints cave = top ++ left ++ right ++ down
+  where
+    ((mx, my), _) = findMax cave
+    top = [((x, -1), D) | x <- [0 .. mx]]
+    left = [((-1, y), R) | y <- [0 .. my]]
+    down = [((x, my + 1), U) | x <- [0 .. mx]]
+    right = [((mx + 1, y), L) | y <- [0 .. my]]
 
 solution2 = undefined
 
