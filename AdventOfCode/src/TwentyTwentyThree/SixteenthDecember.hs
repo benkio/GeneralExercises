@@ -4,10 +4,13 @@ module TwentyTwentyThree.SixteenthDecember where
 
 import Data.Map (Map, fromList)
 import qualified Data.Map as M (lookup)
-import Data.Set (Set)
+import Data.Set (Set, insert, notMember, empty, size, elems)
+import Data.List (nubBy)
+import Data.Bifunctor (bimap)
 
 type Cave = Map (Int, Int) Tile
-data Direction = U | D | R | L
+type Visited = Set ((Int, Int), Direction)
+data Direction = U | D | R | L deriving (Show, Eq, Ord)
 data Tile
     = E
     | VS
@@ -66,8 +69,8 @@ newDirections D ML = [R]
 newDirections d _ = [d] -- E or pointy end of a splitter
 
 newCoord :: (Int, Int) -> Direction -> (Int, Int)
-newCoord (x, y) U = (x, y + 1)
-newCoord (x, y) D = (x, y - 1)
+newCoord (x, y) U = (x, y - 1)
+newCoord (x, y) D = (x, y + 1)
 newCoord (x, y) L = (x - 1, y)
 newCoord (x, y) R = (x + 1, y)
 
@@ -78,14 +81,20 @@ newTiles cs c d = (nextCord,) <$> nextDirs
     nextTile = M.lookup nextCord cs
     nextDirs = maybe [] (newDirections d) nextTile
 
--- lightBeamBounce :: Set (Int, Int) -> Cave -> (Int, Int) -> Direction -> (Set (Int, Int), (Int,Int), Direction)
--- lightBeamBounce vs cs c d = undefined
---   where nts = filter (`notMember` vs) $ newTiles cs c d
+lightBeamBounce :: Visited -> Cave -> [((Int, Int), Direction)] -> Visited
+lightBeamBounce vs _ [] = vs
+lightBeamBounce vs cave ((c,d):cs) = lightBeamBounce (insert (c,d) vs') cave (cs++nts)
+  where
+    nts = filter ((`notMember` vs)) $ newTiles cave c d
+    vs' = foldr insert vs nts
 
-solution1 = undefined
+--solution1 :: Cave -> Int
+solution1 cs =
+  (\x -> x-1) . length . nubBy (\(a, _) (b, _) -> a == b) . elems $ lightBeamBounce empty cs [((-1,0), R)]
+  --fmap (fst) . elems $ lightBeamBounce empty cs [((0,0), R)]
 
-sixteenthDecemberSolution1 :: IO Int
-sixteenthDecemberSolution1 = undefined
+--sixteenthDecemberSolution1 :: IO Int
+sixteenthDecemberSolution1 = solution1 <$> input
 
 solution2 = undefined
 
