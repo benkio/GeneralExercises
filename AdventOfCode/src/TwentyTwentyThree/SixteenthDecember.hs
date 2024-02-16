@@ -3,10 +3,12 @@
 module TwentyTwentyThree.SixteenthDecember where
 
 import Data.Bifunctor (bimap)
-import Data.List (nubBy)
+import Data.List (nubBy, maximum)
 import Data.Map (Map, findMax, fromList)
 import qualified Data.Map as M (lookup)
 import Data.Set (Set, elems, empty, insert, notMember, size)
+import Debug.Trace
+import Control.Parallel.Strategies (parMap, rdeepseq)
 
 type PositionDirection = ((Int, Int), Direction)
 type Cave = Map (Int, Int) Tile
@@ -91,7 +93,7 @@ lightBeamBounce vs cave ((c, d) : cs) = lightBeamBounce (insert (c, d) vs') cave
 
 solution1 :: PositionDirection -> Cave -> Int
 solution1 p cs =
-    (\x -> x - 1) . length . nubBy (\(a, _) (b, _) -> a == b) . elems $ lightBeamBounce empty cs [p]
+    traceShowId . (\x -> x - 1) . length . nubBy (\(a, _) (b, _) -> a == b) . elems $ lightBeamBounce empty cs [p]
 
 sixteenthDecemberSolution1 :: IO Int
 sixteenthDecemberSolution1 = solution1 ((-1, 0), R) <$> input
@@ -105,7 +107,8 @@ startingPoints cave = top ++ left ++ right ++ down
     down = [((x, my + 1), U) | x <- [0 .. mx]]
     right = [((mx + 1, y), L) | y <- [0 .. my]]
 
-solution2 = undefined
+solution2 :: Cave -> Int
+solution2 c = (maximum . parMap rdeepseq (`solution1` c) . startingPoints) c
 
 sixteenthDecemberSolution2 :: IO Int
-sixteenthDecemberSolution2 = undefined
+sixteenthDecemberSolution2 = solution2 <$> input
