@@ -21,7 +21,7 @@ data Direction = L | R | U | D deriving (Eq, Show)
 input :: IO HeatLossMap
 input = parseInput <$> readFile "input/2023/17December.txt"
 
-solution1 hlm = loop (Set.empty) (initialNodeWeigth hlm) hlm [((0,0), [])]
+solution1 hlm = loop (initialNodeWeigth hlm) hlm [((0,0), [])]
 
 seventeenthDecemberSolution1 :: IO Int
 seventeenthDecemberSolution1 = undefined
@@ -57,21 +57,24 @@ testInput =
         \2546548887735\n\
         \4322674655533"
 
-loop :: Set (Int,Int) -> NodeWeight -> HeatLossMap -> [((Int, Int), [Direction])] -> NodeWeight
-loop _ nw _ [] = nw
-loop vs nw hlm ((c, p):xs) = loop vs' newNodeWeight hlm (nn ++ xs)
+loop :: NodeWeight -> HeatLossMap -> [((Int, Int), [Direction])] -> NodeWeight
+loop nw _ [] = nw
+loop nw hlm ((c, p):xs) = loop newNodeWeight hlm nn'
   where
-    nnw = traceShowId $ nextNodes hlm vs c p
+    nnw = nextNodes hlm c p
     newNodeWeight = updateWeight (fmap fst nnw) nw hlm c
-    vs' = Set.insert c vs
-    nnwSorted = sortBy (\(c, _) (c', _) -> sortNodesByWeight nw c c') nnw
-    nn = fmap (\(c, d) ->  (c, p ++ [d])) nnwSorted
+    nn = (filter (isBetterNode nw newNodeWeight . fst) . fmap (\(c, d) ->  (c, p ++ [d])) ) nnw
+    nn' = -- traceShowId $ traceShow ("c: " ++ show c) $
+      (sortBy (\(c, _) (c', _) -> sortNodesByWeight newNodeWeight c c')) (nn ++ xs)
+
+isBetterNode :: NodeWeight -> NodeWeight -> (Int, Int) -> Bool
+isBetterNode (NW nwP) (NW nwN) c = (fromJust (Map.lookup c nwN)) < (fromJust (Map.lookup c nwP))
 
 sortNodesByWeight :: NodeWeight -> (Int,Int) -> (Int,Int) -> Ordering
 sortNodesByWeight (NW nw) c c' = nwc `compare` nwc'
   where
-    nwc  = fromJust $ Map.lookup (traceShowId c) nw
-    nwc' = fromJust $ Map.lookup (traceShowId c') nw
+    nwc  = fromJust $ Map.lookup c nw
+    nwc' = fromJust $ Map.lookup c nw
 
 updateWeight :: [(Int,Int)] -> NodeWeight -> HeatLossMap -> (Int, Int) -> NodeWeight
 updateWeight nn (NW nwm) (HLM hlm) c = NW $ foldl (\m' n -> Map.adjust (\w -> min w (cw + (nv n))) n m') nwm nn
@@ -79,8 +82,8 @@ updateWeight nn (NW nwm) (HLM hlm) c = NW $ foldl (\m' n -> Map.adjust (\w -> mi
     cw = fromJust $ Map.lookup c nwm
     nv n = fromJust $ Map.lookup n hlm
 
-nextNodes :: HeatLossMap -> Set (Int,Int) -> (Int, Int) -> [Direction] -> [((Int, Int), Direction)]
-nextNodes (HLM hlm) vs c ds = (filter ((\x -> Set.notMember x vs && Map.member x hlm) . fst) .  nextNodesSingle c) $ availableDirections ds
+nextNodes :: HeatLossMap  -> (Int, Int) -> [Direction] -> [((Int, Int), Direction)]
+nextNodes (HLM hlm) c ds = (filter ((\x -> Map.member x hlm) . fst) .  nextNodesSingle c) $ availableDirections ds
 
 nextNodesSingle :: (Int, Int) -> [Direction] -> [((Int, Int), Direction)]
 nextNodesSingle (x, y) = fmap move
