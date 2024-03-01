@@ -1,27 +1,23 @@
-{-# LANGUAGE TupleSections #-}
-
 module TwentyTwentyThree.SeventeenthDecember where
 
-import Debug.Trace (traceShow, traceShowId)
+import Text.Printf (printf)
 
-import Data.Maybe (fromJust, mapMaybe)
-
-import Data.Set (Set)
-import Data.List (delete, sortBy)
-import Data.Map (Map, fromList)
-import Data.Map as Map (adjust, lookup, insert, member)
-
-import Data.Set as Set (empty, notMember, insert)
-
+import Data.List (delete)
+import Data.Map (Map, empty, findMax, fromList, size)
+import Data.Map as Map (adjust, insert, insertWith, lookup, member)
+import Data.Maybe (fromJust, isJust)
+import Data.Set (Set, notMember)
+import Data.Set as Set (insert)
+import Debug.Trace
 
 newtype HeatLossMap = HLM (Map (Int, Int) Int) deriving (Show)
-newtype NodeWeight = NW (Map (Int, Int) Int) deriving (Show)
-data Direction = L | R | U | D deriving (Eq, Show)
+data Direction = U | D | L | R deriving (Eq, Show, Ord)
+data Node = N {coord :: (Int, Int), dir :: Direction, dirStreak :: Int} deriving (Show, Eq, Ord)
 
 input :: IO HeatLossMap
 input = parseInput <$> readFile "input/2023/17December.txt"
 
-solution1 hlm = loop (initialNodeWeigth hlm) hlm [((0,0), [])]
+-- solution1 hlm = loop (initialNodeWeigth hlm) hlm [((0,0), [])]
 
 seventeenthDecemberSolution1 :: IO Int
 seventeenthDecemberSolution1 = undefined
@@ -30,9 +26,6 @@ solution2 = undefined
 
 seventeenthDecemberSolution2 :: IO Int
 seventeenthDecemberSolution2 = undefined
-
-initialNodeWeigth :: HeatLossMap -> NodeWeight
-initialNodeWeigth (HLM m) = (NW . Map.insert (0, 0) 0 . fmap (const (maxBound :: Int))) m
 
 parseInput :: String -> HeatLossMap
 parseInput input = HLM $ fromList $ concat $ zipWith (\rowIndex row -> parseRow rowIndex row) [0 ..] (lines input)
@@ -57,51 +50,50 @@ testInput =
         \2546548887735\n\
         \4322674655533"
 
-loop :: NodeWeight -> HeatLossMap -> [((Int, Int), [Direction])] -> NodeWeight
-loop nw _ [] = nw
-loop nw hlm ((c, p):xs) = loop newNodeWeight hlm nn'
+initialNode = N{coord = (0, 0), dir = R, dirStreak = 0}
+
+test n = nextNodes empty testInput n 3
+
+loop :: Map Node Int -> HeatLossMap -> [(Node, Int)] -> Int
+loop _ _ [] = error "no more nodes!"
+loop m hlm ((n, v):ns) = undefined
+
+-- loop grid =
+--     until
+--         ( \(xs, s) ->
+--             -- trace (printf "debug: %s" (show (length xs, size s)))
+--             (null xs)
+--         )
+--         ( \((x : xs), s) ->
+--             let (xs', s') = nextNodes s grid x 3
+--              in ( filter (\(n, nv) -> maybe True (\onv -> nv < onv) (Map.lookup n s')) (xs ++ xs')
+--                 , s'
+--                 )
+--         )
+--         ([(initialNode, 0)], empty)
+
+nextNodes :: Map Node Int -> HeatLossMap -> (Node, Int) -> Int -> ([(Node, Int)], Map Node Int)
+nextNodes visited (HLM m) (n@(N{coord = c, dir = d, dirStreak = ds}), v) pathLimit = (nextNodes, Map.insertWith min n v visited)
   where
-    nnw = nextNodes hlm c p
-    newNodeWeight = updateWeight (fmap fst nnw) nw hlm c
-    nn = (filter (isBetterNode nw newNodeWeight . fst) . fmap (\(c, d) ->  (c, p ++ [d])) ) nnw
-    nn' = -- traceShowId $ traceShow ("c: " ++ show c) $
-      (sortBy (\(c, _) (c', _) -> sortNodesByWeight newNodeWeight c c')) (nn ++ xs)
-
-isBetterNode :: NodeWeight -> NodeWeight -> (Int, Int) -> Bool
-isBetterNode (NW nwP) (NW nwN) c = (fromJust (Map.lookup c nwN)) < (fromJust (Map.lookup c nwP))
-
-sortNodesByWeight :: NodeWeight -> (Int,Int) -> (Int,Int) -> Ordering
-sortNodesByWeight (NW nw) c c' = nwc `compare` nwc'
-  where
-    nwc  = fromJust $ Map.lookup c nw
-    nwc' = fromJust $ Map.lookup c nw
-
-updateWeight :: [(Int,Int)] -> NodeWeight -> HeatLossMap -> (Int, Int) -> NodeWeight
-updateWeight nn (NW nwm) (HLM hlm) c = NW $ foldl (\m' n -> Map.adjust (\w -> min w (cw + (nv n))) n m') nwm nn
-  where
-    cw = fromJust $ Map.lookup c nwm
-    nv n = fromJust $ Map.lookup n hlm
-
-nextNodes :: HeatLossMap  -> (Int, Int) -> [Direction] -> [((Int, Int), Direction)]
-nextNodes (HLM hlm) c ds = (filter ((\x -> Map.member x hlm) . fst) .  nextNodesSingle c) $ availableDirections ds
-
-nextNodesSingle :: (Int, Int) -> [Direction] -> [((Int, Int), Direction)]
-nextNodesSingle (x, y) = fmap move
-  where
-    move L = ((x - 1, y), L)
-    move R = ((x + 1, y), R)
-    move U = ((x, y - 1), U)
-    move D = ((x, y + 1), D)
-
-last3InARow :: [Direction] -> Maybe Direction
-last3InARow ds
-    | length last3 < 3 || any (/= head last3) last3 = Nothing
-    | otherwise = Just $ head last3
-  where
-    last3 = (take 3 . reverse) ds
-
-availableDirections :: [Direction] -> [Direction]
-availableDirections ds = maybe (allDirections) (`delete` allDirections) mayForbiddenDirection
-  where
-    mayForbiddenDirection = last3InARow ds
-    allDirections = [L, R, U, D]
+    ((maxX, maxY), _) = findMax m
+    availableDirections =
+        if ds == pathLimit
+            then d `delete` [U, D, L, R]
+            else [U, D, L, R]
+    nextNodes :: [(Node, Int)]
+    nextNodes =
+        ( filter
+            ( \(node, nv) -> dirStreak node <= pathLimit)
+            . fmap
+                ( \(c', d') ->
+                    (N{coord = c', dir = d', dirStreak = if d' == d then ds + 1 else 1}, (v + (fromJust (Map.lookup c' m))))
+                )
+            . filter (\((x, y), _) -> x <= maxX && x >= 0 && y <= maxY && y >= 0)
+            . fmap (nextCoord c)
+        )
+            availableDirections
+    nextCoord :: (Int, Int) -> Direction -> ((Int, Int), Direction)
+    nextCoord (x, y) U = ((x, y - 1), U)
+    nextCoord (x, y) D = ((x, y + 1), D)
+    nextCoord (x, y) L = ((x - 1, y), L)
+    nextCoord (x, y) R = ((x + 1, y), R)
