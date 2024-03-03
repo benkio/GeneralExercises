@@ -104,7 +104,7 @@ neighborToStatus status neighboor
     | not status && activeNeighboor == 3 = True
     | otherwise = False
   where
-    activeNeighboor = M.size (M.filter (== True) neighboor)
+    activeNeighboor = M.size (M.filter id neighboor)
 
 enlargeGrid :: Grid -> Grid
 enlargeGrid g =
@@ -201,7 +201,7 @@ neighborToStatus2 status neighboor
     | not status && activeNeighboor == 3 = True
     | otherwise = False
   where
-    activeNeighboor = M.size (M.filter (== True) neighboor)
+    activeNeighboor = M.size (M.filter id neighboor)
 
 enlargeGrid2 :: Grid2 -> Grid2
 enlargeGrid2 g =

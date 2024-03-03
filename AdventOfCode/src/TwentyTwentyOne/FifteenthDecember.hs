@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module TwentyTwentyOne.FifteenthDecember where
 
 import Data.List (groupBy, minimumBy, sort)
@@ -29,7 +31,7 @@ buildWeightedMap v es m =
     let
         -- neighboors(ns) of all es filtered not member of v or minimum
         -- foreach ns calc the weight based on the element of es
-        ns = (filter (\(c, x) -> foldl (\_ x' -> x < x') True (M.lookup c v)) . concatMap (neighboorsWeighted m)) es
+        ns = concatMap (filter (\(c, x) -> foldl (\_ x' -> x < x') True (M.lookup c v)) . neighboorsWeighted m) es
         -- sort ns -> group -> minimum
         ns' = (fmap (minimumBy (\(_, y) (_, y') -> y `compare` y')) . groupBy (\(c, _) (c', _) -> c == c') . sort) ns
         -- add them to v
@@ -75,8 +77,8 @@ extendMap m =
                     )
                     x
             )
-                <$> zip [0 ..] (repeat m)
-        newGridRows = (\(i, x) -> (take 5 . drop i) x) <$> zip [0 .. 4] (repeat infinitem)
+                <$> map (,m) [0 ..]
+        newGridRows = (\(i, x) -> (take 5 . drop i) x) <$> map (, infinitem) [0 .. 4]
      in concatMap (foldl1 concatGrid) newGridRows
 
 concatGrid :: [[Int]] -> [[Int]] -> [[Int]]

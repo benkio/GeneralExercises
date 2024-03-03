@@ -1,10 +1,11 @@
 module TwentyTwentyTwo.EleventhDecember where
 
 import Data.Bifunctor
-import Data.List (groupBy, sort)
+import Data.List (groupBy, sortBy, sort)
 import Data.Map (Map, adjust, elems, fromList, insert, size, (!))
 import Debug.Trace
 import Text.Printf
+import Data.Ord
 
 data Monkey = Monkey
     { index :: Int
@@ -45,13 +46,14 @@ takeRound :: (Int -> Int) -> Int -> Map Int Monkey -> Map Int Monkey
 takeRound transform i = (!! i) . iterate (roundMk transform)
 
 solution1 :: Map Int Monkey -> Int
-solution1 = product . take 2 . reverse . sort . fmap inspectionCount . elems . takeRound boredTransform 20
+solution1 = product . take 2 . sortBy (comparing Data.Ord.Down) . fmap inspectionCount . elems . takeRound boredTransform 20
 
 eleventhDecemberSolution1 :: IO Int
 eleventhDecemberSolution1 = solution1 <$> input
 
 solution2 :: Map Int Monkey -> Int
-solution2 ms = (product . take 2 . reverse . sort . fmap inspectionCount . elems . takeRound transform 10000) ms
+solution2 ms = (product . take 2 . sortBy (comparing Data.Ord.Down)
+    . fmap inspectionCount . elems . takeRound transform 10000) ms
   where
     transform = (flip mod . product . fmap divisor . elems) ms
 

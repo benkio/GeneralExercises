@@ -15,7 +15,7 @@ solution1 count xs
     | otherwise = solution1 (count + 1) (fmap tail xs)
 
 endCondition :: [[Int]] -> Bool
-endCondition = all (0 ==) . fmap (\(i, xs) -> xs !! i) . zip [1 ..]
+endCondition = all ((0 ==) . (\ (i, xs) -> xs !! i)) . zip [1 .. ]
 
 testInput :: [[Int]]
 testInput =

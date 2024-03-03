@@ -45,9 +45,9 @@ elfProposal m d e
     | otherwise = (,e) . snd <$> find (checkAdjcents . fst) ps
   where
     p = m ! e
-    (x, y) = (fst p, snd p)
+    (x, y) = p
     ps = positionProposal p d
-    checkAdjcents xs = all not $ fmap (`elem` (elems m)) xs
+    checkAdjcents = not . any (`elem` elems m)
 
 proposePhase :: Map Elf Position -> Direction -> [(Position, Elf)]
 proposePhase m d = (removeDuplicates . mapMaybe (elfProposal m d) . keys) m
@@ -55,7 +55,7 @@ proposePhase m d = (removeDuplicates . mapMaybe (elfProposal m d) . keys) m
     removeDuplicates :: [(Position, Elf)] -> [(Position, Elf)]
     removeDuplicates [] = []
     removeDuplicates (p : ps) =
-        let duplicates = filter (\((x, y), _) -> x == ((fst . fst) p) && y == ((snd . fst) p)) ps
+        let duplicates = filter (\((x, y), _) -> x == (fst . fst) p && y == (snd . fst) p) ps
          in if null duplicates then p : removeDuplicates ps else removeDuplicates (ps \\ duplicates)
 
 movePhase :: Map Elf Position -> [(Position, Elf)] -> Map Elf Position

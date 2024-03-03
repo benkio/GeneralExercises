@@ -25,7 +25,7 @@ testInput =
 snafuToNum :: String -> Int
 snafuToNum = sum . fmap (\(p, x) -> p * singleSnafuToNum x) . zip power5 . reverse
 
-power5 = fmap (\p -> 5 ^ p) [0 ..]
+power5 = fmap (5 ^) [0 ..]
 
 numToSnafu :: Int -> Int -> String
 numToSnafu i x = if i' == 0 then [c] else c : numToSnafu (i' - 1) r
@@ -40,8 +40,8 @@ powerToSinafu (i, x)
     | otherwise = ('0', x, i)
   where
     p = power5 !! i
-    d = (abs x) `div` p
-    m = (abs x) `mod` p
+    d = abs x `div` p
+    m = abs x `mod` p
     hp = p `div` 2
     adjustSignum '1' = if signum x < 0 then '-' else '1'
     adjustSignum '2' = if signum x < 0 then '=' else '2'
@@ -55,8 +55,8 @@ twentyFifthDecemberSolution1 = solution <$> input
 singleSnafuToNum '2' = 2
 singleSnafuToNum '1' = 1
 singleSnafuToNum '0' = 0
-singleSnafuToNum '-' = (-1)
-singleSnafuToNum '=' = (-2)
+singleSnafuToNum '-' = -1
+singleSnafuToNum '=' = -2
 
 singleNumToSnafu 2 = '2'
 singleNumToSnafu 1 = '1'

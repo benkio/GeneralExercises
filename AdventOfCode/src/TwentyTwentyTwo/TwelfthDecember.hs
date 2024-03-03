@@ -113,4 +113,4 @@ solution2 m =
      in minimum $ fmap (`solution` m) as
 
 quickToC :: Map Position Ground -> Ground -> Bool
-quickToC m h = any (any ((== 'c') . height)) $ neighboors m <$> neighboors m h
+quickToC m h = any (any ((== 'c') . height) . neighboors m) (neighboors m h)

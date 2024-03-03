@@ -29,10 +29,10 @@ seventeenthDecemberSolution2 :: IO Int
 seventeenthDecemberSolution2 = solution2 <$> input
 
 parseInput :: String -> HeatLossMap
-parseInput input = HLM $ fromList $ concat $ zipWith (\rowIndex row -> parseRow rowIndex row) [0 ..] (lines input)
+parseInput input = HLM $ fromList $ concat $ zipWith parseRow [0 ..] (lines input)
   where
     parseRow :: Int -> String -> [((Int, Int), Int)]
-    parseRow rowIndex row = zipWith (\colIndex char -> ((colIndex, rowIndex), read [char])) [0 ..] row
+    parseRow rowIndex = zipWith (\colIndex char -> ((colIndex, rowIndex), read [char])) [0 ..]
 
 testInput :: HeatLossMap
 testInput =
@@ -66,31 +66,33 @@ test1 = loop testInput (solution1AvailableDirectionsF 3) solution1EndCondition
 test2a = loop testInput solution2AvailableDirectionsF solution2EndCondition
 test2b = loop testInput2 solution2AvailableDirectionsF solution2EndCondition
 
-loop :: HeatLossMap -> (Int -> Direction -> [Direction]) -> (Node -> (Int,Int) -> Bool) -> Int
+loop :: HeatLossMap -> (Int -> Direction -> [Direction]) -> (Node -> (Int, Int) -> Bool) -> Int
 loop grid@(HLM hlm) availableDirectiorF endConditionF =
     (snd . head . fst) $
         until
-            ( \(((n, v) : xs), s) ->
+            ( \((n, v) : xs, s) ->
                 if v `mod` 100 == 0
                     then
                         trace
                             (printf "debug: %s %s" (show (coord n, v)) (show (length xs, size s)))
-                            endConditionF n maxCoord
+                            endConditionF
+                            n
+                            maxCoord
                     else endConditionF n maxCoord
             )
-            ( \((x : xs), s) ->
+            ( \(x : xs, s) ->
                 let (xs', s') = nextNodes s grid x maxCoord availableDirectiorF
-                 in ((xs `mergeOrdered` xs'), s')
+                 in (xs `mergeOrdered` xs', s')
             )
             ([(initialNode, 0)], empty)
   where
     maxCoord :: (Int, Int)
     maxCoord = (fst . findMax) hlm
 
-solution1EndCondition :: Node -> (Int,Int) -> Bool
+solution1EndCondition :: Node -> (Int, Int) -> Bool
 solution1EndCondition n end = coord n == end
 
-solution2EndCondition :: Node -> (Int,Int) -> Bool
+solution2EndCondition :: Node -> (Int, Int) -> Bool
 solution2EndCondition n end = solution1EndCondition n end && dirStreak n >= 4
 
 solution1AvailableDirectionsF :: Int -> Int -> Direction -> [Direction]
@@ -120,11 +122,11 @@ nextNodes visited (HLM m) (n@(N{coord = c, dir = d, dirStreak = ds}), v) (maxX, 
     nextNodes :: [(Node, Int)]
     nextNodes =
         ( filter
-            (\(node, nv) -> ((fst . coord) node) <= maxX && ((fst . coord) node) >= 0 && ((snd . coord) node) <= maxY && ((snd . coord) node) >= 0 && maybe True (\onv -> nv < onv) (Map.lookup node visited'))
+            (\(node, nv) -> (fst . coord) node <= maxX && (fst . coord) node >= 0 && (snd . coord) node <= maxY && (snd . coord) node >= 0 && maybe True (nv <) (Map.lookup node visited'))
             . fmap
                 ( \direction ->
                     let (c', d') = nextCoord c direction
-                     in (N{coord = c', dir = d', dirStreak = if d' == d then ds + 1 else 1}, (v + (fromJust (Map.lookup c' m))))
+                     in (N{coord = c', dir = d', dirStreak = if d' == d then ds + 1 else 1}, v + fromJust (Map.lookup c' m))
                 )
         )
             availableDirections

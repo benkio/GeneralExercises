@@ -74,7 +74,7 @@ game rolls = do
 exitGame :: Int -> State GameState (Maybe (Int, Int))
 exitGame rolls = do
     gs <- get
-    return $ if (any (>= 1000) . fmap score . players) gs then Just (rolls, (minimum . fmap score . players) gs) else Nothing
+    return $ if (any ((>= 1000) . score) . players) gs then Just (rolls, (minimum . fmap score . players) gs) else Nothing
 
 twentyFirstDecemberSolution1 :: IO Int
 twentyFirstDecemberSolution1 = uncurry (*) . evalState (game 0) . parseInput <$> input

@@ -19,7 +19,7 @@ type Boxes = Map Int Box
 instance Read LensesOp where
     readsPrec _ s =
         let
-            (label, (op : rest)) = break (`elem` "=-") s
+            (label, op : rest) = break (`elem` "=-") s
             (mayFocal, rest') = second (drop 1) $ break (== ',') rest
          in
             if op == '-' then [(LR{labelR = label}, rest')] else [(LA{labelA = label, focal = read mayFocal :: Int}, rest')]
@@ -75,7 +75,7 @@ calculateFocusingPower = foldrWithKey calculateFocusingPowerBox 0
   where
     calculateFocusingPowerBox :: Int -> Box -> Int -> Int
     calculateFocusingPowerBox boxindex box acc =
-        ((acc +) . sum) $ (\(i, l) -> product [(1 + boxindex), i, v l]) <$> zip [1 ..] box
+        ((acc +) . sum) $ (\(i, l) -> product [1 + boxindex, i, v l]) <$> zip [1 ..] box
 
 solution2 :: [LensesOp] -> Int
 solution2 = calculateFocusingPower . foldl executeLensOp M.empty

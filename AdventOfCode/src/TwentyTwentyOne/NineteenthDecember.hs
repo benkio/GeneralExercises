@@ -101,7 +101,7 @@ calculateScannerPosition :: [(Coord, Coord)] -> (Int, Coord)
 calculateScannerPosition =
     second head
         . fromJust
-        . find (\(i, xs) -> and (uncurry (==) <$> xs `zip` tail xs))
+        . find (\(i, xs) -> all (uncurry (==)) (xs `zip` tail xs))
         . ( \(b, b') ->
                 ( \(i, xs) ->
                     ( i

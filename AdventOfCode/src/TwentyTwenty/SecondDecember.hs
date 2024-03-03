@@ -6,7 +6,7 @@ module TwentyTwenty.SecondDecember (
     solution2,
 ) where
 
-import Data.Maybe (fromJust, isJust)
+import Data.Maybe (fromJust, isJust,mapMaybe)
 
 data Policy
     = Policy Int Int Char
@@ -19,7 +19,7 @@ data Password
 input :: IO [Password]
 input = do
     content <- readFile "input/2020/2December.txt"
-    (return . fmap fromJust . filter isJust . fmap lineToPassword . lines) content
+    (return . fmap fromJust . map Just . mapMaybe lineToPassword . lines) content
 
 lineToPassword :: String -> Maybe Password
 lineToPassword [] = Nothing

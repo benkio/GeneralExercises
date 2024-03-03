@@ -34,10 +34,10 @@ searchTillTargetFromValley v = searchTillTarget [s] e
 searchTillTarget :: [State] -> Env -> ([State], Env)
 searchTillTarget s e = search s e exitCondition
   where
-    exitCondition = any ((== (target e)) . currPos)
+    exitCondition = any ((== target e) . currPos)
 
 getResult :: [State] -> Env -> State
-getResult s e = (fromJust . find ((== (target e)) . currPos)) s
+getResult s e = (fromJust . find ((== target e) . currPos)) s
 
 search :: [State] -> Env -> ([State] -> Bool) -> ([State], Env)
 search ss e f
@@ -50,7 +50,7 @@ search ss e f
 nextStates :: State -> Env -> [State]
 nextStates s@(State{currPos = crp, minute = m}) (Env{valleys = vss, target = ext, start = str, vBounds = vbs}) = ns
   where
-    bl = vss !! ((m + 1) `mod` (length vss))
+    bl = vss !! ((m + 1) `mod` length vss)
     ns = expeditionMove s bl vbs ext str
 
 -- Generate new states based on where expedition can go, or just wait where it is
@@ -61,9 +61,9 @@ expeditionMove (State{currPos = (x, y), minute = m}) bs (vbsx, vbsy) entrance ex
   where
     notOutOfBounds (x, y) =
         (x >= 0 && y >= 0 && x <= vbsx && y <= vbsy) || (x, y) == entrance || (x, y) == exit
-    ps = filter (notOutOfBounds) [(x, y), (x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    ps = filter notOutOfBounds [(x, y), (x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
     ns = filter ((`elem` ps) . blizzardPos) bs
-    freePos = filter (`notElem` (fmap blizzardPos ns)) ps
+    freePos = filter (`notElem` fmap blizzardPos ns) ps
 
 eqState :: Int -> State -> State -> Bool
 eqState valleyNum (State{currPos = cr1, minute = m1}) (State{currPos = cr2, minute = m2}) =
@@ -106,10 +106,10 @@ solution2 :: Valley -> Int
 solution2 v = minute s1 + minute s2 + minute s3
   where
     (s1, e) = (\(ss, x) -> (getResult ss x, x)) $ searchTillTargetFromValley v
-    b = valleys e !! (minute s1 `mod` (length (valleys e)))
+    b = valleys e !! (minute s1 `mod` length (valleys e))
     v' = Valley{valleyBlizzards = b, entrance = target e, valleyBounds = valleyBounds v, exit = start e}
     (s2, e') = (\(ss, x) -> (getResult ss x, x)) $ searchTillTargetFromValley v'
-    b' = valleys e' !! (minute s2 `mod` (length (valleys e')))
+    b' = valleys e' !! (minute s2 `mod` length (valleys e'))
     v'' = Valley{valleyBlizzards = b', entrance = target e', valleyBounds = valleyBounds v, exit = start e'}
     (s3, _) = (\(ss, x) -> (getResult ss x, x)) $ searchTillTargetFromValley v''
 
@@ -127,7 +127,7 @@ parseInput s =
             , ((\x -> x - 1) . length . init . tail) ls
             )
      in Valley
-            { entrance = (s_entrance, (-1))
+            { entrance = (s_entrance, - 1)
             , valleyBlizzards = s_valley
             , exit = (s_exit, length ls - 2)
             , valleyBounds = s_valleyBounds

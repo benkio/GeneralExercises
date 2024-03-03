@@ -64,8 +64,8 @@ getNeighborTiles (x, y) =
 
 initialAllTilesToCompute :: [[Direction]] -> [Coordinate]
 initialAllTilesToCompute ds =
-    (concatMap (\x -> x : getNeighborTiles x) . fmap head . group . sort)
-        (calculateTerminalCoordinate <$> ds)
+    (concatMap ((\ x -> x : getNeighborTiles x) . head) . group . sort)
+            (calculateTerminalCoordinate <$> ds)
 
 computeTile :: S.Set Coordinate -> Coordinate -> Either Coordinate Coordinate
 computeTile blacks c

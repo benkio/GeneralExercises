@@ -34,7 +34,7 @@ search is target step visited designerNum
     | target `elem` is = step
     | otherwise =
         let nextCoordinates =
-                (filter (`notElem` visited) . concatMap (neighboors designerNum)) is
+                concatMap (filter (`notElem` visited) . neighboors designerNum) is
          in search nextCoordinates target (step + 1) (visited ++ is) designerNum
 
 test :: Bool
@@ -49,7 +49,7 @@ fiftyIterationStatus is step visited designerNum
     | step == 50 = visited ++ is
     | otherwise =
         let nextCoordinates =
-                (filter (`notElem` visited) . concatMap (neighboors designerNum)) is
+                concatMap (filter (`notElem` visited) . neighboors designerNum) is
          in fiftyIterationStatus
                 nextCoordinates
                 (step + 1)

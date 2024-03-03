@@ -3,7 +3,7 @@
 -------------------------------------------------------------------------------
 module TwentyTwenty.EleventhDecember where
 
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 
 data SeatStatus
     = Floor
@@ -103,7 +103,7 @@ expandView _ _ s = Just s
 
 getNeighbors2 :: Grid -> Coordinate -> Grid
 getNeighbors2 grid coord =
-    catMaybes $ expandView grid coord <$> getNeighbors grid coord
+    mapMaybe (expandView grid coord) (getNeighbors grid coord)
 
 computeSeatStatus :: Seat -> Grid -> Seat
 computeSeatStatus seat@(c, st) neighbors

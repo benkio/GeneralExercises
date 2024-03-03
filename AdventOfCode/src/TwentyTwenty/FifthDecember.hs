@@ -110,7 +110,7 @@ selectSeat :: [String] -> [Seat]
 selectSeat xs = selectSeat' <$> fmap getSelectors xs
 
 maxSeatId :: [Seat] -> Int
-maxSeatId = foldr max 0 . fmap seatId
+maxSeatId = foldr (max . seatId) 0
 
 emptySeatId :: [Seat] -> Maybe Int
 emptySeatId xs =

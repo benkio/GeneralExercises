@@ -35,7 +35,7 @@ parseBags :: [Bag] -> [(String, [String])] -> [Bag]
 parseBags bags [] = bags
 parseBags bags (b : bs)
     | null currentBagContent = parseBags (Bag (fst b) [] : bags) bs
-    | all (`elem` bagNames) (fmap snd currentBagContent) =
+    | all ((`elem` bagNames) . snd) currentBagContent =
         let newBagContent =
                 currentBagContent
                     >>= (\x -> replicate (fst x) (fromJust (find ((snd x ==) . bagName) bags)))
@@ -49,7 +49,7 @@ isBagContained :: String -> Bag -> Bool
 isBagContained bName (Bag bn bc)
     | bn == bName = True
     | bn /= bName && null bc = False
-    | otherwise = or $ isBagContained bName <$> bc
+    | otherwise = any (isBagContained bName) bc
 
 searchForBagInContent :: String -> [Bag] -> [Bag]
 searchForBagInContent bName = filter (isBagContained bName)

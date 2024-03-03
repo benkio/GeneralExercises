@@ -1,7 +1,7 @@
 module TwentyTwentyTwo.EighteenthDecember where
 
 import Data.List (find, groupBy, sortBy, (\\))
-import Data.Maybe (catMaybes, listToMaybe)
+import Data.Maybe (mapMaybe)
 import Debug.Trace
 
 type Obsidian = (Int, Int, Int)
@@ -74,7 +74,7 @@ connectFace :: ObsidianFace -> [ObsidianFace] -> [ObsidianFace] -> ([ObsidianFac
 connectFace f ss fs = (connections, fs \\ connections)
   where
     possibleConnections = connectionFaces f
-    connections = ((\\ ss) . catMaybes) $ find (\x -> x `elem` (fs ++ ss)) <$> possibleConnections
+    connections = (\\ ss) (mapMaybe (find (\x -> x `elem` (fs ++ ss))) possibleConnections)
 
 expandSurface :: [ObsidianFace] -> [ObsidianFace] -> [ObsidianFace] -> ([ObsidianFace], [ObsidianFace])
 expandSurface expanded surface fs = maybe (surface, fs) loop mayS

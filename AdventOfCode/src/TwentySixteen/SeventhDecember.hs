@@ -48,7 +48,7 @@ abbaCheck' s =
 
 isValidAbba :: IPV7 -> Bool
 isValidAbba IPV7{outside = o, inside = i} =
-    or (fmap abbaCheck o) && and (fmap (not . abbaCheck) i)
+    any abbaCheck o && (not . any abbaCheck) i
 
 solution1 :: [IPV7] -> Int
 solution1 = length . filter isValidAbba
@@ -84,8 +84,8 @@ isValidAba :: IPV7 -> Bool
 isValidAba IPV7{outside = o, inside = i} =
     any ((`elem` abaOutside) . invertAba) abaInside
   where
-    abaInside = (filter (not . null) . concatMap (`abaFind` abaCheck)) i
-    abaOutside = (filter (not . null) . concatMap (`abaFind` abaCheck)) o
+    abaInside = concatMap (filter (not . null) . (`abaFind` abaCheck)) i
+    abaOutside = concatMap (filter (not . null) . (`abaFind` abaCheck)) o
 
 inputTest2 :: [IPV7]
 inputTest2 =

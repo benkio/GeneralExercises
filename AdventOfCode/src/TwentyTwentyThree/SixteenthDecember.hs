@@ -88,7 +88,7 @@ lightBeamBounce :: Visited -> Cave -> [PositionDirection] -> Visited
 lightBeamBounce vs _ [] = vs
 lightBeamBounce vs cave ((c, d) : cs) = lightBeamBounce (insert (c, d) vs') cave (cs ++ nts)
   where
-    nts = filter ((`notMember` vs)) $ newTiles cave c d
+    nts = filter (`notMember` vs) $ newTiles cave c d
     vs' = foldr insert vs nts
 
 solution1 :: PositionDirection -> Cave -> Int

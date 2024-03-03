@@ -60,7 +60,7 @@ parse xs offset
         let (n, xs') = span isDigit xs
          in (read n :: Int, offset) : parse xs' (offset + 1)
 
-task1 ts = head . filter isJust . concatMap (\(ts, ids) -> map (check ts) ids)
+task1 ts = head . concatMap (filter isJust . (\ (ts, ids) -> map (check ts) ids))
   where
     check ts' id
         | ts' `mod` id == 0 = Just ((ts' - ts) * id)
