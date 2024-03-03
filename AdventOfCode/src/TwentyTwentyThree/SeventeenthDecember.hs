@@ -1,14 +1,14 @@
 module TwentyTwentyThree.SeventeenthDecember where
 
 import Data.Bifunctor (first)
-import Text.Printf (printf)
-
-import Data.Map (Map, empty, findMax, fromList, size)
+import Data.List (minimumBy)
+import Data.Map (Map, empty, findMax, fromList, size, toList)
 import Data.Map as Map (adjust, insert, insertWith, lookup, member)
 import Data.Maybe (fromJust, isJust)
 import Data.Set (Set, notMember)
 import Data.Set as Set (insert)
 import Debug.Trace
+import Text.Printf (printf)
 
 newtype HeatLossMap = HLM (Map (Int, Int) Int) deriving (Show)
 data Direction = U | D | L | R deriving (Eq, Show, Ord)
@@ -17,16 +17,16 @@ data Node = N {coord :: (Int, Int), dir :: Direction, dirStreak :: Int} deriving
 input :: IO HeatLossMap
 input = parseInput <$> readFile "input/2023/17December.txt"
 
-solution1 hlm = loop hlm
+solution1 hlm = loop hlm (solution1AvailableDirectionsF 3) solution1EndCondition
 
 -- solution 1256
 seventeenthDecemberSolution1 :: IO Int
 seventeenthDecemberSolution1 = solution1 <$> input
 
-solution2 = undefined
+solution2 hlm = loop hlm solution2AvailableDirectionsF solution2EndCondition
 
 seventeenthDecemberSolution2 :: IO Int
-seventeenthDecemberSolution2 = undefined
+seventeenthDecemberSolution2 = solution2 <$> input
 
 parseInput :: String -> HeatLossMap
 parseInput input = HLM $ fromList $ concat $ zipWith (\rowIndex row -> parseRow rowIndex row) [0 ..] (lines input)
@@ -51,12 +51,23 @@ testInput =
         \2546548887735\n\
         \4322674655533"
 
+testInput2 :: HeatLossMap
+testInput2 =
+    parseInput
+        "111111111111\n\
+        \999999999991\n\
+        \999999999991\n\
+        \999999999991\n\
+        \999999999991"
+
 initialNode = N{coord = (0, 0), dir = R, dirStreak = 0}
 
-test = loop testInput
+test1 = loop testInput (solution1AvailableDirectionsF 3) solution1EndCondition
+test2a = loop testInput solution2AvailableDirectionsF solution2EndCondition
+test2b = loop testInput2 solution2AvailableDirectionsF solution2EndCondition
 
-loop :: HeatLossMap -> Int
-loop grid@(HLM hlm) =
+loop :: HeatLossMap -> (Int -> Direction -> [Direction]) -> (Node -> (Int,Int) -> Bool) -> Int
+loop grid@(HLM hlm) availableDirectiorF endConditionF =
     (snd . head . fst) $
         until
             ( \(((n, v) : xs), s) ->
@@ -64,11 +75,11 @@ loop grid@(HLM hlm) =
                     then
                         trace
                             (printf "debug: %s %s" (show (coord n, v)) (show (length xs, size s)))
-                            (coord n == maxCoord)
-                    else (coord n == maxCoord)
+                            endConditionF n maxCoord
+                    else endConditionF n maxCoord
             )
             ( \((x : xs), s) ->
-                let (xs', s') = nextNodes s grid x 3 maxCoord
+                let (xs', s') = nextNodes s grid x maxCoord availableDirectiorF
                  in ((xs `mergeOrdered` xs'), s')
             )
             ([(initialNode, 0)], empty)
@@ -76,18 +87,36 @@ loop grid@(HLM hlm) =
     maxCoord :: (Int, Int)
     maxCoord = (fst . findMax) hlm
 
-nextNodes :: Map Node Int -> HeatLossMap -> (Node, Int) -> Int -> (Int, Int) -> ([(Node, Int)], Map Node Int)
-nextNodes visited (HLM m) (n@(N{coord = c, dir = d, dirStreak = ds}), v) pathLimit (maxX, maxY) = (nextNodes, visited')
+solution1EndCondition :: Node -> (Int,Int) -> Bool
+solution1EndCondition n end = coord n == end
+
+solution2EndCondition :: Node -> (Int,Int) -> Bool
+solution2EndCondition n end = solution1EndCondition n end && dirStreak n >= 4
+
+solution1AvailableDirectionsF :: Int -> Int -> Direction -> [Direction]
+solution1AvailableDirectionsF limit ds d =
+    if ds == limit
+        then case d of
+            U -> [L, R]
+            L -> [U, D]
+            D -> [L, R]
+            R -> [U, D]
+        else case d of
+            U -> [U, L, R]
+            L -> [L, U, D]
+            D -> [D, L, R]
+            R -> [R, U, D]
+
+solution2AvailableDirectionsF :: Int -> Direction -> [Direction]
+solution2AvailableDirectionsF ds d
+    | ds < 4 = [d]
+    | otherwise = solution1AvailableDirectionsF 10 ds d
+
+nextNodes :: Map Node Int -> HeatLossMap -> (Node, Int) -> (Int, Int) -> (Int -> Direction -> [Direction]) -> ([(Node, Int)], Map Node Int)
+nextNodes visited (HLM m) (n@(N{coord = c, dir = d, dirStreak = ds}), v) (maxX, maxY) availableDirectiorF = (nextNodes, visited')
   where
-    visited' = Map.insertWith min n v visited
-    availableDirections =
-        if ds == pathLimit
-            then case d of
-                U -> [D, L, R]
-                L -> [U, D, R]
-                D -> [U, L, R]
-                R -> [U, L, D]
-            else [U, D, L, R]
+    visited' = Map.insert n v visited
+    availableDirections = availableDirectiorF ds d
     nextNodes :: [(Node, Int)]
     nextNodes =
         ( filter
