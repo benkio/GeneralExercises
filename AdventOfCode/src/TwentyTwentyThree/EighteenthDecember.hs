@@ -1,14 +1,18 @@
 module TwentyTwentyThree.EighteenthDecember where
 
+import Data.Char (digitToInt)
 import Data.List (groupBy, maximumBy, minimumBy)
 import Data.Set (Set, empty, insert, size)
+import Debug.Trace
+import Numeric (readHex)
+import Text.Printf (printf)
 
-data Direction = U | D | L | R deriving (Show)
+data Direction = R | D | L | U deriving (Show, Enum)
 data DigPlan = DP {direction :: Direction, steps :: Int, color :: String} deriving (Show)
 type EdgeBlock = ((Int, Int), Direction)
 
 parseInput :: String -> [DigPlan]
-parseInput = fmap ((\[d, s, c] -> DP{direction = parseDirection d, steps = (read s :: Int), color = (take 6 . drop 2) c}) . words) . lines
+parseInput = fmap ((\[d, s, c] -> DP{direction = parseDirection d, steps = read s :: Int, color = (take 6 . drop 2) c}) . words) . lines
   where
     parseDirection "U" = U
     parseDirection "L" = L
@@ -36,58 +40,34 @@ testInput =
         \L 2 (#015232)\n\
         \U 2 (#7a21e3)"
 
-digPlanToEdges :: [DigPlan] -> [EdgeBlock]
-digPlanToEdges = snd . foldl followDigPlan ((0, 0), [])
+area :: [DigPlan] -> Int
+area = go (0, 0)
   where
-    followDigPlan :: ((Int, Int), [EdgeBlock]) -> DigPlan -> ((Int, Int), [EdgeBlock])
-    followDigPlan (pos, acc) digPlan =
-        let edge = createEdge pos digPlan in ((fst . last) edge, acc ++ edge)
-    createEdge :: (Int, Int) -> DigPlan -> [EdgeBlock]
-    createEdge (x, y) (DP{direction = U, steps = s}) = [((x, b), U) | b <- fmap (y -) [1 .. s]]
-    createEdge (x, y) (DP{direction = D, steps = s}) = [((x, b), D) | b <- fmap (y +) [1 .. s]]
-    createEdge (x, y) (DP{direction = R, steps = s}) = [((a, y), R) | a <- fmap (x +) [1 .. s]]
-    createEdge (x, y) (DP{direction = L, steps = s}) = [((a, y), L) | a <- fmap (x -) [1 .. s]]
-
-findInsideLagoon :: [EdgeBlock] -> Int
-findInsideLagoon es = go es es empty
-  where
-    go :: [EdgeBlock] -> [EdgeBlock] -> Set (Int, Int) -> Int
-    go [] _ lagoon = size lagoon
-    go ((c, d) : xs) es lagoon =
-        let
-            c' = move c (inDirections d)
-            inside = calcInsideBlocks c' (inDirections d) (fmap fst es)
-         in
-            go xs es (foldl (flip insert) lagoon inside)
-
-calcInsideBlocks :: (Int, Int) -> Direction -> [(Int,Int)] -> [(Int, Int)]
-calcInsideBlocks c ind es
-    | c `elem` es = []
-    | c `notElem` es = c : calcInsideBlocks (move c ind) ind es
-
-move :: (Int, Int) -> Direction -> (Int, Int)
-move (x, y) U = (x, y - 1)
-move (x, y) D = (x, y + 1)
-move (x, y) R = (x + 1, y)
-move (x, y) L = (x - 1, y)
-
-inDirections :: Direction -> Direction
-inDirections R = D
-inDirections D = L
-inDirections L = U
-inDirections U = R
+    go :: (Int, Int) -> [DigPlan] -> Int
+    go _ [] = 1
+    go (x, y) (DP{direction = R, steps = s} : ds) = s + go (x + s, y) ds
+    go (x, y) (DP{direction = D, steps = s} : ds) = (x + 1) * s + go (x, y + s) ds
+    go (x, y) (DP{direction = U, steps = s} : ds) = (-(x * s)) + go (x, y - s) ds
+    go (x, y) (DP{direction = L, steps = s} : ds) = go (x - s, y) ds
 
 solution1 :: [DigPlan] -> Int
-solution1 digPlan = length es + inside
-  where
-    es = digPlanToEdges digPlan
-    inside = findInsideLagoon es
+solution1 = area
 
 -- too low 49570
 eighteenthDecemberSolution1 :: IO Int
 eighteenthDecemberSolution1 = solution1 <$> input
 
 eighteenthDecemberSolution2 :: IO Int
-eighteenthDecemberSolution2 = undefined
+eighteenthDecemberSolution2 = solution2 <$> input
 
-solution2 = undefined
+digPlanHex :: [DigPlan] -> [DigPlan]
+digPlanHex [] = []
+digPlanHex (DP{color = c} : ds) =
+    ( (\[(h, "")] -> DP{direction = (toEnum . digitToInt . last) c, steps = h, color = c})
+        . readHex
+        . init
+    )
+        c
+        : digPlanHex ds
+
+solution2 = area . digPlanHex
