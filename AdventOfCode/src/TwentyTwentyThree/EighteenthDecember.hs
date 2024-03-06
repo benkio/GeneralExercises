@@ -56,16 +56,14 @@ findInsideLagoon es = go es es empty
     go ((c, d) : xs) es lagoon =
         let
             c' = move c (inDirections d)
-            inside = calcInsideBlocks c' (inDirections d) es
+            inside = calcInsideBlocks c' (inDirections d) (fmap fst es)
          in
             go xs es (foldl (flip insert) lagoon inside)
 
-calcInsideBlocks :: (Int, Int) -> Direction -> [EdgeBlock] -> [(Int, Int)]
+calcInsideBlocks :: (Int, Int) -> Direction -> [(Int,Int)] -> [(Int, Int)]
 calcInsideBlocks c ind es
-    | c `elem` ces = []
-    | c `notElem` ces = c : calcInsideBlocks (move c ind) ind es
-  where
-    ces = fmap fst es
+    | c `elem` es = []
+    | c `notElem` es = c : calcInsideBlocks (move c ind) ind es
 
 move :: (Int, Int) -> Direction -> (Int, Int)
 move (x, y) U = (x, y - 1)
