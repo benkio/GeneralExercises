@@ -2,13 +2,9 @@
 
 module TwentyTwentyThree.NineteenthDecember where
 
-import Data.List (find, findIndex)
-
-import Data.Maybe (catMaybes, fromJust, isJust)
-
 import Data.Bifunctor (bimap)
-
-import Data.List (break)
+import Data.List (break, find, findIndex)
+import Data.Maybe (catMaybes, fromJust, isJust)
 import GHC.Utils.Misc (split)
 
 data MachinePart = MP
@@ -61,38 +57,6 @@ solution1 (fs, ms) = sum . fmap machinePartRating $ filterAcceptedMachineParts f
 ninetheenthDecemberSolution1 :: IO Int
 ninetheenthDecemberSolution1 = solution1 <$> input
 
--- I crate 4 ranges, 1-4000 foreach category
--- I consume the flow by sectioning the ranges by the threshold and bind the n outcomes to the new flows.
--- Eventually all the ranges will have an A or an R
--- Keep the As, sum by category, multiply the sums
--- Profit
-
-data MetaMachinePart = MMP
-  { mmp_x :: (Int,Int)
-    , mmp_m :: (Int,Int)
-    , mmp_a :: (Int,Int)
-    , mmp_s :: (Int,Int)
-    }
-
-mmp :: MetaMachinePart
-mmp = MMP { mmp_x = (1,4000)
-    , mmp_m = (1,4000)
-    , mmp_a = (1,4000)
-    , mmp_s = (1,4000)
-    }
-
-metaApplyCheck :: Check -> MetaMachinePart -> Maybe String
-metaApplyCheck (C f) m = f m
-
-metaApplyFlow :: Flow -> MetaMachinePart -> String
-metaApplyFlow (F{checks = cs}) m = head . catMaybes . fmap ((flip applyCheck) m) $ cs
-
-
-solution2 = undefined
-
-ninetheenthDecemberSolution2 :: IO Int
-ninetheenthDecemberSolution2 = undefined
-
 parseMachinePart :: String -> MachinePart
 parseMachinePart i = MP{mp_x = xv, mp_m = mv, mp_a = av, mp_s = sv}
   where
@@ -105,13 +69,13 @@ parseMachinePart i = MP{mp_x = xv, mp_m = mv, mp_a = av, mp_s = sv}
 
 parseCheck :: String -> Check
 parseCheck s
-    | '<' `elem` s = C (\m -> if machinePartValueFromString (valueString '<' s) m < valueCheck '<' s then Just (valueFlow s) else Nothing)
-    | '>' `elem` s = C (\m -> if machinePartValueFromString (valueString '>' s) m > valueCheck '>' s then Just (valueFlow s) else Nothing)
+    | '<' `elem` s = C (\m -> if machinePartValueFromString (valueString '<' s) m < valueCheck '<' s then Just valueFlow else Nothing)
+    | '>' `elem` s = C (\m -> if machinePartValueFromString (valueString '>' s) m > valueCheck '>' s then Just valueFlow else Nothing)
     | otherwise = C (const $ Just s)
   where
     valueString c = takeWhile (/= c)
     valueCheck c = (\x -> read x :: Int) . takeWhile (/= ':') . tail . dropWhile (/= c)
-    valueFlow = tail . dropWhile (/= ':')
+    valueFlow = tail . dropWhile (/= ':') $ s
 
 parseFlow :: String -> Flow
 parseFlow s = F{fId = fIdValue, checks = cs}
@@ -125,6 +89,113 @@ parseInput = bimap (fmap parseFlow) (fmap parseMachinePart . tail) . break (== "
 testInput :: ([Flow], [MachinePart])
 testInput =
     parseInput
+        "px{a<2006:qkq,m>2090:A,rfg}\n\
+        \pv{a>1716:R,A}\n\
+        \lnx{m>1548:A,A}\n\
+        \rfg{s<537:gd,x>2440:R,A}\n\
+        \qs{s>3448:A,lnx}\n\
+        \qkq{x<1416:A,crn}\n\
+        \crn{x>2662:A,R}\n\
+        \in{s<1351:px,qqz}\n\
+        \qqz{s>2770:qs,m<1801:hdj,R}\n\
+        \gd{a>3333:R,R}\n\
+        \hdj{m>838:A,pv}\n\
+        \\n\
+        \{x=787,m=2655,a=1222,s=2876}\n\
+        \{x=1679,m=44,a=2067,s=496}\n\
+        \{x=2036,m=264,a=79,s=2244}\n\
+        \{x=2461,m=1339,a=466,s=291}\n\
+        \{x=2127,m=1623,a=2188,s=1013}"
+
+-- I crate 4 ranges, 1-4000 foreach category
+-- I consume the flow by sectioning the ranges by the threshold and bind the n outcomes to the new flows.
+-- Eventually all the ranges will have an A or an R
+-- Keep the As, sum by category, multiply the sums
+-- Profit
+
+data MetaMachinePart = MMP
+    { mmp_x :: (Int, Int)
+    , mmp_m :: (Int, Int)
+    , mmp_a :: (Int, Int)
+    , mmp_s :: (Int, Int)
+    }
+data MetaFlow = MF {mfId :: String, mChecks :: [MetaCheck]} deriving (Show)
+data Ior a b = L a | R b | B (a, b)
+data MetaCheck = MC (MetaMachinePart -> Ior (MetaMachinePart, String) MetaMachinePart)
+
+instance Show MetaCheck where
+    show _ = "MC"
+
+mmp :: MetaMachinePart
+mmp =
+    MMP
+        { mmp_x = (1, 4000)
+        , mmp_m = (1, 4000)
+        , mmp_a = (1, 4000)
+        , mmp_s = (1, 4000)
+        }
+
+metaMachinePartValueFromString :: String -> MetaMachinePart -> (Int, Int)
+metaMachinePartValueFromString "x" = mmp_x
+metaMachinePartValueFromString "m" = mmp_m
+metaMachinePartValueFromString "a" = mmp_a
+metaMachinePartValueFromString "s" = mmp_s
+
+-- metaApplyCheck :: MetaCheck -> MetaMachinePart -> ((MetaMachinePart, String), MetaMachinePart)
+-- metaApplyCheck (MC f) m = f m
+
+-- metaApplyFlow :: MetaFlow -> MetaMachinePart -> [(MetaMachinePart,String)]
+-- metaApplyFlow (MF{checks = cs}) m = fst . foldl foldlF ([], m) $ cs
+--   where
+--     foldlF :: ([(MetaMachinePart, String)], MetaMachinePart) -> MetaCheck -> ([(MetaMachinePart, String)], MetaMachinePart)
+--     foldF (acc, mmp) mc = first ((acc++) . (:[])) $ metaApplyCheck mc mmp
+
+solution2 = undefined
+
+ninetheenthDecemberSolution2 :: IO Int
+ninetheenthDecemberSolution2 = undefined
+
+parseMetaFlow :: String -> MetaFlow
+parseMetaFlow s = MF{mfId = fIdValue, mChecks = cs}
+  where
+    fIdValue = takeWhile (/= '{') s
+    cs = fmap parseMetaCheck . split ',' . init . tail . dropWhile (/= '{') $ s
+
+parseMetaCheck :: String -> MetaCheck
+parseMetaCheck s
+    | '<' `elem` s = MC (metaCheckLogic '<')
+    | '>' `elem` s = MC (metaCheckLogic '>')
+    | otherwise = MC (\mmp -> L (mmp, s))
+  where
+    valueString c = takeWhile (/= c)
+    valueCheck c = (\x -> read x :: Int) . takeWhile (/= ':') . tail . dropWhile (/= c)
+    valueFlow = tail . dropWhile (/= ':') $ s
+    metaCheckLogic :: Char -> (MetaMachinePart -> Ior (MetaMachinePart, String) MetaMachinePart)
+    metaCheckLogic c = \mmp ->
+        let
+            selector = (valueString c s)
+            (minV, maxV) = metaMachinePartValueFromString selector mmp
+            tv = valueCheck c s
+         in
+            buildMetaMachinePart c tv (minV, maxV) mmp
+    buildMetaMachinePart :: Char -> Int -> (Int, Int) -> MetaMachinePart -> Ior (MetaMachinePart, String) MetaMachinePart
+    buildMetaMachinePart '<' tv (minV, maxV) mmp =
+        case (tv < minV, tv > minV && tv < maxV, tv > maxV) of
+            (True, _, _) -> R mmp
+            (_, True, _) -> undefined
+            (_, _, True) -> L (mmp, valueFlow)
+    buildMetaMachinePart '>' tv (minV, maxV) mmp =
+        case (tv < minV, tv > minV && tv < maxV, tv > maxV) of
+            (True, _, _) -> undefined
+            (_, True, _) -> undefined
+            (_, _, True) -> undefined
+
+parseInput2 :: String -> [MetaFlow]
+parseInput2 = fmap parseMetaFlow . fst . break (== "") . lines
+
+testInput2 :: [MetaFlow]
+testInput2 =
+    parseInput2
         "px{a<2006:qkq,m>2090:A,rfg}\n\
         \pv{a>1716:R,A}\n\
         \lnx{m>1548:A,A}\n\
