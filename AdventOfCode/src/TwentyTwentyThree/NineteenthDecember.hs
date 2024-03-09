@@ -178,17 +178,17 @@ parseMetaCheck s
             tv = valueCheck c s
          in
             buildMetaMachinePart c tv (minV, maxV) mmp
-    buildMetaMachinePart :: Char -> Int -> (Int, Int) -> MetaMachinePart -> Ior (MetaMachinePart, String) MetaMachinePart
-    buildMetaMachinePart '<' tv (minV, maxV) mmp =
+    buildMetaMachinePart :: Char -> String -> Int -> (Int, Int) -> MetaMachinePart -> Ior (MetaMachinePart, String) MetaMachinePart
+    buildMetaMachinePart '<' selector tv (minV, maxV) mmp =
         case (tv < minV, tv > minV && tv < maxV, tv > maxV) of
             (True, _, _) -> R mmp
-            (_, True, _) -> undefined
+            (_, True, _) -> B ((setMetaMachinePart () selector mmp ,valueFlow), setMetaMachinePart () selector mmp)
             (_, _, True) -> L (mmp, valueFlow)
-    buildMetaMachinePart '>' tv (minV, maxV) mmp =
+    buildMetaMachinePart '>' selector tv (minV, maxV) mmp =
         case (tv < minV, tv > minV && tv < maxV, tv > maxV) of
-            (True, _, _) -> undefined
-            (_, True, _) -> undefined
-            (_, _, True) -> undefined
+            (True, _, _) -> L (mmp, valueFlow)
+            (_, True, _) -> B ((setMetaMachinePart () selector mmp ,valueFlow), setMetaMachinePart () selector mmp)
+            (_, _, True) -> R mmp
 
 parseInput2 :: String -> [MetaFlow]
 parseInput2 = fmap parseMetaFlow . fst . break (== "") . lines
