@@ -1,16 +1,10 @@
-{-# LANGUAGE TupleSections #-}
-
 module TwentyTwentyThree.TwentiethDecember where
 
 import Data.Bifunctor (first)
-
-import Text.Printf (printf)
-
 import Data.List (isPrefixOf)
 import Data.Map (Map, adjust, empty, fromList, insert, toList)
 import qualified Data.Map as Map (foldr, lookup)
 import Data.Maybe (fromJust, isNothing)
-import Debug.Trace
 
 data Pulse = P Bool String String deriving (Show)
 type Modules = Map String Module
@@ -18,6 +12,17 @@ data Module
     = FF String Bool [String]
     | C String (Map String Bool) [String]
     | BR [String]
+    deriving (Show)
+data ButtonResult = ButtonResult
+    { modules :: Modules
+    , highPulses :: Int
+    , lowPulses :: Int
+    , buttonPushNum :: Int
+    , ddTrigger :: Bool
+    , fhTrigger :: Bool
+    , xpTrigger :: Bool
+    , fcTrigger :: Bool
+    }
     deriving (Show)
 
 getModuleKey :: Module -> String
@@ -44,10 +49,10 @@ instance ProcessPulse Module where
     processPulse (C s mem out) p@(P v src _) =
         let c' = C s (insert src v mem) out
             mem' = (toList . getModuleMem) c'
-         in if all id (fmap snd mem')
-                then (c', fmap (\k -> P False s k) out)
-                else (c', fmap (\k -> P True s k) out)
-    processPulse m@(BR ds) p = (m, (fmap (setPulseSrc "broadcaster" . (`setPulseDst` p)) ds))
+         in if all snd mem'
+                then (c', fmap (P False s) out)
+                else (c', fmap (P True s) out)
+    processPulse m@(BR ds) p = (m, fmap (setPulseSrc "broadcaster" . (`setPulseDst` p)) ds)
 
 setPulseValue :: Bool -> Pulse -> Pulse
 setPulseValue b (P _ s d) = P b s d
@@ -80,47 +85,83 @@ updateConjunctionInputs m = Map.foldr updateInputs m m
   where
     updateInputs :: Module -> Modules -> Modules
     updateInputs x m' =
-        foldl (\m'' o -> adjust (`addInput` (getModuleKey x)) o m'') m' (getModuleOutput x)
+        foldl flip (adjust (`addInput` getModuleKey x)) m' (getModuleOutput x)
 
-pushButton :: Modules -> ((Int, Int), Bool, Modules)
-pushButton m = go m (1, 0) False $ snd $ processPulse broacastModule (P False "aptly" "broadcaster")
+initialButtonResult m =
+    ButtonResult
+        { modules = m
+        , highPulses = 0
+        , lowPulses = 0
+        , buttonPushNum = 0
+        , ddTrigger = False
+        , fhTrigger = False
+        , xpTrigger = False
+        , fcTrigger = False
+        }
+
+pushButton :: ButtonResult -> ButtonResult
+pushButton br = go br{lowPulses = lowPulses br + 1, buttonPushNum = buttonPushNum br + 1} $ snd $ processPulse broacastModule (P False "aptly" "broadcaster")
   where
-    broacastModule = fromJust $ Map.lookup "broadcaster" m
-    updateCounter (lp, hp) (P True _ _) = (lp, hp + 1)
-    updateCounter (lp, hp) (P False _ _) = (lp + 1, hp)
-    activateRX (P False _ "rx") = True
-    activateRX _ = False
-    go :: Modules -> (Int, Int) -> Bool -> [Pulse] -> ((Int, Int), Bool, Modules)
-    go m c rx [] = (c, rx, m)
-    go m c rx (p : ps)
-        | isNothing (Map.lookup (getPulseDst p) m) = go m (updateCounter c p) (rx || activateRX p) ps
+    broacastModule = fromJust $ Map.lookup "broadcaster" (modules br)
+    updatePulsesCounter br@(ButtonResult{highPulses = hp}) (P True _ _) = br{highPulses = hp + 1}
+    updatePulsesCounter br@(ButtonResult{lowPulses = lp}) (P False _ _) = br{lowPulses = lp + 1}
+    activateModule md v (P pv src dst) = src == md && pv == v && dst == "dn"
+    checkModules x p
+        | activateModule "dd" True p = x{ddTrigger = True}
+        | activateModule "fh" True p = x{fhTrigger = True}
+        | activateModule "xp" True p = x{xpTrigger = True}
+        | activateModule "fc" True p = x{fcTrigger = True}
+        | otherwise = x
+    go :: ButtonResult -> [Pulse] -> ButtonResult
+    go br [] = br
+    go br@(ButtonResult{modules = m}) (p : ps)
+        | isNothing (Map.lookup (getPulseDst p) m) =
+            go (((`checkModules` p) . updatePulsesCounter br) p) ps
         | otherwise =
             let
                 pDst = getPulseDst p
                 modul = fromJust $ Map.lookup pDst m
                 (modul', pulses) = processPulse modul p
                 m' = insert pDst modul' m
+                br' = (checkModules (updatePulsesCounter br p) p){modules = m'}
              in
-                go m' (updateCounter c p) (rx || activateRX p) (ps ++ pulses)
+                go br' (ps ++ pulses)
 
-solution1 m =
-    (\(x, y) -> x * y)
-        . (\(c, _, _) -> c)
+solution1 :: Modules -> Int
+solution1 =
+    (\br -> lowPulses br * highPulses br)
         . (!! 1000)
-        $ iterate (\((plp, php), _, x) -> (\((clp, chp), a, b) -> ((plp + clp, php + chp), a, b)) (pushButton x)) ((0, 0), False, m)
+        . iterate pushButton
+        . initialButtonResult
 
 twentiethDecemberSolution1 :: IO Int
 twentiethDecemberSolution1 = solution1 <$> input
 
-solution2 m = go 1 (pushButton m)
+solution2 m = foldl1 lcm [ddHighPulse, fhHighPulse, xpHighPulse, fcHighPulse]
   where
-    go c (_, True, _) = c
-    go c (_, False, m') = go (c + 1) (pushButton m')
+    buttonResult = initialButtonResult m
+    ddHighPulse = findHighPulseLoopForModule "dd" buttonResult
+    fhHighPulse = findHighPulseLoopForModule "fh" buttonResult
+    xpHighPulse = findHighPulseLoopForModule "xp" buttonResult
+    fcHighPulse = findHighPulseLoopForModule "fc" buttonResult
 
-solution2' m = (\(c, _, _) -> c) $ until (\(_, b, _) -> b) (\(c, _, x) -> (\(_, a, b) -> ((c + 1), a, b)) (pushButton x)) (0, False, m)
+findHighPulseLoopForModule :: String -> ButtonResult -> Int
+findHighPulseLoopForModule mid br = buttonPushNum secondHighPulseButtonResult
+  where
+    firstHighPulseButtonResult = findHighPulse br
+    secondHighPulseButtonResult = findHighPulse ((initialButtonResult . modules) firstHighPulseButtonResult)
+    findHighPulse =
+        until
+            ( \x -> case mid of
+                "dd" -> ddTrigger x
+                "fh" -> fhTrigger x
+                "xp" -> xpTrigger x
+                "fc" -> fcTrigger x
+            )
+            pushButton
 
-twentiethDecemberSolution2 :: IO Int
-twentiethDecemberSolution2 = solution2' <$> input
+-- twentiethDecemberSolution2 :: IO Int
+-- twentiethDecemberSolution2 = solution2 <$> input
 
 testInput :: Modules
 testInput =
