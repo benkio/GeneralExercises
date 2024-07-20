@@ -1,7 +1,7 @@
 module TwentyTwentyThree.TwentyFirstDecember where
 
 import Data.Map (Map)
-import qualified Data.Map as M (filter, fromList, lookup, toList)
+import qualified Data.Map as M (filter, findMax, fromList, lookup, mapKeys, toList, union)
 import Data.Set (Set)
 import qualified Data.Set as S (fromList, map, size, toList)
 
@@ -40,6 +40,21 @@ solution1 f = S.size $ walk f startingPoint 64
 
 twentyfirstDecemberSolution1 :: IO Int
 twentyfirstDecemberSolution1 = solution1 <$> input
+
+expandField :: Field -> (Int, Int) -> Field -> Step -> Field
+expandField f c f' s = expandField' f (amendCoord c s) f' s
+  where
+    (mx, my) = fst $ M.findMax f'
+    amendCoord (x, y) N = (x - (x `mod` mx), y)
+    amendCoord (x, y) S = (x - (x `mod` mx), y)
+    amendCoord (x, y) E = (x, y - (y `mod` my))
+    amendCoord (x, y) W = (x, y - (y `mod` my))
+
+expandField' :: Field -> (Int, Int) -> Field -> Step -> Field
+expandField' f (sx, sy) f' N = f `M.union` M.mapKeys (\(x, y) -> (sx + x, sy + y - ((snd . fst . M.findMax) f) - 1)) f'
+expandField' f (sx, sy) f' S = f `M.union` M.mapKeys (\(x, y) -> (sx + x, sy + y + 1)) f'
+expandField' f (sx, sy) f' W = f `M.union` M.mapKeys (\(x, y) -> (sx + x + 1, sy + y)) f'
+expandField' f (sx, sy) f' E = f `M.union` M.mapKeys (\(x, y) -> (sx + x - ((fst . fst . M.findMax) f) - 1, sy + y)) f'
 
 solution2 = undefined
 
