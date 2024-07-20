@@ -38,7 +38,13 @@ invertStep (x, y) E = (x + 1, y)
 invertStep (x, y) W = (x - 1, y)
 
 takeOneStep :: Field -> Set (Int, Int) -> Set (Int, Int)
-takeOneStep f s = setConcatMap (\c -> filter (\x -> isAvailableStep f x == Just True) (takeStep c <$> (enumFrom N))) s
+takeOneStep f =
+    setConcatMap
+        ( \c ->
+            filter
+                (\x -> isAvailableStep f x == Just True)
+                (takeStep c <$> enumFrom N)
+        )
 
 walk :: Field -> Set (Int, Int) -> Int -> Set (Int, Int)
 walk _ s 0 = s
@@ -62,21 +68,21 @@ expandField f c f' s = expandField' f (amendCoord c s) f' s
     amendCoord (x, y) W = (x, y - (y `mod` (my + 1)))
 
 expandField' :: Field -> (Int, Int) -> Field -> Step -> Field
-expandField' f (sx, sy) f' N = f `M.union` M.mapKeys (\(x, y) -> (sx + x, sy + y - ((snd . fst . M.findMax) f') - 1)) f'
+expandField' f (sx, sy) f' N = f `M.union` M.mapKeys (\(x, y) -> (sx + x, sy + y - (snd . fst . M.findMax) f' - 1)) f'
 expandField' f (sx, sy) f' S = f `M.union` M.mapKeys (\(x, y) -> (sx + x, sy + y + 1)) f'
 expandField' f (sx, sy) f' W = f `M.union` M.mapKeys (\(x, y) -> (sx + x + 1, sy + y)) f'
-expandField' f (sx, sy) f' E = f `M.union` M.mapKeys (\(x, y) -> (sx + x - ((fst . fst . M.findMax) f') - 1, sy + y)) f'
+expandField' f (sx, sy) f' E = f `M.union` M.mapKeys (\(x, y) -> (sx + x - (fst . fst . M.findMax) f' - 1, sy + y)) f'
 
 takeOneStepInfinite :: Field -> Set (Int, Int) -> Field -> (Set (Int, Int), Field)
 takeOneStepInfinite f s fieldBlock =
     S.foldr step (S.empty, f) s
   where
     step :: (Int, Int) -> (Set (Int, Int), Field) -> (Set (Int, Int), Field)
-    step c (s, f) = foldr step' (s, f) (fmap (\d -> (d, takeStep c d)) (enumFrom N))
+    step c (s, f) = foldr (step' . (\ d -> (d, takeStep c d))) (s, f) (enumFrom N)
     step' :: (Step, (Int, Int)) -> (Set (Int, Int), Field) -> (Set (Int, Int), Field)
     step' (direction, c) (s, f)
         | isAvailableStep f c == Just True = (S.insert c s, f)
-        | M.lookup c f == Nothing = step' (direction, c) (s, expandField f (invertStep c direction) fieldBlock direction)
+        | isNothing (M.lookup c f) = step' (direction, c) (s, expandField f (invertStep c direction) fieldBlock direction)
         | otherwise = (s, f)
 
 findPolynomialValues :: Field -> Set (Int, Int) -> Field -> Int -> Int -> [Int] -> [Int]

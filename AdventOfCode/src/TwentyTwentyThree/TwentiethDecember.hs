@@ -85,7 +85,7 @@ updateConjunctionInputs m = Map.foldr updateInputs m m
   where
     updateInputs :: Module -> Modules -> Modules
     updateInputs x m' =
-        foldl (\m'' s -> adjust (`addInput` getModuleKey x) s m'') m' (getModuleOutput x)
+        foldl (flip (adjust (`addInput` getModuleKey x))) m' (getModuleOutput x)
 
 initialButtonResult m =
     ButtonResult
