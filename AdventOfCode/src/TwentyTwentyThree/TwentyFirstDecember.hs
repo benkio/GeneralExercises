@@ -6,11 +6,11 @@ module TwentyTwentyThree.TwentyFirstDecember where
 import Text.Printf (printf)
 
 import Data.List
+import Data.Maybe (isNothing)
 import Data.Map (Map)
 import qualified Data.Map as M (filter, findMax, fromList, lookup, mapKeys, size, toList, union)
 import Data.Set (Set)
 import qualified Data.Set as S (empty, foldr, fromList, insert, map, size, toList)
-import Debug.Trace
 
 data FieldBlock = GardenPlot | Rock | StartingPosition deriving (Show, Eq)
 data Step = N | S | E | W deriving (Show, Enum)
