@@ -56,11 +56,11 @@ moveTetris tetris = go tetris S.empty
          in
             if rightsLength > 0
                 then
-                    trace (printf "debug: moved, leftsLength %d rights %s" leftsLength (show rights)) $
+                    trace (printf "debug: moved, leftsLength %d rightsLength %d" leftsLength rightsLength) $
                         go
                             (fmap (either id id) nts)
                             (foldl (\s e -> S.insert (either id id e) s) rs rights)
-                else (ts, rs)
+                else trace (printf "debug: all fallen") $ (ts, rs)
 
 destroyableBlocks :: Tetris -> Int
 destroyableBlocks ts = length . filter (all isLeft) $ fmap (\i -> moveBlocksBelow (deleteAt i ts)) [0 .. length ts - 1]
@@ -100,14 +100,9 @@ twentysecondDecemberSolution1 = solution1 <$> input
 
 fallBricks :: Tetris -> Int
 fallBricks ts =
-    sum $
-        fmap
-            (S.size . snd . moveTetris . (`deleteAt` ts))
-            [ 0
-            .. 0 -- length ts - 1
-            ]
+    sum $ fmap (S.size . snd . moveTetris . (`deleteAt` ts)) [0 .. length ts - 1]
 
-solution2 = undefined
+solution2 = fallBricks . fst . moveTetris
 
 twentysecondDecemberSolution2 :: IO Int
-twentysecondDecemberSolution2 = undefined
+twentysecondDecemberSolution2 = solution2 <$> input
