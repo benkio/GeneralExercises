@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TupleSections #-}
 
 module TwentyTwentyThree.TwentyThirdDecember where
 
@@ -69,18 +70,18 @@ isNotCounterSlope p hm D = fromMaybe False $ (/= SlopeU) <$> M.lookup p hm
 isNotCounterSlope p hm L = fromMaybe False $ (/= SlopeR) <$> M.lookup p hm
 isNotCounterSlope p hm R = fromMaybe False $ (/= SlopeL) <$> M.lookup p hm
 
-hikeStep :: Path -> HikeMap -> [((Int, Int), Direction)]
-hikeStep (Path{visited = path, current = p, dir = dir}) hm = filter ((`S.notMember` path) . fst) nextStepsNonForest
+hikeStep :: Set (Int, Int) -> (Int, Int) -> Direction -> HikeMap -> Bool -> [((Int, Int), Direction)]
+hikeStep path p dir hm slopeCheck = filter ((`S.notMember` path) . fst) nextStepsNonForest
   where
     ds = nextDirections dir
     nextStepsCoordDirection = fmap (\d -> (step p d, d)) ds
-    nextStepsNonForest = filter (\(p', d) -> isNotForest p' hm && isNotCounterSlope p' hm d) nextStepsCoordDirection
+    nextStepsNonForest = filter (\(p', d) -> isNotForest p' hm && (not slopeCheck || isNotCounterSlope p' hm d)) nextStepsCoordDirection
 
 walkPath :: Path -> HikeMap -> [Path]
 walkPath path hm =
     fmap (updatePath path) pathNextSteps
   where
-    pathNextSteps = hikeStep path hm
+    pathNextSteps = hikeStep (visited path) (current path) (dir path) hm True
     updatePath :: Path -> ((Int, Int), Direction) -> Path
     updatePath (Path{visited = vs, current = p, dir = dir}) (p', d') =
         (Path{visited = S.insert p vs, current = p', dir = d'})
@@ -126,6 +127,54 @@ solution1 = maximum . fmap pathLength . walkPaths [startingPath]
 
 twentythirdDecemberSolution1 :: IO Int
 twentythirdDecemberSolution1 = solution1 <$> input
+
+data GraphPath = GraphPath
+    { gpLength :: Int
+    , gpStart :: (Int, Int)
+    , gpEnd :: (Int, Int)
+    }
+    deriving (Eq, Ord, Show)
+
+buildGraphPathsSingle :: (Int, Int) -> Direction -> HikeMap -> ([GraphPath], [((Int, Int), Direction)])
+buildGraphPathsSingle start d hm = go (step start d) d 1
+  where
+    go current dir stepCount
+        | length steps == 1 = go ((fst . head) steps) ((snd . head) steps) (stepCount + 1)
+        | otherwise =
+            (
+                [ GraphPath{gpLength = stepCount, gpStart = start, gpEnd = current}
+                , GraphPath{gpLength = stepCount, gpStart = current, gpEnd = start}
+                ]
+            , fmap ((current,) . snd) steps
+            )
+      where
+        steps = hikeStep S.empty current dir hm False
+
+buildGraphPath :: (Int, Int) -> Direction -> HikeMap -> Set GraphPath
+buildGraphPath start d hm = go [(start, d)] S.empty
+  where
+    go [] gs = gs
+    go ((current, dir) : cs) gs =
+        let
+            (gs', next) = buildGraphPathsSingle current dir hm
+            newgs = filter (`notElem` gs) gs'
+         in
+            if null newgs
+                then go cs gs
+                else go (cs ++ next) (foldl (\s x -> S.insert x s) gs newgs)
+
+-- given a list of graph paths it checks if there are duplicate nodes
+-- checkDuplicateNodesInPath :: [GraphPath] -> Bool
+
+-- given a node terminal return the adjacent paths
+-- findAdjacentPaths :: (Int,Int) -> [GraphPath]
+
+-- given a list of graphPath it returns its step size
+-- graphPathSize :: [GraphPath] -> Int
+
+-- given the list of all the graph path and starting from the first one
+-- returns the list of all paths that ends with the ending position and has no repeated nodes
+-- buildPaths :: (Int,Int) -> [[GraphPath]]
 
 solution2 = undefined
 
