@@ -3,6 +3,7 @@
 
 module TwentyTwentyThree.TwentyThirdDecember where
 
+import Data.List (group, sort)
 import Data.Map (Map, findMax)
 import qualified Data.Map as M (fromList, lookup)
 import Data.Maybe (catMaybes, fromMaybe, isJust)
@@ -164,17 +165,29 @@ buildGraphPath start d hm = go [(start, d)] S.empty
                 else go (cs ++ next) (foldl (\s x -> S.insert x s) gs newgs)
 
 -- given a list of graph paths it checks if there are duplicate nodes
--- checkDuplicateNodesInPath :: [GraphPath] -> Bool
+checkDuplicateNodesInPath :: [GraphPath] -> Bool
+checkDuplicateNodesInPath = any ((> 1) . length) . group . sort . fmap (\gp -> gpStart gp)
 
 -- given a node terminal return the adjacent paths
--- findAdjacentPaths :: (Int,Int) -> [GraphPath]
+findAdjacentPaths :: (Int, Int) -> [GraphPath] -> [GraphPath]
+findAdjacentPaths node = filter ((== node) . gpStart)
 
 -- given a list of graphPath it returns its step size
--- graphPathSize :: [GraphPath] -> Int
+graphPathSize :: [GraphPath] -> Int
+graphPathSize = sum . fmap gpLength
 
--- given the list of all the graph path and starting from the first one
--- returns the list of all paths that ends with the ending position and has no repeated nodes
--- buildPaths :: (Int,Int) -> [[GraphPath]]
+-- given the list of all the graph path, the current path and current position
+-- returns a list of all the grap path that can be added from that one. filtering by duplicates
+buildPathsSingle :: [GraphPath] -> (Int, Int) -> [GraphPath] -> [[GraphPath]]
+buildPathsSingle currentGP currentPos allPaths = newPaths
+  where
+    adjacentPaths = findAdjacentPaths currentPos allPaths
+    newPathsRaw = fmap ((currentGP ++) . (: [])) adjacentPaths
+    newPaths = filter (not . checkDuplicateNodesInPath) newPathsRaw
+
+-- given the paths that are being built, keep building till all the paths ending to the end node are generated.
+buildPath :: [[GraphPath]] -> [[GraphPath]]
+buildPath gps = undefined
 
 solution2 = undefined
 
