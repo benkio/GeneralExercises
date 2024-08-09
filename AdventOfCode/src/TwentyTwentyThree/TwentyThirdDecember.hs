@@ -1,14 +1,18 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 
 module TwentyTwentyThree.TwentyThirdDecember where
 
-import Data.List (group, sort)
+import Text.Printf (printf)
+
+import Data.List (group, partition, sort)
 import Data.Map (Map, findMax)
 import qualified Data.Map as M (fromList, lookup)
 import Data.Maybe (catMaybes, fromMaybe, isJust)
 import Data.Set (Set)
-import qualified Data.Set as S (empty, insert, notMember, size)
+import qualified Data.Set as S (empty, filter, insert, notMember, size, toList,fromList)
+import Debug.Trace
 
 data FieldBlock = Empty | SlopeU | SlopeL | SlopeD | SlopeR deriving (Eq)
 type HikeMap = Map (Int, Int) FieldBlock
@@ -46,8 +50,9 @@ parseInput = M.fromList . concat . zipWith parseLine [0 ..] . lines
     parseLine y = catMaybes . zipWith (\x c -> if c /= '#' then Just ((x, y), read [c]) else Nothing) [0 ..]
 
 startingPath :: Path
-startingPath = Path{visited = S.empty, current = (1, 0), dir = D}
-
+startingPath = Path{visited = S.empty, current = startingPoint, dir = D}
+startingPoint :: (Int, Int)
+startingPoint = (1, 0)
 endingPoint :: HikeMap -> (Int, Int)
 endingPoint = fst . findMax
 
@@ -164,13 +169,9 @@ buildGraphPath start d hm = go [(start, d)] S.empty
                 then go cs gs
                 else go (cs ++ next) (foldl (\s x -> S.insert x s) gs newgs)
 
--- given a list of graph paths it checks if there are duplicate nodes
-checkDuplicateNodesInPath :: [GraphPath] -> Bool
-checkDuplicateNodesInPath = any ((> 1) . length) . group . sort . fmap (\gp -> gpStart gp)
-
 -- given a node terminal return the adjacent paths
-findAdjacentPaths :: (Int, Int) -> [GraphPath] -> [GraphPath]
-findAdjacentPaths node = filter ((== node) . gpStart)
+findAdjacentPaths :: [GraphPath] -> (Int, Int) -> Set GraphPath -> [GraphPath]
+findAdjacentPaths path node = S.toList . S.filter (\gp -> gpStart gp == node && gpEnd gp `notElem` concatMap (\x -> [gpEnd x, gpStart x]) path)
 
 -- given a list of graphPath it returns its step size
 graphPathSize :: [GraphPath] -> Int
@@ -178,18 +179,32 @@ graphPathSize = sum . fmap gpLength
 
 -- given the list of all the graph path, the current path and current position
 -- returns a list of all the grap path that can be added from that one. filtering by duplicates
-buildPathsSingle :: [GraphPath] -> (Int, Int) -> [GraphPath] -> [[GraphPath]]
+buildPathsSingle :: [GraphPath] -> (Int, Int) -> Set GraphPath -> [[GraphPath]]
 buildPathsSingle currentGP currentPos allPaths = newPaths
   where
-    adjacentPaths = findAdjacentPaths currentPos allPaths
-    newPathsRaw = fmap ((currentGP ++) . (: [])) adjacentPaths
-    newPaths = filter (not . checkDuplicateNodesInPath) newPathsRaw
+    adjacentPaths = findAdjacentPaths currentGP currentPos allPaths
+    newPaths = fmap ((currentGP ++) . (: [])) adjacentPaths
 
 -- given the paths that are being built, keep building till all the paths ending to the end node are generated.
-buildPath :: [[GraphPath]] -> [[GraphPath]]
-buildPath gps = undefined
+buildPath :: HikeMap -> Set GraphPath -> [[GraphPath]] -> Int -> Int
+buildPath _ _ [] v = v
+buildPath hm allGp (gp : gps) !v =
+  buildPath hm allGp gps' v'
+  where
+    end = endingPoint hm
+    currentPoint = if null gp then startingPoint else (gpEnd . last) gp
+    newGps = buildPathsSingle gp currentPoint allGp
+    (endingGps, nextGps) = partition ((== end) . gpEnd . last) newGps
+    gps' = S.toList $ S.fromList (gps ++ nextGps)
+    v' = (\x -> trace (printf "debug: %s - %d" (show  x) (length gps')) x) $ foldl (\m gp -> max m (graphPathSize gp)) v endingGps
 
-solution2 = undefined
+solution2 hm =
+    -- graphPathSize . maximumBy (\p p' -> graphPathSize p `compare` graphPathSize p')
+        buildPath hm allPaths [firstPath] 0
+  where
+    allPaths = buildGraphPath (1, 0) D hm
+    firstPath = S.toList $ S.filter ((== (1, 0)) . gpStart) allPaths
 
-twentythirdDecemberSolution2 :: IO Int
-twentythirdDecemberSolution2 = undefined
+-- 3050 is too low
+-- twentythirdDecemberSolution2 :: IO Int
+twentythirdDecemberSolution2 = solution2 <$> input
