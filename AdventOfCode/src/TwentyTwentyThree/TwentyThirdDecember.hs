@@ -11,7 +11,7 @@ import Data.Map (Map, findMax)
 import qualified Data.Map as M (fromList, lookup)
 import Data.Maybe (catMaybes, fromMaybe, isJust)
 import Data.Set (Set)
-import qualified Data.Set as S (empty, filter, insert, notMember, size, toList,fromList)
+import qualified Data.Set as S (empty, filter, fromList, insert, notMember, size, toList)
 import Debug.Trace
 
 data FieldBlock = Empty | SlopeU | SlopeL | SlopeD | SlopeR deriving (Eq)
@@ -189,22 +189,22 @@ buildPathsSingle currentGP currentPos allPaths = newPaths
 buildPath :: HikeMap -> Set GraphPath -> [[GraphPath]] -> Int -> Int
 buildPath _ _ [] v = v
 buildPath hm allGp (gp : gps) !v =
-  buildPath hm allGp gps' v'
+    buildPath hm allGp gps' v'
   where
     end = endingPoint hm
     currentPoint = if null gp then startingPoint else (gpEnd . last) gp
     newGps = buildPathsSingle gp currentPoint allGp
     (endingGps, nextGps) = partition ((== end) . gpEnd . last) newGps
     gps' = S.toList $ S.fromList (gps ++ nextGps)
-    v' = (\x -> trace (printf "debug: %s - %d" (show  x) (length gps')) x) $ foldl (\m gp -> max m (graphPathSize gp)) v endingGps
+    v' = (\x -> trace (printf "debug: %s - %d" (show x) (length gps')) x) $ foldl (\m gp -> max m (graphPathSize gp)) v endingGps
 
 solution2 hm =
     -- graphPathSize . maximumBy (\p p' -> graphPathSize p `compare` graphPathSize p')
-        buildPath hm allPaths [firstPath] 0
+    buildPath hm allPaths [firstPath] 0
   where
     allPaths = buildGraphPath (1, 0) D hm
     firstPath = S.toList $ S.filter ((== (1, 0)) . gpStart) allPaths
 
--- 3050 is too low
+-- 6238 is too low
 -- twentythirdDecemberSolution2 :: IO Int
 twentythirdDecemberSolution2 = solution2 <$> input
