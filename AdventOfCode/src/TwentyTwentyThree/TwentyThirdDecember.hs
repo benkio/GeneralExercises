@@ -57,7 +57,7 @@ endingPoint :: HikeMap -> (Int, Int)
 endingPoint = fst . findMax
 
 nextDirections :: Direction -> [Direction]
-nextDirections d = filter (/= (reverseDirection d)) $ enumFrom U
+nextDirections d = filter (/= reverseDirection d) $ enumFrom U
 reverseDirection :: Direction -> Direction
 reverseDirection U = D
 reverseDirection R = L
@@ -71,10 +71,10 @@ step (x, y) R = (x + 1, y)
 isNotForest :: (Int, Int) -> HikeMap -> Bool
 isNotForest p hm = isJust $ M.lookup p hm
 isNotCounterSlope :: (Int, Int) -> HikeMap -> Direction -> Bool
-isNotCounterSlope p hm U = fromMaybe False $ (/= SlopeD) <$> M.lookup p hm
-isNotCounterSlope p hm D = fromMaybe False $ (/= SlopeU) <$> M.lookup p hm
-isNotCounterSlope p hm L = fromMaybe False $ (/= SlopeR) <$> M.lookup p hm
-isNotCounterSlope p hm R = fromMaybe False $ (/= SlopeL) <$> M.lookup p hm
+isNotCounterSlope p hm U = maybe False (/= SlopeD) (M.lookup p hm)
+isNotCounterSlope p hm D = maybe False (/= SlopeU) (M.lookup p hm)
+isNotCounterSlope p hm L = maybe False (/= SlopeR) (M.lookup p hm)
+isNotCounterSlope p hm R = maybe False (/= SlopeL) (M.lookup p hm)
 
 hikeStep :: Set (Int, Int) -> (Int, Int) -> Direction -> HikeMap -> Bool -> [((Int, Int), Direction)]
 hikeStep path p dir hm slopeCheck = filter ((`S.notMember` path) . fst) nextStepsNonForest
@@ -145,7 +145,7 @@ buildGraphPathsSingle :: (Int, Int) -> Direction -> HikeMap -> ([GraphPath], [((
 buildGraphPathsSingle start d hm = go (step start d) d 1
   where
     go current dir stepCount
-        | length steps == 1 = go ((fst . head) steps) ((snd . head) steps) (stepCount + 1)
+        | length steps == 1 = uncurry go (head steps) (stepCount + 1)
         | otherwise =
             (
                 [ GraphPath{gpLength = stepCount, gpStart = start, gpEnd = current}
@@ -167,7 +167,7 @@ buildGraphPath start d hm = go [(start, d)] S.empty
          in
             if null newgs
                 then go cs gs
-                else go (cs ++ next) (foldl (\s x -> S.insert x s) gs newgs)
+                else go (cs ++ next) (foldl (flip S.insert) gs newgs)
 
 -- given a node terminal return the adjacent paths
 findAdjacentPaths :: [GraphPath] -> (Int, Int) -> Set GraphPath -> [GraphPath]
