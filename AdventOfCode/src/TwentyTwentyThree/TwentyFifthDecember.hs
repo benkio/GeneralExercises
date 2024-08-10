@@ -1,15 +1,17 @@
 module TwentyTwentyThree.TwentyFifthDecember where
 
-import Data.Map (Map, insertWith, empty)
-
+import Data.Maybe (fromJust)
+import Data.Map (Map, insertWith, empty, keys, fromList)
+import qualified Data.Map as M (lookup)
 import Data.List.Split (splitOn)
-
 import Data.Bifunctor (bimap, first, second)
 
-input :: IO (Map String [String])
+type Connections = Map String [String]
+
+input :: IO (Connections)
 input = parseInput <$> readFile "input/2023/25December.txt"
 
-parseInput :: String -> Map String [String]
+parseInput :: String -> Connections
 parseInput = foldl (\m (x, v) -> insertWith (++) x [v] m) empty .
   concatMap parseLineWire . lines
   where
@@ -17,7 +19,7 @@ parseInput = foldl (\m (x, v) -> insertWith (++) x [v] m) empty .
     parseLineWire =
         (\(s, xs) -> concatMap (\x -> [(s, x), (x, s)]) xs) . second (splitOn " " . drop 2) . break (== ':')
 
-testInput :: Map String [String]
+testInput :: Connections
 testInput =
     parseInput
         "jqt: rhn xhk nvd\n\
@@ -34,6 +36,22 @@ testInput =
         \rzs: qnr cmg lsr rsh\n\
         \frs: qnr lhk lsr"
 
+unsafeLookup :: Connections -> String -> [String]
+unsafeLookup m s = fromJust $ M.lookup s m
+
+-- if empty is connected, otherwise returns the ones not connected (left)
+isConnected :: Connections -> [String]
+isConnected cs = go (keys cs) [(head . keys) cs]
+  where
+    go :: [String] -> [String] -> [String]
+    go [] _ = []
+    go xs [] = xs
+    go xs ss =
+      let
+        leftConnections = filter (`notElem` ss) xs
+      in go leftConnections ((filter (`elem` leftConnections) . concatMap (unsafeLookup cs)) ss)
+
+-- brute force removing all 3 possible wires till we disconnect? How many?
 solution1 = undefined
 
 twentyfifthDecemberSolution1 :: IO Int
@@ -43,3 +61,7 @@ solution2 = undefined
 
 twentyfifthDecemberSolution2 :: IO Int
 twentyfifthDecemberSolution2 = undefined
+
+-- works
+test :: [String]
+test = isConnected $ fromList [("bvb",["ntq","hfx","xhk","rhn"]),("cmg",["rzs","lhk","nvd","qnr"]),("frs",["lsr","lhk","qnr","rsh"]),("hfx",["ntq","bvb","rhn","xhk"]),("jqt",["ntq","xhk","rhn"]),("lhk",["frs","lsr","nvd","cmg"]),("lsr",["frs","rzs","lhk","pzl","rsh"]),("ntq",["xhk","bvb","hfx","jqt"]),("nvd",["lhk","qnr","pzl","cmg"]),("pzl",["nvd","lsr","rsh"]),("qnr",["frs","rzs","nvd","cmg"]),("rhn",["hfx","bvb","xhk","jqt"]),("rsh",["rzs","lsr","pzl","frs"]),("rzs",["rsh","lsr","cmg","qnr"]),("xhk",["ntq","bvb","rhn","hfx","jqt"])]
