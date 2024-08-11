@@ -8,7 +8,7 @@ import Data.Bifunctor (bimap, first, second)
 
 type Connections = Map String [String]
 
-input :: IO (Connections)
+input :: IO Connections
 input = parseInput <$> readFile "input/2023/25December.txt"
 
 parseInput :: String -> Connections
@@ -49,9 +49,9 @@ isConnected cs = go (keys cs) [(head . keys) cs]
     go xs ss =
       let
         leftConnections = filter (`notElem` ss) xs
-      in go leftConnections ((filter (`elem` leftConnections) . concatMap (unsafeLookup cs)) ss)
+      in go leftConnections (concatMap (filter (`elem` leftConnections) . unsafeLookup cs) ss)
 
--- brute force removing all 3 possible wires till we disconnect? How many?
+-- https://en.wikipedia.org/wiki/Karger%27s_algorithm
 solution1 = undefined
 
 twentyfifthDecemberSolution1 :: IO Int
