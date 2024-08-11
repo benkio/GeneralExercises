@@ -1,10 +1,13 @@
 module TwentyTwentyThree.TwentyFifthDecember where
 
+import Debug.Trace (traceShow, traceShowId)
+
 import Data.Maybe (fromJust)
-import Data.Map (Map, insertWith, empty, keys, fromList)
+import Data.Map (Map, insertWith, empty, keys, fromList, insert, delete, toList, size, elems)
 import qualified Data.Map as M (lookup)
 import Data.List.Split (splitOn)
 import Data.Bifunctor (bimap, first, second)
+import System.Random (randomRIO)
 
 type Connections = Map String [String]
 
@@ -51,8 +54,33 @@ isConnected cs = go (keys cs) [(head . keys) cs]
         leftConnections = filter (`notElem` ss) xs
       in go leftConnections (concatMap (filter (`elem` leftConnections) . unsafeLookup cs) ss)
 
+mergeNodes :: Connections -> IO Connections
+mergeNodes cs = do
+  let ns = toList cs
+  (node1K, node1V) <- fmap (ns !!) $ randomRIO (0, length ns - 1)
+  (node2K, node2V) <- fmap (ns !!) $ randomRIO (0, length ns - 1)
+  let
+    deleteDup [] = []
+    deleteDup (x:xs) = if x `elem` xs then deleteDup xs else x:deleteDup xs
+    (mergeNodeK, mergeNodeV) = (node1K ++ ";" ++ node2K, (filter (\x -> x `notElem` (splitOn ";" node1K) && x `notElem` (splitOn ";" node2K)) . deleteDup) (node1V ++ node2V))
+  return $ if node1K /= node2K
+    then insert mergeNodeK mergeNodeV $ delete node2K $ delete node1K cs
+    else cs
+
+karger :: Connections -> IO [([String],[String])]
+karger cs
+  | size cs > 2 = mergeNodes cs >>= karger
+  | otherwise = return $ first (splitOn ";") <$> toList cs
+
 -- https://en.wikipedia.org/wiki/Karger%27s_algorithm
-solution1 = undefined
+solution1 cs = do
+  [n1,n2] <- karger cs
+  let
+    connections1 = traceShowId $ filter (`elem` (fst n2)) (snd n1)
+    connections2 = traceShowId $ filter (`elem` (fst n1)) (snd n2)
+  if length connections2 == 3 && length connections1 == 3
+    then return $ length (fst (traceShowId n1)) * length (fst (traceShowId n2))
+    else solution1 cs
 
 twentyfifthDecemberSolution1 :: IO Int
 twentyfifthDecemberSolution1 = undefined
