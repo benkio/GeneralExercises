@@ -83,10 +83,12 @@ computeSolution tr0 tr1 tr2 =
     (fvx, fvy, fvz) = vectorApplyF' (vectorApplyF c1 c2 (-)) (t2 - t1) div
     (fpx, fpy, fpz) = vectorApplyF c1 (vectorApplyF' (fvx, fvy, fvz) t1 (*)) (-)
 
-solution2 = double2Int . (\p -> px p + py p + pz p) . (\l -> computeSolution (l !! 0) (l !! 1) (l !! 2)) . fmap toTrajectory2d
+solution2 = fmap (\(x,y,z) -> double2Int ((\p -> px p + py p + pz p) (computeSolution x y z))) . (\x -> zip3 x (tail x) (tail (tail x)) ) . fmap toTrajectory2d
 
 -- 792453925505022 too low
-twentyfourthDecemberSolution2 :: IO Int
+-- 811662715630199 too low
+-- 1018285678400640 too high
+-- twentyfourthDecemberSolution2 :: IO Int
 twentyfourthDecemberSolution2 = solution2 <$> input
 
 buildPairs :: [a] -> [(a, a)]
