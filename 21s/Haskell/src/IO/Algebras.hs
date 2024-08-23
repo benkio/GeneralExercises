@@ -1,7 +1,7 @@
 module IO.Algebras where
 
 class MonadConsole m where
-  putStrLn :: String -> m ()
+    putStrLn :: String -> m ()
 
 instance MonadConsole IO where
-  putStrLn = Prelude.putStrLn
+    putStrLn = Prelude.putStrLn

@@ -2,27 +2,28 @@
 
 module ProjectEuler3 where
 
-import Data.List (find, sort, nub)
+import Data.List (find, nub, sort)
 import Data.Maybe (fromJust, isJust)
-import qualified Data.Set as Set (Set, fromList, toList, empty, union)
+import qualified Data.Set as Set (Set, empty, fromList, toList, union)
 import qualified Data.Text as T (pack, replace, splitOn, unpack)
 import ProjectEuler2 (findDivisors)
---import ProjectEuler
+
+-- import ProjectEuler
 
 -- Es 21 ----------------------------------------------------------------------
 
 amicableNum :: Int -> Maybe [Int]
 amicableNum x =
-  let divisorSum = (sum . findDivisors) x
-      amicableDivisorSum = (sum . findDivisors) divisorSum
-   in if amicableDivisorSum == x && x /= divisorSum then Just [x, divisorSum] else Nothing
+    let divisorSum = (sum . findDivisors) x
+        amicableDivisorSum = (sum . findDivisors) divisorSum
+     in if amicableDivisorSum == x && x /= divisorSum then Just [x, divisorSum] else Nothing
 
 findAmicables :: [Int] -> [Int] -> [Int]
 findAmicables [] amicables = amicables
 findAmicables (x : xs) amicables
-  | x `elem` amicables = findAmicables xs amicables
-  | isJust maybeAmicables = findAmicables xs (amicables ++ fromJust maybeAmicables)
-  | otherwise = findAmicables xs amicables
+    | x `elem` amicables = findAmicables xs amicables
+    | isJust maybeAmicables = findAmicables xs (amicables ++ fromJust maybeAmicables)
+    | otherwise = findAmicables xs amicables
   where
     maybeAmicables = amicableNum x
 
@@ -52,11 +53,11 @@ isAbundant :: Int -> Bool
 isAbundant x = ((> x) . sum . findDivisors) x
 
 abundants :: [Int]
-abundants = [x | x <- [1..limit], isAbundant x]
+abundants = [x | x <- [1 .. limit], isAbundant x]
 
 abundantsSum :: Set.Set Int -> [Int] -> Set.Set Int
 abundantsSum acc [] = acc
-abundantsSum acc abus@(x:xs) = abundantsSum (((acc `Set.union`) . Set.fromList . filter (<= limit) . fmap (+x)) abus) xs
+abundantsSum acc abus@(x : xs) = abundantsSum (((acc `Set.union`) . Set.fromList . filter (<= limit) . fmap (+ x)) abus) xs
 
 es23 :: Int
-es23 = sum $ [1..limit] \\ Set.toList (abundantsSum Set.empty abundants)
+es23 = sum $ [1 .. limit] \\ Set.toList (abundantsSum Set.empty abundants)

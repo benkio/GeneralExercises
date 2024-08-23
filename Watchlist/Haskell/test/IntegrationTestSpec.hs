@@ -7,5 +7,5 @@ main = hspec spec
 
 spec :: Spec
 spec = do
-  describe "Integration Test" $ do
-    it "test something" $ pending
+    describe "Integration Test" $ do
+        it "test something" $ pending

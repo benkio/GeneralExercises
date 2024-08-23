@@ -1,7 +1,7 @@
 module TwentyTwentyThree.TwelfthDecember where
 
 import Data.Bifunctor (second)
-import Data.List (group, intersperse, intercalate)
+import Data.List (group, intercalate, intersperse)
 import Data.List.Split (splitOn)
 import Data.Map (Map, empty, insert)
 import qualified Data.Map as M (lookup)

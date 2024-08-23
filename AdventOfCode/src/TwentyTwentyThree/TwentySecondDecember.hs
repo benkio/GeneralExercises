@@ -21,7 +21,7 @@ instance Ord Block where
     (<=) (B{bid = b1}) (B{bid = b2}) = b1 <= b2
 
 getBricksByLevel :: Tetris -> Int -> [Coord]
-getBricksByLevel ts z = concatMap (filter (\ (_, _, bz) -> bz == z) . cs) ts
+getBricksByLevel ts z = concatMap (filter (\(_, _, bz) -> bz == z) . cs) ts
 getBlockByLevel :: Tetris -> Int -> [Block]
 getBlockByLevel ts z = filter ((== z) . minimum . fmap (\(_, _, bz) -> bz) . cs) ts
 getMaximumBlockLevel :: Tetris -> Int

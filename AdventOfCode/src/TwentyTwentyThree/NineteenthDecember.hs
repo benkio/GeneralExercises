@@ -4,7 +4,7 @@ module TwentyTwentyThree.NineteenthDecember where
 
 import Data.Bifunctor (bimap)
 import Data.List (break, find, findIndex)
-import Data.Maybe (mapMaybe, fromJust, isJust)
+import Data.Maybe (fromJust, isJust, mapMaybe)
 import GHC.Utils.Misc (split)
 
 data MachinePart = MP
@@ -61,7 +61,7 @@ parseMachinePart :: String -> MachinePart
 parseMachinePart i = MP{mp_x = xv, mp_m = mv, mp_a = av, mp_s = sv}
   where
     dropTillNum = tail . dropWhile (/= '=')
-    extractNumber n l s = ((\ b -> read b :: Int) . takeWhile (/= l) . foldl (\ dropTillNum f -> f dropTillNum) s) (replicate n dropTillNum)
+    extractNumber n l s = ((\b -> read b :: Int) . takeWhile (/= l) . foldl (\dropTillNum f -> f dropTillNum) s) (replicate n dropTillNum)
     xv = extractNumber 1 ',' i
     mv = extractNumber 2 ',' i
     av = extractNumber 3 ',' i

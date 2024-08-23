@@ -99,7 +99,7 @@ selectInOutSingle fm loop (c, am) (sin, sout) =
   where
     (inDirections, outDirections) = inOutConvention ((fromJust . M.lookup c) fm) am
     -- select all the elements not in loop and not out of the map in the directions from the coordinate c
-    inCoordinates = concatMap  (rowColumnInOut fm loop c) inDirections
+    inCoordinates = concatMap (rowColumnInOut fm loop c) inDirections
     outCoordinates = concatMap (rowColumnInOut fm loop c) outDirections
 
 rowColumnInOut :: FieldMap -> [Coordinate] -> Coordinate -> AnimalMove -> [Coordinate]

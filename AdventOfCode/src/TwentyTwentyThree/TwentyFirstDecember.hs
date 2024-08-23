@@ -6,9 +6,9 @@ module TwentyTwentyThree.TwentyFirstDecember where
 import Text.Printf (printf)
 
 import Data.List
-import Data.Maybe (isNothing)
 import Data.Map (Map)
 import qualified Data.Map as M (filter, findMax, fromList, lookup, mapKeys, size, toList, union)
+import Data.Maybe (isNothing)
 import Data.Set (Set)
 import qualified Data.Set as S (empty, foldr, fromList, insert, map, size, toList)
 
@@ -78,7 +78,7 @@ takeOneStepInfinite f s fieldBlock =
     S.foldr step (S.empty, f) s
   where
     step :: (Int, Int) -> (Set (Int, Int), Field) -> (Set (Int, Int), Field)
-    step c (s, f) = foldr (step' . (\ d -> (d, takeStep c d))) (s, f) (enumFrom N)
+    step c (s, f) = foldr (step' . (\d -> (d, takeStep c d))) (s, f) (enumFrom N)
     step' :: (Step, (Int, Int)) -> (Set (Int, Int), Field) -> (Set (Int, Int), Field)
     step' (direction, c) (s, f)
         | isAvailableStep f c == Just True = (S.insert c s, f)

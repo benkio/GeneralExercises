@@ -1,15 +1,16 @@
-module QualitySpec (spec
-                   , qualityNeverNegative
-                   , qualityLessThen50
-                   , qualityDegradesTwiceAsFast
-                   ) where
+module QualitySpec (
+    spec,
+    qualityNeverNegative,
+    qualityLessThen50,
+    qualityDegradesTwiceAsFast,
+) where
 
 import Generators
 import Item
-import Test.Hspec
-import Test.QuickCheck
 import PropertyChecks
 import SuccessConditions
+import Test.Hspec
+import Test.QuickCheck
 
 qualityNeverNegative' :: ([Item], Positive Int) -> Bool
 qualityNeverNegative' (is, d) = qualityCheckAll qualityNeverNegative (getPositive d) is
@@ -22,9 +23,11 @@ qualityDegradesTwiceAsFast (is, d) = qualityCheck qualityDegradesExpired False (
 
 spec :: Spec
 spec = describe "QualitySpec" $ do
-  it "Quality should never be negative" $ property $
-    forAll (allItemsGen allItemGen) qualityNeverNegative'
-  it "Quality should never be > 50" $ property $
-    forAll (allItemsGen allItemGen) qualityLessThen50'
-  it "Once the sell by date has passed, Quality degrades twice as fast" $
-    forAll (allItemsGen allItemGenExpired) qualityDegradesTwiceAsFast
+    it "Quality should never be negative" $
+        property $
+            forAll (allItemsGen allItemGen) qualityNeverNegative'
+    it "Quality should never be > 50" $
+        property $
+            forAll (allItemsGen allItemGen) qualityLessThen50'
+    it "Once the sell by date has passed, Quality degrades twice as fast" $
+        forAll (allItemsGen allItemGenExpired) qualityDegradesTwiceAsFast

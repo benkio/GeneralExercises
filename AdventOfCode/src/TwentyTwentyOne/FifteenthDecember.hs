@@ -78,7 +78,7 @@ extendMap m =
                     x
             )
                 <$> map (,m) [0 ..]
-        newGridRows = (\(i, x) -> (take 5 . drop i) x) <$> map (, infinitem) [0 .. 4]
+        newGridRows = (\(i, x) -> (take 5 . drop i) x) <$> map (,infinitem) [0 .. 4]
      in concatMap (foldl1 concatGrid) newGridRows
 
 concatGrid :: [[Int]] -> [[Int]] -> [[Int]]

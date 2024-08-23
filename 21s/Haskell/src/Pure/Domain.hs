@@ -1,19 +1,19 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Pure.Domain
-  (
+
+module Pure.Domain (
     Card (..),
     CardValue (..),
     CardType (..),
     TwentyOneValue (..),
     Player (..),
     GameState (..),
-    GameExitCondition(..),
+    GameExitCondition (..),
     gameState,
     deck,
     sam,
     dealer,
-    Deck
-  )
+    Deck,
+)
 where
 
 -------------------------------------------------------------------------------
@@ -26,62 +26,65 @@ data CardType = Clubs | Diamonds | Hearts | Spades deriving (Show, Bounded, Enum
 
 data GameExitCondition = Blackjack | PlayerLost
 
-data Card = Card {
-  cValue :: CardValue,
-  cType :: CardType
-  } deriving (Show, Eq, Ord)
+data Card = Card
+    { cValue :: CardValue
+    , cType :: CardType
+    }
+    deriving (Show, Eq, Ord)
 
-data Player = Player {
-  hand :: [Card],
-  name :: String
-  } deriving (Show, Eq)
+data Player = Player
+    { hand :: [Card]
+    , name :: String
+    }
+    deriving (Show, Eq)
 
 type Deck = [Card]
 
-data GameState = GameState {
-  properPlayer :: Player,
-  dealerPlayer :: Player,
-  gameStateDeck   :: Deck
-  } deriving (Show, Eq)
+data GameState = GameState
+    { properPlayer :: Player
+    , dealerPlayer :: Player
+    , gameStateDeck :: Deck
+    }
+    deriving (Show, Eq)
 
 -------------------------------------------------------------------
 --                           typeClasses                         --
 -------------------------------------------------------------------
 
 class (Enum a) => TwentyOneValue a where
-  to21Value :: a -> Int
+    to21Value :: a -> Int
 
 instance TwentyOneValue CardValue where
-  to21Value Two    = 2
-  to21Value Three  = 3
-  to21Value Four   = 4
-  to21Value Five   = 5
-  to21Value Six    = 6
-  to21Value Seven  = 7
-  to21Value Eight  = 8
-  to21Value Nine   = 9
-  to21Value Ten    = 10
-  to21Value Jack   = 10
-  to21Value King   = 10
-  to21Value Queen  = 10
-  to21Value Ace    = 11
+    to21Value Two = 2
+    to21Value Three = 3
+    to21Value Four = 4
+    to21Value Five = 5
+    to21Value Six = 6
+    to21Value Seven = 7
+    to21Value Eight = 8
+    to21Value Nine = 9
+    to21Value Ten = 10
+    to21Value Jack = 10
+    to21Value King = 10
+    to21Value Queen = 10
+    to21Value Ace = 11
 
 instance Show GameExitCondition where
-  show Blackjack = "Blackjack"
-  show PlayerLost = "Player Lost"
+    show Blackjack = "Blackjack"
+    show PlayerLost = "Player Lost"
 
 -- ----------------------------------------------------------
 --                    Starting Values                   --
 ----------------------------------------------------------
 
 sam :: Player
-sam = Player {hand=[], name="Sam"}
+sam = Player{hand = [], name = "Sam"}
 
 dealer :: Player
-dealer = Player {hand=[], name="Dealer"}
+dealer = Player{hand = [], name = "Dealer"}
 
 deck :: Deck
-deck = [Card {cValue=x, cType=y} | x <- [minBound..], y <- [minBound..]]
+deck = [Card{cValue = x, cType = y} | x <- [minBound ..], y <- [minBound ..]]
 
 gameState :: Deck -> GameState
-gameState d = GameState {properPlayer=sam, dealerPlayer=dealer, gameStateDeck=d}
+gameState d = GameState{properPlayer = sam, dealerPlayer = dealer, gameStateDeck = d}

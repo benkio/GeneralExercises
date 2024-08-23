@@ -127,7 +127,7 @@ parseInput s =
             , ((\x -> x - 1) . length . init . tail) ls
             )
      in Valley
-            { entrance = (s_entrance, - 1)
+            { entrance = (s_entrance, -1)
             , valleyBlizzards = s_valley
             , exit = (s_exit, length ls - 2)
             , valleyBounds = s_valleyBounds

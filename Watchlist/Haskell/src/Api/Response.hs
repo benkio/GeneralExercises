@@ -1,11 +1,13 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+
 module Api.Response where
 
 import Api.Domain
-import GHC.Generics
 import Data.Aeson
+import GHC.Generics
 
-newtype WatchListResponse = WatchListResponse {
-  watchlist :: [ContentID]
-  } deriving (Generic, ToJSON)
+newtype WatchListResponse = WatchListResponse
+    { watchlist :: [ContentID]
+    }
+    deriving (Generic, ToJSON)

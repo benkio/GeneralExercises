@@ -2,13 +2,13 @@
 
 module TwentyTwentyThree.SixteenthDecember where
 
+import Control.Parallel.Strategies (parMap, rdeepseq)
 import Data.Bifunctor (bimap)
-import Data.List (nubBy, maximum)
+import Data.List (maximum, nubBy)
 import Data.Map (Map, findMax, fromList)
 import qualified Data.Map as M (lookup)
 import Data.Set (Set, elems, empty, insert, notMember, size)
 import Debug.Trace
-import Control.Parallel.Strategies (parMap, rdeepseq)
 
 type PositionDirection = ((Int, Int), Direction)
 type Cave = Map (Int, Int) Tile

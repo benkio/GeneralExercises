@@ -86,8 +86,9 @@ findRepetition = go 0 empty
 solution2 :: Platform -> Int
 solution2 p =
     northLoad endPlatform
-    -- (fmap northLoad . take 50) (iterate tiltCycle p)
   where
+    -- (fmap northLoad . take 50) (iterate tiltCycle p)
+
     (startRep, endRep) = (\(a, b) -> (a - 1, b - 1)) $ findRepetition p
     cycleLength = endRep - startRep
     remainingCycles = (1000000000 - endRep) `mod` cycleLength

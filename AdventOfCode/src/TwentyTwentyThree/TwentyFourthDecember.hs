@@ -1,10 +1,9 @@
 module TwentyTwentyThree.TwentyFourthDecember where
 
 import Data.Bifunctor (bimap)
-import Data.List (tails)
+import Data.List (group, maximumBy, sort, tails)
 import Data.List.Split (splitOn)
 import Debug.Trace (traceShow, traceShowId)
-import GHC.Float (double2Int, int2Double)
 
 data PointVelocity = PV
     { px :: Double
@@ -43,52 +42,55 @@ solution1 =
 twentyfourthDecemberSolution1 :: IO Int
 twentyfourthDecemberSolution1 = solution1 <$> input
 
-crossProduct :: (Int, Int, Int) -> (Int, Int, Int) -> (Int, Int, Int)
+crossProduct :: (Num a) => (a, a, a) -> (a, a, a) -> (a, a, a)
 crossProduct (a1, a2, a3) (b1, b2, b3) =
     (subtract (a2 * b3) (b2 * a3), subtract (b1 * a3) (a1 * b3), subtract (a1 * b2) (b1 * a2))
 
-dotProduct :: (Int, Int, Int) -> (Int, Int, Int) -> Int
+dotProduct :: (Num a) => (a, a, a) -> (a, a, a) -> a
 dotProduct (a1, a2, a3) (b1, b2, b3) =
     a1 * b1 + a2 * b2 + a3 * b3
 
-vectorApplyF :: (Int, Int, Int) -> (Int, Int, Int) -> (Int -> Int -> Int) -> (Int, Int, Int)
+vectorApplyF :: (Num a) => (a, a, a) -> (a, a, a) -> (a -> a -> a) -> (a, a, a)
 vectorApplyF (a1, a2, a3) (b1, b2, b3) f = (a1 `f` b1, a2 `f` b2, a3 `f` b3)
 
-vectorApplyF' :: (Int, Int, Int) -> Int -> (Int -> Int -> Int) -> (Int, Int, Int)
+vectorApplyF' :: (Num a) => (a, a, a) -> a -> (a -> a -> a) -> (a, a, a)
 vectorApplyF' (a1, a2, a3) x f = (a1 `f` x, a2 `f` x, a3 `f` x)
 
 computeSolution :: Trajectory2D -> Trajectory2D -> Trajectory2D -> PointVelocity
 computeSolution tr0 tr1 tr2 =
     PV
-        { px = int2Double fpx
-        , py = int2Double fpy
-        , pz = int2Double fpz
-        , vx = int2Double fvx
-        , vy = int2Double fvy
-        , vz = int2Double fvz
+        { px = fpx
+        , py = fpy
+        , pz = fpz
+        , vx = fvx
+        , vy = fvy
+        , vz = fvz
         }
   where
-    position1 = (double2Int (t2d_px tr1), double2Int (t2d_py tr1), double2Int (t2d_pz tr1))
-    velocity1 = (double2Int (t2d_vx tr1), double2Int (t2d_vy tr1), double2Int (t2d_vz tr1))
-    position2 = (double2Int (t2d_px tr2), double2Int (t2d_py tr2), double2Int (t2d_pz tr2))
-    velocity2 = (double2Int (t2d_vx tr2), double2Int (t2d_vy tr2), double2Int (t2d_vz tr2))
-    p1 = (double2Int (t2d_px tr1 - t2d_px tr0), double2Int (t2d_py tr1 - t2d_py tr0), double2Int (t2d_pz tr1 - t2d_pz tr0))
-    v1 = (double2Int (t2d_vx tr1 - t2d_vx tr0), double2Int (t2d_vy tr1 - t2d_vy tr0), double2Int (t2d_vz tr1 - t2d_vz tr0))
-    p2 = (double2Int (t2d_px tr2 - t2d_px tr0), double2Int (t2d_py tr2 - t2d_py tr0), double2Int (t2d_pz tr2 - t2d_pz tr0))
-    v2 = (double2Int (t2d_vx tr2 - t2d_vx tr0), double2Int (t2d_vy tr2 - t2d_vy tr0), double2Int (t2d_vz tr2 - t2d_vz tr0))
-    t1 = -((p1 `crossProduct` p2) `dotProduct` v2) `div` ((v1 `crossProduct` p2) `dotProduct` v2)
-    t2 = -((p1 `crossProduct` p2) `dotProduct` v1) `div` ((p1 `crossProduct` v2) `dotProduct` v1)
+    position0 = (t2d_px tr0, t2d_py tr0, t2d_pz tr0)
+    velocity0 = (t2d_vx tr0, t2d_vy tr0, t2d_vz tr0)
+    position1 = (t2d_px tr1, t2d_py tr1, t2d_pz tr1)
+    velocity1 = (t2d_vx tr1, t2d_vy tr1, t2d_vz tr1)
+    position2 = (t2d_px tr2, t2d_py tr2, t2d_pz tr2)
+    velocity2 = (t2d_vx tr2, t2d_vy tr2, t2d_vz tr2)
+    p1 = vectorApplyF position1 position0 (-)
+    v1 = vectorApplyF velocity1 velocity0 (-)
+    p2 = vectorApplyF position2 position0 (-)
+    v2 = vectorApplyF velocity2 velocity0 (-)
+    t1 = -((p1 `crossProduct` p2) `dotProduct` v2) / ((v1 `crossProduct` p2) `dotProduct` v2)
+    t2 = -((p1 `crossProduct` p2) `dotProduct` v1) / ((p1 `crossProduct` v2) `dotProduct` v1)
     c1 = vectorApplyF position1 (vectorApplyF' velocity1 t1 (*)) (+)
     c2 = vectorApplyF position2 (vectorApplyF' velocity2 t2 (*)) (+)
-    (fvx, fvy, fvz) = vectorApplyF' (vectorApplyF c1 c2 (-)) (t2 - t1) div
+    (fvx, fvy, fvz) = vectorApplyF' (vectorApplyF c2 c1 (-)) (t2 - t1) (/)
     (fpx, fpy, fpz) = vectorApplyF c1 (vectorApplyF' (fvx, fvy, fvz) t1 (*)) (-)
 
-solution2 = fmap (\(x,y,z) -> double2Int ((\p -> px p + py p + pz p) (computeSolution x y z))) . (\x -> zip3 x (tail x) (tail (tail x)) ) . fmap toTrajectory2d
+solution2 = head . maximumBy (\l l' -> length l `compare` length l') . group . sort . fmap (\(x, y, z) -> round ((\p -> px p + py p + pz p) (computeSolution x y z))) . (\x -> zip3 x (tail x) (tail (tail x))) . fmap toTrajectory2d
 
 -- 792453925505022 too low
 -- 811662715630199 too low
+-- 856642398547748 right
 -- 1018285678400640 too high
--- twentyfourthDecemberSolution2 :: IO Int
+twentyfourthDecemberSolution2 :: IO Int
 twentyfourthDecemberSolution2 = solution2 <$> input
 
 buildPairs :: [a] -> [(a, a)]

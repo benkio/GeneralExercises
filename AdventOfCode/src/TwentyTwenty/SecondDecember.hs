@@ -6,7 +6,7 @@ module TwentyTwenty.SecondDecember (
     solution2,
 ) where
 
-import Data.Maybe (fromJust, isJust,mapMaybe)
+import Data.Maybe (fromJust, isJust, mapMaybe)
 
 data Policy
     = Policy Int Int Char
