@@ -4,8 +4,8 @@ import Debug.Trace (traceShow, traceShowId)
 
 import Data.Bifunctor (bimap, first, second)
 import Data.List.Split (splitOn)
-import Data.Map (Map, delete, elems, empty, fromList, insert, insertWith, keys, size, toList)
-import qualified Data.Map as M (lookup)
+import Data.Map (Map, delete, elems, empty, fromList, insert, insertWith, keys, size, toList, (!))
+import qualified Data.Map as M (lookup, map)
 import Data.Maybe (fromJust)
 import System.Random (randomRIO)
 
@@ -41,50 +41,30 @@ testInput =
         \rzs: qnr cmg lsr rsh\n\
         \frs: qnr lhk lsr"
 
-unsafeLookup :: Connections -> String -> [String]
-unsafeLookup m s = fromJust $ M.lookup s m
-
--- if empty is connected, otherwise returns the ones not connected (left)
-isConnected :: Connections -> [String]
-isConnected cs = go (keys cs) [(head . keys) cs]
-  where
-    go :: [String] -> [String] -> [String]
-    go [] _ = []
-    go xs [] = xs
-    go xs ss =
-        let
-            leftConnections = filter (`notElem` ss) xs
-         in
-            go leftConnections (concatMap (filter (`elem` leftConnections) . unsafeLookup cs) ss)
-
 mergeNodes :: Connections -> IO Connections
 mergeNodes cs = do
-    let ns = toList cs
-    (node1K, node1V) <- (ns !!) <$> randomRIO (0, length ns - 1)
-    (node2K, node2V) <- (ns !!) <$> randomRIO (0, length ns - 1)
     let
-        deleteDup [] = []
-        deleteDup (x : xs) = if x `elem` xs then deleteDup xs else x : deleteDup xs
-        (mergeNodeK, mergeNodeV) = (node1K ++ ";" ++ node2K, (filter (\x -> x `notElem` splitOn ";" node1K && x `notElem` splitOn ";" node2K) . deleteDup) (node1V ++ node2V))
-    return $
-        if node1K /= node2K
-            then insert mergeNodeK mergeNodeV $ delete node2K $ delete node1K cs
-            else cs
+      ns = toList cs
+    (node1K, node1V) <- (ns !!) <$> randomRIO (0, length ns - 1)
+    (node2K, node2V) <- (\k -> (k ,cs ! k)) . (node1V !!) <$> randomRIO (0, length node1V - 1)
+    let cs' = (M.map (fmap (\x -> if x == node2K then node1K else x)) . delete node1K . delete node2K) cs
+        node1V' = filter (`notElem` [node1K, node2K]) (node1V ++ node2V)
+    return $ insert node1K node1V' cs'
 
-karger :: Connections -> IO [([String], [String])]
+karger :: Connections -> IO [[String]]
 karger cs
     | size cs > 2 = mergeNodes cs >>= karger
-    | otherwise = return $ first (splitOn ";") <$> toList cs
+    | otherwise = return $ elems cs
 
--- https://en.wikipedia.org/wiki/Karger%27s_algorithm
-solution1 cs = do
-    [n1, n2] <- karger cs
-    let
-        connections1 = traceShowId $ filter (`elem` fst n2) (snd n1)
-        connections2 = traceShowId $ filter (`elem` fst n1) (snd n2)
-    if length connections2 == 3 && length connections1 == 3
-        then return $ length (fst (traceShowId n1)) * length (fst (traceShowId n2))
-        else solution1 cs
+-- -- https://en.wikipedia.org/wiki/Karger%27s_algorithm
+-- solution1 cs = do
+--     [n1, n2] <- karger cs
+--     let
+--         connections1 = traceShowId $ filter (`elem` fst n2) (snd n1)
+--         connections2 = traceShowId $ filter (`elem` fst n1) (snd n2)
+--     if length connections2 == 3 && length connections1 == 3
+--         then return $ length (fst (traceShowId n1)) * length (fst (traceShowId n2))
+--         else solution1 cs
 
 twentyfifthDecemberSolution1 :: IO Int
 twentyfifthDecemberSolution1 = undefined
@@ -93,7 +73,3 @@ solution2 = undefined
 
 twentyfifthDecemberSolution2 :: IO Int
 twentyfifthDecemberSolution2 = undefined
-
--- works
-test :: [String]
-test = isConnected $ fromList [("bvb", ["ntq", "hfx", "xhk", "rhn"]), ("cmg", ["rzs", "lhk", "nvd", "qnr"]), ("frs", ["lsr", "lhk", "qnr", "rsh"]), ("hfx", ["ntq", "bvb", "rhn", "xhk"]), ("jqt", ["ntq", "xhk", "rhn"]), ("lhk", ["frs", "lsr", "nvd", "cmg"]), ("lsr", ["frs", "rzs", "lhk", "pzl", "rsh"]), ("ntq", ["xhk", "bvb", "hfx", "jqt"]), ("nvd", ["lhk", "qnr", "pzl", "cmg"]), ("pzl", ["nvd", "lsr", "rsh"]), ("qnr", ["frs", "rzs", "nvd", "cmg"]), ("rhn", ["hfx", "bvb", "xhk", "jqt"]), ("rsh", ["rzs", "lsr", "pzl", "frs"]), ("rzs", ["rsh", "lsr", "cmg", "qnr"]), ("xhk", ["ntq", "bvb", "rhn", "hfx", "jqt"])]
