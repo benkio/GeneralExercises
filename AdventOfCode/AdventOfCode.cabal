@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -93,6 +93,31 @@ library
       TwentyTwenty.TwentyFourthDecember
       TwentyTwenty.TwentySecondDecember
       TwentyTwenty.TwentyThirdDecember
+      TwentyTwentyFour.December01
+      TwentyTwentyFour.December02
+      TwentyTwentyFour.December03
+      TwentyTwentyFour.December04
+      TwentyTwentyFour.December05
+      TwentyTwentyFour.December06
+      TwentyTwentyFour.December07
+      TwentyTwentyFour.December08
+      TwentyTwentyFour.December09
+      TwentyTwentyFour.December10
+      TwentyTwentyFour.December11
+      TwentyTwentyFour.December12
+      TwentyTwentyFour.December13
+      TwentyTwentyFour.December14
+      TwentyTwentyFour.December15
+      TwentyTwentyFour.December16
+      TwentyTwentyFour.December17
+      TwentyTwentyFour.December18
+      TwentyTwentyFour.December19
+      TwentyTwentyFour.December20
+      TwentyTwentyFour.December21
+      TwentyTwentyFour.December22
+      TwentyTwentyFour.December23
+      TwentyTwentyFour.December24
+      TwentyTwentyFour.December25
       TwentyTwentyOne.EighteenthDecember
       TwentyTwentyOne.EighthDecember
       TwentyTwentyOne.EleventhDecember
