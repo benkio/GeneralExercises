@@ -47,18 +47,20 @@ collectParser p = do
 
 solution1 :: String -> Int
 solution1 s =
-    fromRight 0 $
-        foldl (\acc (Mul v1 v2) -> acc + (v1 * v2)) 0 <$> parse (collectParser parseMul) "" s
+    either
+        (const 0)
+        (foldl (\acc (Mul v1 v2) -> acc + (v1 * v2)) 0)
+        (parse (collectParser parseMul) "" s)
 
 december03Solution1 :: IO Int
 december03Solution1 = solution1 <$> input
 
 solution2 :: String -> Int
 solution2 s =
-    fromRight 0 $
-        snd
-            <$> foldl compute (True, 0)
-            <$> parse (collectParser parseExpr) "" s
+    either
+        (const 0)
+        (snd <$> foldl compute (True, 0))
+        (parse (collectParser parseExpr) "" s)
   where
     compute (True, acc) (Mul v1 v2) = (True, acc + v1 * v2)
     compute (False, acc) (Mul _ _) = (False, acc)
