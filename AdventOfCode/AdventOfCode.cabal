@@ -204,6 +204,7 @@ library
     , bytestring
     , containers
     , ghc
+    , megaparsec
     , mtl
     , parallel
     , pureMD5
@@ -229,6 +230,7 @@ executable AdventOfCode-exe
     , bytestring
     , containers
     , ghc
+    , megaparsec
     , mtl
     , parallel
     , pureMD5
@@ -255,6 +257,7 @@ test-suite AdventOfCode-test
     , bytestring
     , containers
     , ghc
+    , megaparsec
     , mtl
     , parallel
     , pureMD5

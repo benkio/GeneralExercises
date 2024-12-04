@@ -28,6 +28,7 @@ dependencies:
 - bytestring
 - pureMD5
 - parallel
+- megaparsec
 - aeson
 - scientific
 - text
