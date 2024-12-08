@@ -21,13 +21,13 @@ parseInput = fmap parseEq . lines
 operators :: [Operator]
 operators = [(*), (+)]
 
-testEq :: Equation -> Bool
-testEq (E{test = t, terms = ts}) = elem t $ computeTerms ts
+testEq :: [Operator] -> Equation -> Bool
+testEq ops (E{test = t, terms = ts}) = elem t $ computeTerms ops ts
 
-computeTerms :: [Int] -> [Int]
-computeTerms [] = [0]
-computeTerms [a] = [a]
-computeTerms (a : b : xs) = operators >>= (\ x -> computeTerms (x : xs)) . (\ o -> o a b)
+computeTerms :: [Operator] -> [Int] -> [Int]
+computeTerms _ [] = error "shouldn't happen"
+computeTerms _ [a] = [a]
+computeTerms ops (a : b : xs) = ops >>= (\ x -> computeTerms ops (x : xs)) . (\ o -> o a b)
 
 testInput :: [Equation]
 testInput =
@@ -42,14 +42,15 @@ testInput =
         \21037: 9 7 18 13\n\
         \292: 11 6 16 20"
 
-solution1 :: [Equation] -> Int
-solution1 = sum . fmap test . filter testEq
+solution :: [Operator] -> [Equation] -> Int
+solution ops = sum . fmap test . filter (testEq ops)
 
 december07Solution1 :: IO Int
-december07Solution1 = solution1 <$> input
+december07Solution1 = solution operators <$> input
 
-solution2 :: [Equation] -> Int
-solution2 = undefined
+operators' :: [Operator]
+operators' = concatOp:operators
+  where concatOp x y = read (show x ++ show y) :: Int
 
 december07Solution2 :: IO Int
-december07Solution2 = solution2 <$> input
+december07Solution2 = solution operators' <$> input
