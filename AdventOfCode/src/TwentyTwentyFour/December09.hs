@@ -1,7 +1,7 @@
 module TwentyTwentyFour.December09 where
 
 import Data.Bifunctor (bimap, first, second)
-
+import Data.List (group)
 import Data.Maybe (fromJust, isJust)
 
 -- import Text.Printf
@@ -15,47 +15,65 @@ input = parseInput . init <$> readFile "input/2024/December09.txt"
 parseInput :: String -> [Int]
 parseInput = fmap (\x -> read [x] :: Int)
 
-generateFileSystem :: [Int] -> String
+generateFileSystem :: [Int] -> [Int]
 generateFileSystem = concat . zipWith generateFilesOrSpace [0 ..]
 
-generateFilesOrSpace :: Int -> Int -> String
+generateFilesOrSpace :: Int -> Int -> [Int]
 generateFilesOrSpace i v
-    | even i = concat $ replicate v (show (i `div` 2)) -- file
-    | otherwise = replicate v '.' -- free space
+    | even i = replicate v (i `div` 2) -- file
+    | otherwise = replicate v (-1) -- free space
 
-defrag :: String -> String
+defrag :: [Int] -> [Int]
 defrag [] = []
 defrag xs = merge content rest
   where
-    totalSpace = length . filter (=='.') $ xs
-    (content, rest) = second (filter (/='.') . reverse) . splitAt (length xs - totalSpace) $ xs
+    totalSpace = length . filter (== (-1)) $ xs
+    (content, rest) = second (reverse . filter (/= (-1))) . splitAt (length xs - totalSpace) $ xs
 
-merge :: String -> String -> String
+merge :: [Int] -> [Int] -> [Int]
 merge [] xs = []
 merge xs ys = content ++ toInsert ++ merge restXs restYs
   where
-    (content, (space, restXs)) = second (span (=='.')) $ span (/='.') xs
+    (content, (space, restXs)) = second (span (== (-1))) $ span (/= (-1)) xs
     (toInsert, restYs) = splitAt (length space) ys
 
 testInput :: [Int]
 testInput = parseInput "2333133121414131402"
 
-solution1 :: [Int] -> Integer
+checksum :: [Int] -> Int
+checksum = foldl (\acc (i, c) -> if c < 0 then acc else acc + i * c) 0 . zip [0 ..]
+
+solution1 :: [Int] -> Int
 solution1 =
-  foldl (\acc (i,c) -> acc + i * (read [c] :: Integer)) 0
-  . zip [0 ..]
-  . defrag
-  . generateFileSystem
+    checksum
+        . defrag
+        . generateFileSystem
 
 -- too low 90167081070
-december09Solution1 :: IO Integer
+december09Solution1 :: IO Int
 december09Solution1 = solution1 <$> input
 
-solution2 :: [Int] -> Integer
-solution2 = undefined
+insertInFirstAvailableSpace :: [Int] -> [[Int]] -> [[Int]]
+insertInFirstAvailableSpace vs xss =
+    let (initial, space : rest) = span (\xs -> any (/= (-1)) xs || length xs < length vs) xss
+     in initial ++ [vs, replicate (length space - length vs) (-1)] ++ rest
 
-december09Solution2 :: IO Integer
+extractValue :: [Int] -> [[Int]] -> [[Int]]
+extractValue vs xss =
+    let (initial, _ : yss) = span (/= vs) xss
+     in initial ++ replicate (length vs) (-1) : yss
+
+defragSingle :: [Int] -> [[Int]] -> [[Int]]
+defragSingle vs = insertInFirstAvailableSpace vs . extractValue vs
+
+defrag2 :: [Int] -> [Int]
+defrag2 xs = concat $ foldr defragSingle xss files
+  where
+    xss = group xs
+    files = filter (any (/= (-1))) xss
+
+solution2 :: [Int] -> Int
+solution2 = checksum . defrag2 . generateFileSystem
+
+december09Solution2 :: IO Int
 december09Solution2 = solution2 <$> input
-
-testInput2000 :: [Int]
-testInput2000 = parseInput "28416271487555953479241258525826546051745653975533603074325890963034835711247345845862103541236013305628234121412240246410701350331714886430184853835938645936139442902475929147105711828353894182515966158641284893423351281137742216602139742169693981554551128665214319432592938192426862638454887316851116192297295179318856868744428864557210612129918355683062111346811851903832572711171079181661859330793469648648986636154675314950791490631246349986343456474894114073285988629853204368962674944888384180705137246612714241722041567923168949891683808359359962625453965128844095354318245041211434348629922813655042815236153429887019144116172385133955102899697597707327103328168932381256378029914046452716215634731386868682406733374486786138762662903199884640802766803280555483448248979170864249866894592382986180967170455542182985992587437017655453137861295781556276718693292648477756495413235981277415753845718233369381665892965933375014446012407436644960815363744148795712912110298381581826772367558990411536832227447994874667135922666353142065537297383169474036917980234154273484314158913325381433258012724941655372963857122050712626816930657131432057669255967675811525644622264890984379102344746286882627318666671544966388306695128532166573535894365992369481532938118672724128596376799912227442489274457859268694496352946095643865203136825686648336253013943461265267874696564965424211466042939852451130558292551891406583231444222749142470577618467686828211598410722958132848879358174413823594196974189243233199477261133673342590809555249085158751579064824570616441502355578447479568768865284492739655335053123326575827275210698872943727302992736374449278723957381612984427928669206756164573784456432355305166381098119938528643762596745356239295187157101590841253501612729934368850916533446049877275384961202966414933575474346792154755357744799852381725571319999225115654279150284531792982338140791232363647683827467865772670885135627037109366819591979555792340269641703872822570355886159022415114566612"
