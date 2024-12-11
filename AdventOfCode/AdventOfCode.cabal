@@ -19,6 +19,7 @@ extra-source-files:
 
 library
   exposed-modules:
+      Lib.Parse
       TwentyFifteen.EighteenthDecember
       TwentyFifteen.EighthDecember
       TwentyFifteen.EleventhDecember
