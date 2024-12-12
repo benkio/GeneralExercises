@@ -1,9 +1,14 @@
-module Lib.Parse where
+module Lib.Parse (
+    parseCommaSeparatedInts,
+    parseGridWithElemSelection,
+    parseNumGrid,
+    parseTwoColumnNum,
+) where
 
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (either, isRight, partitionEithers, rights)
-import Data.Maybe (mapMaybe)
 import Data.List.Split (wordsBy)
+import Data.Maybe (mapMaybe)
 
 {-
   3   4
@@ -46,17 +51,19 @@ parseNumGrid = fmap parseInts . lines
   #.........
   ......#...
 -}
-parseGridWithElemSelection :: String -> (Int -> Int -> Char -> Maybe (Either (Int,Int) (Int,Int))) -> ([(Int,Int)], (Int,Int))
-parseGridWithElemSelection s f =
-  second head
-  . partitionEithers
-  . concatMap (\(y, s) ->
-                 mapMaybe
-                 (uncurry (f y))
-                 (zip [0 ..] s)
-              )
-  . zip [0 ..]
-  . lines $ s
+parseGridWithElemSelection :: (Int -> Int -> Char -> Maybe (Either a a)) -> String -> ([a], a)
+parseGridWithElemSelection f s =
+    second head
+        . partitionEithers
+        . concatMap
+            ( \(y, s) ->
+                mapMaybe
+                    (uncurry (f y))
+                    (zip [0 ..] s)
+            )
+        . zip [0 ..]
+        . lines
+        $ s
 
 {-
   75,47,61,53,29
