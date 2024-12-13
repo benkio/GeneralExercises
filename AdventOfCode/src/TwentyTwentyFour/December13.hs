@@ -1,17 +1,20 @@
+{-# LANGUAGE TupleSections #-}
+
 module TwentyTwentyFour.December13 where
+
+import Data.Bifunctor (bimap, first, second)
 
 import Data.Maybe (mapMaybe)
 
 import Control.Monad (guard)
 import Data.List.Split (splitOn)
-import GHC.Float (int2Double)
-import GHC.Float.RealFracMethods (properFractionDoubleInt)
 import Lib.Coord (Coord, cardinalNeighboors, findCardinalNeighboors)
+import Lib.Math (isInteger, twoLinearEqSolver)
 
 data Arcade = A
     { btnA :: (Int, Int)
     , btnB :: (Int, Int)
-    , prize :: Coord
+    , prize :: (Int, Int)
     }
     deriving (Show)
 
@@ -34,25 +37,8 @@ parseInput = fmap (parseArcade . splitOn "\n") . splitOn "\n\n"
             , prize = parsePrize (xs !! 2)
             }
 
-{-
-a * x1 + b * x2 = c
-x2 = (c - a * x1)/b
--}
-deriveBtnBCoefficientX :: Int -> Int -> Int -> Int -> Maybe Int
-deriveBtnBCoefficientX a x1 b c =
-    if decimals /= 0.0 then Nothing else Just result
-  where
-    x2 = int2Double (c - a * x1) / (fromIntegral b)
-    (result, decimals) = properFractionDoubleInt x2
-
-findBntCoefficients :: Arcade -> [(Int, Int)]
-findBntCoefficients A{btnA = (btnAx, btnAy), btnB = (btnBx, btnBy), prize = (pX, pY)} =
-    mapMaybe search [0 .. 100]
-  where
-    search coeffBtnA = do
-        coeffBtnB <- deriveBtnBCoefficientX btnAx coeffBtnA btnBx pX
-        guard $ (btnAy * coeffBtnA) + (btnBy * coeffBtnB) == pY
-        return (coeffBtnA, coeffBtnB)
+findBntCoefficients' :: Arcade -> Maybe (Int, Int)
+findBntCoefficients' A{btnA = (btnAx, btnAy), btnB = (btnBx, btnBy), prize = (pX, pY)} = twoLinearEqSolver btnAx btnBx pX btnAy btnBy pY
 
 calcTokens :: (Int, Int) -> Int
 calcTokens (coeffBtnA, coeffBtnB) = coeffBtnA * 3 + coeffBtnB
@@ -77,13 +63,39 @@ testInput =
         \Prize: X=18641, Y=10279\n"
 
 solution1 :: [Arcade] -> Int
-solution1 = sum . concatMap (fmap calcTokens . findBntCoefficients)
+solution1 =
+    sum
+        . fmap (calcTokens . snd)
+        . filter
+            ( \(arcade, (a, b)) ->
+                a <= 100
+                    && b <= 100
+                    && checkSolution arcade (a, b)
+            )
+        . mapMaybe (\a -> (a,) <$> findBntCoefficients' a)
 
 december13Solution1 :: IO Int
 december13Solution1 = solution1 <$> input
 
-solution2 :: [Arcade] -> Int
-solution2 = undefined
+checkSolution :: Arcade -> (Int, Int) -> Bool
+checkSolution A{btnA = (btnAx, btnAy), btnB = (btnBx, btnBy), prize = (pX, pY)} (cA, cB) =
+    (btnAx * cA) + (btnBx * cB) == pX
+        && (btnAy * cA) + (btnBy * cB) == pY
 
+solution2 :: [Arcade] -> Int
+solution2 =
+    sum
+        . fmap (calcTokens . snd)
+        . filter (uncurry checkSolution)
+        . mapMaybe
+            ( \a ->
+                let a' = a{prize = bimap increasePrize increasePrize (prize a)}
+                 in (a',) <$> findBntCoefficients' a'
+            )
+  where
+    increasePrize = (+) 10000000000000
+
+-- too high 133834706986425
+-- too low  71037763783856
 december13Solution2 :: IO Int
 december13Solution2 = solution2 <$> input

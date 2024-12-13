@@ -21,6 +21,7 @@ library
   exposed-modules:
       Lib.Coord
       Lib.List
+      Lib.Math
       Lib.Parse
       TwentyFifteen.EighteenthDecember
       TwentyFifteen.EighthDecember
