@@ -5,7 +5,7 @@ module TwentyTwentyFour.December14 where
 
 import Text.Printf (printf)
 
-import Lib.Coord (Coord, coordDistance)
+import Lib.Coord (Coord)
 
 import Data.List (group, nub, sortBy, sortOn)
 import Data.Ord (comparing)

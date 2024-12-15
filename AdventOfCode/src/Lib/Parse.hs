@@ -3,8 +3,10 @@ module Lib.Parse (
     parseGridWithElemSelection,
     parseNumGrid,
     parseTwoColumnNum,
+    parseMove
 ) where
 
+import Lib.Move (Move(..))
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (either, isRight, partitionEithers, rights)
 import Data.List.Split (wordsBy)
@@ -51,7 +53,7 @@ parseNumGrid = fmap parseInts . lines
   #.........
   ......#...
 -}
-parseGridWithElemSelection :: (Int -> Int -> Char -> Maybe (Either a a)) -> String -> ([a], a)
+parseGridWithElemSelection :: (Int -> Int -> Char -> Maybe (Either a b)) -> String -> ([a], b)
 parseGridWithElemSelection f s =
     second head
         . partitionEithers
@@ -75,3 +77,12 @@ parseGridWithElemSelection f s =
 -}
 parseCommaSeparatedInts :: String -> [Int]
 parseCommaSeparatedInts = fmap ((\x -> read x :: Int) . take 2) . wordsBy (== ',')
+
+{-
+  <^^>>>vv<v>>v<<
+-}
+parseMove :: Char -> Move
+parseMove '<' = L
+parseMove '^' = U
+parseMove '>' = R
+parseMove 'v' = D

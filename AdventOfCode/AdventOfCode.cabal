@@ -20,8 +20,11 @@ extra-source-files:
 library
   exposed-modules:
       Lib.Coord
+      Lib.CoordMove
       Lib.List
+      Lib.Map
       Lib.Math
+      Lib.Move
       Lib.Parse
       Lib.Print
       TwentyFifteen.EighteenthDecember
@@ -112,7 +115,8 @@ library
       TwentyTwentyFour.December12
       TwentyTwentyFour.December13
       TwentyTwentyFour.December14
-      TwentyTwentyFour.December15
+      TwentyTwentyFour.December15a
+      TwentyTwentyFour.December15b
       TwentyTwentyFour.December16
       TwentyTwentyFour.December17
       TwentyTwentyFour.December18
