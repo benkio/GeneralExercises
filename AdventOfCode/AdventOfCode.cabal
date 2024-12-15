@@ -23,6 +23,7 @@ library
       Lib.List
       Lib.Math
       Lib.Parse
+      Lib.Print
       TwentyFifteen.EighteenthDecember
       TwentyFifteen.EighthDecember
       TwentyFifteen.EleventhDecember
