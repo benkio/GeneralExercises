@@ -74,19 +74,13 @@ move =
     until (null . sMoves) moveSingle
 
 calculateGPS :: Sea -> Int
-calculateGPS = sum . fmap ((uncurry (+)) . second (* 100) . coordDistance (0, 0)) . keys . M.filter (== Box) . sMap
+calculateGPS = sum . fmap (uncurry (+) . second (* 100) . coordDistance (0, 0)) . keys . M.filter (== Box) . sMap
 
 solution1 :: Sea -> Int
 solution1 = calculateGPS . move
 
 december15Solution1 :: IO Int
 december15Solution1 = solution1 <$> input
-
-solution2 :: Sea -> Int
-solution2 = undefined
-
-december15Solution2 :: IO Int
-december15Solution2 = solution2 <$> input
 
 testInput2 :: Sea
 testInput2 =
@@ -152,13 +146,13 @@ printSeaMap S{sMap = sm, sRobot = Robot{rCoord = rc}} m =
     printSeaObj _ (Just Box) = "O"
     printSeaObj c Nothing = if c == rc then [printMove m] else "."
 
-testMoveAll :: Sea -> IO ()
-testMoveAll =
-    mapM_ (\s -> printSeaMap s ((head . sMoves) s)) . takeWhile ((not . null) . sMoves) . iterate moveSingle
-
 testMove :: Sea -> IO ()
 testMove =
     (`printSeaMap` U) . move
 
 getSeaAtTime :: Int -> Sea -> Sea
 getSeaAtTime n = (!! n) . iterate moveSingle
+
+testMoveAt :: Int -> Sea -> IO ()
+testMoveAt n =
+    (`printSeaMap` U) . getSeaAtTime n
