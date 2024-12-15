@@ -125,7 +125,7 @@ solution1 t bSize =
 
 printRobots :: Coord -> [Robot] -> String
 printRobots bSize =
-    printGrid bSize (const 'R')
+    printGrid bSize (const "R")
         . fmap pos
 
 december14Solution1 :: IO Int

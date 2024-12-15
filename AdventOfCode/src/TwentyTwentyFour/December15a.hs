@@ -148,9 +148,9 @@ printSeaMap :: Sea -> Move -> IO ()
 printSeaMap S{sMap = sm, sRobot = Robot{rCoord = rc}} m =
     putStrLn . printGridMap printSeaObj $ sm
   where
-    printSeaObj _ (Just Wall) = '#'
-    printSeaObj _ (Just Box) = 'O'
-    printSeaObj c Nothing = if c == rc then printMove m else '.'
+    printSeaObj _ (Just Wall) = "#"
+    printSeaObj _ (Just Box) = "O"
+    printSeaObj c Nothing = if c == rc then [printMove m] else "."
 
 testMoveAll :: Sea -> IO ()
 testMoveAll =
