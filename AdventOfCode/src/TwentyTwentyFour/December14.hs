@@ -1,6 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections #-}
 
 module TwentyTwentyFour.December14 where
 
@@ -91,7 +90,7 @@ quadrants :: (Int, Int) -> [(Coord, Coord)]
 quadrants (x, y) =
     [ ((0, 0), (qx, qy))
     , ((qx + 2, 0), (qx * 2 + 2, qy))
-    , (((0, qy + 2)), (qx, qy * 2 + 2))
+    , ((0, qy + 2), (qx, qy * 2 + 2))
     , ((qx + 2, qy + 2), (qx * 2 + 2, qy * 2 + 2))
     ]
   where
@@ -121,7 +120,7 @@ solution1 :: Int -> Coord -> [Robot] -> Int
 solution1 t bSize =
     product
         . fmap length
-        . (`robotsInQuadrants` (quadrants bSize))
+        . (`robotsInQuadrants` quadrants bSize)
         . evolveToT t bSize
 
 printRobots :: Coord -> [Robot] -> String
@@ -141,8 +140,8 @@ loop rs bSize = go 1 (moveRobots bSize rs)
 
 atLeastNAdjacentRobotsByDirection :: Int -> Coord -> [Robot] -> Bool
 atLeastNAdjacentRobotsByDirection n (bx, by) rs =
-    -- (>= n) . length . filter (all (== 1)) . groupa $
-    if null consecutiveDistances then False else ((>= n) . length . last) consecutiveDistances
+    not (null consecutiveDistances)
+        && ((>= n) . length . last) consecutiveDistances
   where
     psRow = (sortBy (comparing snd <> comparing fst) . fmap pos) rs
     psCol = (sortBy (comparing fst <> comparing snd) . fmap pos) rs
