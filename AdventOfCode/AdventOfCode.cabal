@@ -20,12 +20,16 @@ extra-source-files:
 library
   exposed-modules:
       Lib.Coord
+      Lib.CoordDirection
+      Lib.CoordMap
       Lib.CoordMove
+      Lib.Direction
       Lib.List
       Lib.Map
       Lib.Math
       Lib.Move
       Lib.Parse
+      Lib.Pathfinding
       Lib.Print
       TwentyFifteen.EighteenthDecember
       TwentyFifteen.EighthDecember

@@ -9,4 +9,3 @@ updateKeys originalMap updates = foldl updateMap originalMap updates
     updateMap m ((cOld, cNew), v) =
       let mWithoutOld = M.delete cOld m
       in M.insert cNew v mWithoutOld
-

@@ -7,8 +7,9 @@ module Lib.Coord (
     coordDistance
 ) where
 
-import Data.Map (Map)
+import Data.Map (Map, toList)
 import qualified Data.Map as M (filterWithKey)
+import Data.Maybe (listToMaybe)
 
 type Coord = (Int, Int)
 
@@ -25,4 +26,4 @@ isCardinalNeighboor (x, y) c = c `elem` cardinalNeighboors (x, y)
 isOrdinalNeighboor (x, y) c = c `elem` ordinalNeighboors (x, y)
 
 coordDistance :: Coord -> Coord -> (Int, Int)
-coordDistance (x,y) (a,b) = (abs (x-a), abs (y-b))
+coordDistance (x, y) (a, b) = (abs (x - a), abs (y - b))
