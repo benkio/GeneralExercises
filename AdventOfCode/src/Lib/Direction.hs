@@ -9,7 +9,7 @@ module Lib.Direction (
 
 import Data.Bifunctor
 
-data Direction = North | South | East | West deriving (Show, Eq)
+data Direction = North | South | East | West deriving (Show, Eq, Ord)
 
 turn90, turn180, turn270 :: Direction -> Direction
 turn90 North = East
