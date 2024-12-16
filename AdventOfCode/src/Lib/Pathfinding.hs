@@ -29,12 +29,11 @@ updateLowestScore c v =
 mapToPaths ::
     (Coord, a) ->
     Direction ->
-    (Coord -> Int) ->
     (Coord -> a -> Bool) ->
     (Node a -> Int) ->
     Map Coord a ->
     [[(Node a, Int)]]
-mapToPaths (sc, v) direction distanceToTargetF extraNodeF scoreNodeF ms = go empty [] [start]
+mapToPaths (sc, v) direction extraNodeF scoreNodeF ms = go empty [] [start]
   where
     start = (sc, 0, v, (0, 0), direction, 0, [])
     go _ result [] = result
@@ -57,7 +56,7 @@ mapToPaths (sc, v) direction distanceToTargetF extraNodeF scoreNodeF ms = go emp
                         || (c' == c && tot < currentTot)
                 )
         sortByDistanceToTarget =
-          sortBy ( \(x, _, _, _, _, _, _) (x', _, _, _, _, _, _) -> distanceToTargetF x `compare` distanceToTargetF x')
+          sortBy ( \(_, _, _, _, _, tot, _) (_, _, _, _, _, tot', _) -> tot `compare` tot')
         branches =
           sortByDistanceToTarget
           .  filterNext . (xs ++) $

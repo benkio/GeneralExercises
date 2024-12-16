@@ -33,7 +33,7 @@ parseInput = fromList . fst . parseGridWithElemSelection parseReindeerMap
     parseReindeerMap y x 'E' = Just $ Left ((x, y), E)
 
 buildPaths :: (Coord, Terrain) -> Coord -> ReindeerMap -> [[(Node (Terrain), Int)]]
-buildPaths startingPoint target = mapToPaths startingPoint East ((\(x, y) -> x + y) . coordDistance target) (\_ v -> v == E) calculateScore
+buildPaths startingPoint target = mapToPaths startingPoint East (\_ v -> v == E) calculateScore
 
 findPoint :: Terrain -> ReindeerMap -> (Coord, Terrain)
 findPoint t = fromJust . find ((== t) . snd) . toList
