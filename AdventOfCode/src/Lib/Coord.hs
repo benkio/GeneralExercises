@@ -7,9 +7,11 @@ module Lib.Coord (
     coordDistance
 ) where
 
-import Data.Map (Map, toList)
+import Data.Functor ((<&>))
+import Data.List (sortOn)
+import Data.Map (Map, toList, (!?))
 import qualified Data.Map as M (filterWithKey)
-import Data.Maybe (listToMaybe)
+import Data.Maybe (listToMaybe, mapMaybe)
 
 type Coord = (Int, Int)
 

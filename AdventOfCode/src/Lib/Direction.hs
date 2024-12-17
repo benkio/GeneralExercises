@@ -4,12 +4,16 @@ module Lib.Direction (
     turn180,
     turn270,
     turn90N,
-    turnsToDirection
+    turnsToDirection,
+    allDirection
     ) where
 
 import Data.Bifunctor
 
-data Direction = North | South | East | West deriving (Show, Eq, Ord)
+data Direction = North | South | East | West deriving (Show, Eq, Ord, Enum)
+
+allDirection :: [Direction]
+allDirection = enumFrom North
 
 turn90, turn180, turn270 :: Direction -> Direction
 turn90 North = East

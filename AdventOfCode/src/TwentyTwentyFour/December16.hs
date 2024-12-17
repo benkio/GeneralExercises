@@ -2,7 +2,7 @@ module TwentyTwentyFour.December16 where
 
 import Control.Arrow
 import Data.Bifunctor (bimap)
-import Data.List (find, groupBy, minimumBy, nubBy, sortBy)
+import Data.List (find, groupBy, minimumBy, nub, sortBy)
 import Data.Map (Map)
 import Data.Map as Map (fromList, lookup, toList)
 import Data.Maybe (fromJust)
@@ -13,9 +13,9 @@ import Data.Void
 import Debug.Trace
 import Lib.Coord (Coord, coordDistance, findCardinalNeighboors)
 import Lib.CoordMap (findBranches)
-import Lib.Direction (Direction (..))
+import Lib.Direction (Direction (..), turnsToDirection)
 import Lib.Parse (parseGridWithElemSelection)
-import Lib.Pathfinding (Node (..), mapToPaths)
+import Lib.Pathfinding (Node (..), mapToPaths, pathToCoord)
 
 data Terrain = S | E | T deriving (Show, Eq)
 type ReindeerMap = Map Coord Terrain
@@ -32,14 +32,16 @@ parseInput = fromList . fst . parseGridWithElemSelection parseReindeerMap
     parseReindeerMap y x 'S' = Just $ Left ((x, y), S)
     parseReindeerMap y x 'E' = Just $ Left ((x, y), E)
 
-buildPaths :: (Coord, Terrain) -> Coord -> ReindeerMap -> [[(Node (Terrain), Int)]]
-buildPaths startingPoint target = mapToPaths startingPoint East (\_ v -> v == E) calculateScore
+detectEnd _ endValue = endValue == E
+
+buildPaths :: (Coord, Terrain) -> Coord -> ReindeerMap -> [[Node Terrain]]
+buildPaths startingPoint target = mapToPaths startingPoint East detectEnd calculateScore
 
 findPoint :: Terrain -> ReindeerMap -> (Coord, Terrain)
 findPoint t = fromJust . find ((== t) . snd) . toList
 
 -- foldTree :: (a -> [b] -> b) -> Tree a -> b
-findBestPathScore :: Tree ((Node Terrain, Int)) -> (Int, [Coord])
+findBestPathScore :: Tree (Node Terrain, Int) -> (Int, [Coord])
 findBestPathScore = foldTree foldNCalculateScore
 
 foldNCalculateScore :: (Node Terrain, Int) -> [(Int, [Coord])] -> (Int, [Coord])
@@ -53,18 +55,24 @@ foldNCalculateScore (n, v) xs
 calculateScore :: Node Terrain -> Int
 calculateScore (N{distanceFromParent = dist, turnL = tl, turnR = tr}) = dist + (1000 * (tl + tr))
 
+calculateScoreToNorth :: Node Terrain -> Int
+calculateScoreToNorth (N{distanceFromParent = dist, turnL = tl, turnR = tr, direction = dir}) =
+    dist + (1000 * (tl + tr + abs (turnsToDirection North dir)))
+
 -- test' = putStrLn . drawTree . fmap (\n -> show (calculateScore n) ++ show n) $ buildPaths sp testInput
 --   where
 --     sp = findPoint testInput
 -- test c dir = findBranches c dir (\_ v -> v == E) testInput
 
+findMinimumScore :: [[Node Terrain]] -> Int
 findMinimumScore = minimum . fmap getPathScore . findEndPaths
-getPathScore = snd . last
-findEndPaths = filter ((== E) . val . fst . last)
+getPathScore = sum . fmap calculateScore
+findEndPaths :: [[Node Terrain]] -> [[Node Terrain]]
+findEndPaths = filter ((== E) . val . last)
 
 solution1 :: ReindeerMap -> Int
 solution1 ms =
-    findMinimumScore $ paths
+    findMinimumScore paths
   where
     sp = findPoint S ms
     target = fst $ findPoint E ms
@@ -73,12 +81,12 @@ solution1 ms =
 december16Solution1 :: IO Int
 december16Solution1 = solution1 <$> input
 
--- solution2 :: ReindeerMap -> Int
+solution2 :: ReindeerMap -> Int
 solution2 ms =
-     -- sum $ fmap (\(n,_) -> distanceFromParent n)
-     -- .nubBy (\(n,_) (n',_) -> nc n == nc n')
-     fmap (fmap (distanceFromParent . fst))
---        . concat
+    (+ 1)
+        . length
+        . nub
+        . concatMap (\xs -> pathToCoord xs ms detectEnd)
         . filter ((== minimumScore) . getPathScore)
         $ endPaths
   where
@@ -88,7 +96,7 @@ solution2 ms =
     minimumScore = findMinimumScore paths
     endPaths = findEndPaths paths
 
--- december16Solution2 :: IO Int
+december16Solution2 :: IO Int
 december16Solution2 = solution2 <$> input
 
 testInput :: ReindeerMap
