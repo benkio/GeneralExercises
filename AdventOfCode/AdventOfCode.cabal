@@ -19,6 +19,7 @@ extra-source-files:
 
 library
   exposed-modules:
+      Lib.Bit
       Lib.Coord
       Lib.CoordDirection
       Lib.CoordMap
