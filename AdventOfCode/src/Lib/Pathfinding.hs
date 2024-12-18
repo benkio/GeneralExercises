@@ -1,18 +1,19 @@
 {-# LANGUAGE TupleSections #-}
 
-module Lib.Pathfinding (Node (..), mapToPaths, pathToCoord) where
+module Lib.Pathfinding (Node (..), mapToPaths, pathToCoord, minimumSteps) where
 
 import Text.Printf (printf)
 
 import Data.Functor ((<&>))
 import Data.IORef
-import Data.List (sortBy)
-import Data.Map (Map, alter, empty, size, (!?))
+import Data.List (sortOn)
+import Data.Map (Map, alter, empty, elems, size, (!?))
 import Data.Maybe (mapMaybe)
 import Debug.Trace
 import Lib.Coord (Coord, findCardinalNeighboors)
 import Lib.CoordMap (findBranches, findBranchesFull)
 import Lib.Direction (Direction)
+import Lib.Map (updateLowestScore)
 
 import Data.Tree (Tree, unfoldTreeM)
 
@@ -22,40 +23,40 @@ instance (Show a) => Show (Node a) where
     show (N{nc = c, val = v, distanceFromParent = d, turnL = tl, turnR = tr}) =
         printf "%s - %s - %d - < %d - > %d" (show c) (show v) d tl tr
 
-updateLowestScore :: Coord -> Int -> Map Coord Int -> Map Coord Int
-updateLowestScore c v =
-    alter (\mv -> maybe (Just v) (Just . min v) mv) c
-
 mapToPaths ::
     (Coord, a) ->
     Direction ->
     (Coord -> a -> Bool) ->
     (Node a -> Int) ->
+    (Int -> Int -> Bool) ->
+    (Int -> Int -> Bool) ->
+    ((Node a, Int) -> Int) ->
     Map Coord a ->
     [[Node a]]
-mapToPaths (sc, v) direction extraNodeF scoreNodeF ms = go empty [] [start]
+mapToPaths (sc, v) direction extraNodeF scoreNodeF discardNodeByScoreF keepNextNodeByScoreF sortNodesF ms = go empty [] [start]
   where
     start = (N{nc = sc, val = v, distanceFromParent = 0, turnL = 0, turnR = 0, direction = direction}, 0, [])
     go _ result [] = result
     go visitedScoreMap result (x : xs)
-        | extraNodeF c elem = trace ("END: " ++ show (currentTot)) $ go visitedScoreMap' (prev' : result) xs'
-        | endCheck c = go visitedScoreMap' result xs'
-        | otherwise = trace ("r " ++ (show c) ++ " " ++ show (length xs') ++ " " ++ show (currentTot)) $ go visitedScoreMap' result branches
+        | extraNodeF c elem = -- trace ("END: " ++ show (currentTot)) $
+          go visitedScoreMap' (prev' : result) xs
+        | endCheck c = go visitedScoreMap' result xs
+        | otherwise = -- trace (printf "r %s %d %d" (show c) (length xs) (currentTot)) $
+          go visitedScoreMap' result branches
       where
         (node@N{nc = c, val = elem, distanceFromParent = dis, turnL = tl, turnR = tr, direction = dir}, tot, prev) = x
-        endCheck x = maybe False (\prevTot -> (prevTot + 1000) < currentTot) (visitedScoreMap !? x)
+        endCheck x = maybe False (discardNodeByScoreF currentTot) (visitedScoreMap !? x)
         currentTot = tot + scoreNodeF node
         visitedScoreMap' = updateLowestScore c currentTot visitedScoreMap
         prev' = prev ++ [node]
-        xs' = filterNext xs
         filterNext =
             filter
                 ( \(n', tot, _) ->
-                    (nc n' /= c && (maybe True (\prevTot -> tot < (prevTot + 1000)) (visitedScoreMap' !? nc n')))
-                        || (nc n' == c && tot < (currentTot + 1000))
+                    (nc n' /= c && (maybe True (keepNextNodeByScoreF tot) (visitedScoreMap' !? nc n')))
+                        || (nc n' == c && keepNextNodeByScoreF tot currentTot)
                 )
         sortByDistanceToTarget =
-            sortBy (\(_, tot, _) (_, tot', _) -> tot `compare` tot')
+            sortOn (\(n, tot, _) -> sortNodesF (n,tot))
         branches =
             sortByDistanceToTarget
                 . filterNext
@@ -91,3 +92,6 @@ pathToCoord ns ms extraNodeF = foldl foldNodes [] $ zip ns (tail ns)
       $ findBranchesFull (nc n) (direction n) extraNodeF ms
     foldNodes acc (n, n') =
         acc ++ branch n n'
+
+minimumSteps :: [[Node a]] -> Int
+minimumSteps = minimum . fmap (sum . fmap distanceFromParent)

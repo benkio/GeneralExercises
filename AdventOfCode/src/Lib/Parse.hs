@@ -3,14 +3,21 @@ module Lib.Parse (
     parseGridWithElemSelection,
     parseNumGrid,
     parseTwoColumnNum,
-    parseMove
+    parseMove,
+    parseCoords,
 ) where
 
-import Lib.Move (Move(..))
+import Control.Applicative (many)
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (either, isRight, partitionEithers, rights)
 import Data.List.Split (wordsBy)
 import Data.Maybe (mapMaybe)
+import Data.Void (Void)
+import Lib.Coord (Coord (..))
+import Lib.Move (Move (..))
+import Text.Megaparsec (Parsec, parse)
+import Text.Megaparsec.Char (newline, string)
+import Text.Megaparsec.Char.Lexer (decimal, signed)
 
 {-
   3   4
@@ -86,3 +93,20 @@ parseMove '<' = L
 parseMove '^' = U
 parseMove '>' = R
 parseMove 'v' = D
+
+{-
+5,4
+4,2
+4,5
+3,0
+-}
+parseCoords :: String -> [Coord]
+parseCoords = either (\e -> error ("[Parse]: error parsing choordinates " ++ show e)) id . parse (many parseCoord) ""
+  where
+    parseCoord :: Parsec Void String Coord
+    parseCoord = do
+        x <- decimal
+        string ","
+        y <- decimal
+        newline
+        return (x, y)

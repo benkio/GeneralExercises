@@ -1,8 +1,8 @@
-module Lib.Print (printGrid, printGridMap, printMove) where
+module Lib.Print (printGrid, printGridMap, printMove, printGridMapDefault) where
 
+import Data.Map (Map, findMax, (!?))
 import Lib.Coord (Coord)
-import Lib.Move (Move(..))
-import Data.Map (Map, findMax ,(!?))
+import Lib.Move (Move (..))
 
 {-
   Print the coords in input by the function in input
@@ -10,7 +10,7 @@ import Data.Map (Map, findMax ,(!?))
 -}
 printGrid :: Coord -> (Coord -> String) -> [Coord] -> String
 printGrid (maxX, maxY) f cs = do
-    y <- [0 .. maxY -1]
+    y <- [0 .. maxY - 1]
     x <- [0 .. maxX]
     let c = case (x, y) of
             c | c `elem` cs -> f (x, y)
@@ -23,13 +23,16 @@ printGrid (maxX, maxY) f cs = do
   no empty spaces, just maximum boundaries
 -}
 printGridMap :: (Coord -> Maybe a -> String) -> Map Coord a -> String
-printGridMap  f ms = do
+printGridMap f ms = do
     y <- [0 .. maxY]
     x <- [0 .. maxX + 1]
-    let c = if x == (maxX +1) then "\n" else  f (x, y) $ ms !? (x, y)
+    let c = if x == (maxX + 1) then "\n" else f (x, y) $ ms !? (x, y)
     c
   where
-    ((maxX, maxY),_) = findMax ms
+    ((maxX, maxY), _) = findMax ms
+
+printGridMapDefault :: (Show a) => Map Coord a -> String
+printGridMapDefault = printGridMap (\_ ma -> maybe "." show ma)
 
 printMove :: Move -> Char
 printMove U = '^'
