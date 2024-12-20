@@ -2,7 +2,9 @@ module Lib.Coord (
     Coord,
     cardinalNeighboors,
     ordinalNeighboors,
-    coordDistance,
+    manhattanDistance,
+    manhattanDistance',
+    manhattanPath,
     onTheSameLine,
     isCardinalNeighboor,
     isOrdinalNeighboor,
@@ -24,8 +26,17 @@ isCardinalNeighboor, isOrdinalNeighboor :: Coord -> Coord -> Bool
 isCardinalNeighboor (x, y) c = c `elem` cardinalNeighboors (x, y)
 isOrdinalNeighboor (x, y) c = c `elem` ordinalNeighboors (x, y)
 
-coordDistance :: Coord -> Coord -> (Int, Int)
-coordDistance (x, y) (a, b) = (abs (x - a), abs (y - b))
+manhattanDistance :: Coord -> Coord -> (Int, Int)
+manhattanDistance (x, y) (a, b) = (abs (x - a), abs (y - b))
+manhattanDistance' :: Coord -> Coord -> Int
+manhattanDistance' c c' = (\(a,b) -> a + b) $ manhattanDistance c c'
+
+manhattanPath :: Coord -> Coord -> [Coord]
+manhattanPath (x, y) (a, b)
+    | x <= a && y <= b = [(x', y') | x' <- [x .. a], y' <- [y .. b], y' == y || x' == a]
+    | x <= a && y > b = [(x', y') | x' <- [x .. a], y' <- reverse [b .. y], y' == y || x' == a]
+    | x > a && y <= b = reverse [(x', y') | x' <- [a .. x], y' <- reverse [y .. b], y' == y || x' == a]
+    | x > a && y > b = reverse [(x', y') | x' <- [a .. x], y' <- [b .. y], y' == b || x' == x]
 
 onTheSameLine :: Coord -> Coord -> Bool
 onTheSameLine (x, y) (a, b)

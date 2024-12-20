@@ -7,20 +7,20 @@ module Lib.CoordMap (
     findCardinalNeighboors,
     findOrdinalNeighboors,
     findBridges,
-    notKeys
+    notKeys,
 ) where
 
 import Data.Bifunctor (bimap, first)
 import Data.List (maximumBy)
-import Data.Map (Map, alter, fromList, keys, toList, (!?))
+import Data.Map (Map, alter, fromList, keys, toList, (!?), notMember)
 import qualified Data.Map as M (filterWithKey)
 import Data.Maybe (isNothing, listToMaybe, mapMaybe)
 import Data.Ord (comparing)
 import Debug.Trace
-import Lib.Coord (Coord, cardinalNeighboors, onTheSameLine, ordinalNeighboors)
+import Lib.Coord (Coord, cardinalNeighboors, onTheSameLine, ordinalNeighboors, manhattanPath, manhattanDistance)
 import Lib.CoordDirection (changeDirection)
 import Lib.Direction (Direction)
-import Lib.List (pairsWith)
+import Lib.List (pairsWith, pairs)
 
 {-
   Given a:
@@ -93,18 +93,12 @@ updateLowestScore c v =
 
 -- Returns non-existing coordinates in the map that:
 -- - connect 2 or more existing points
--- - at least 2 neighbours are in opposite directions
-findBridges :: Map Coord a -> [Coord]
-findBridges ms = filter neighboursCheck . notKeys $ ms
+-- - at the given distance
+findBridges :: Int -> Map Coord a -> [[Coord]]
+findBridges bridgeLength ms = manhattanPaths
   where
-    ns c = findCardinalNeighboors c ms
-    neighboursCheck c =
-        length (ns c) >= 2
-            && ( any id
-                    . pairsWith onTheSameLine
-                    . keys
-               )
-                (ns c)
+    cPairsAtDistance = filter ((\(a,b ) -> a + b == bridgeLength) . uncurry manhattanDistance) . pairs . keys $ ms
+    manhattanPaths = filter (\xs -> any (`notMember` ms) xs) . fmap (uncurry manhattanPath) $ cPairsAtDistance
 
 findCardinalNeighboors, findOrdinalNeighboors :: Coord -> Map Coord a -> Map Coord a
 findCardinalNeighboors c ms = fromList . mapMaybe (\x -> (x,) <$> ms !? x) $ cardinalNeighboors c

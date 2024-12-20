@@ -11,7 +11,7 @@ import Data.Map (Map, alter, elems, empty, size, (!?))
 import Data.Maybe (mapMaybe)
 import Data.Ord (comparing)
 import Debug.Trace
-import Lib.Coord (Coord, coordDistance)
+import Lib.Coord (Coord, manhattanDistance)
 import Lib.CoordMap (findBranches, findBranchesFull, findCardinalNeighboors, updateLowestScore)
 import Lib.Direction (Direction (..))
 
@@ -83,7 +83,7 @@ searchTreeBranches c dir tot extraNodeF prev ms =
         $ findBranches c dir extraNodeF ms
 
 pathToCoord :: [Node a] -> Map Coord a -> (Coord -> a -> Bool) -> [Coord]
-pathToCoord ns ms extraNodeF = foldl foldNodes [] $ zip ns (tail ns)
+pathToCoord ns ms extraNodeF = ((nc . head) ns:) . foldl foldNodes [] $ zip ns (tail ns)
   where
     branch n n' =
         head
@@ -100,7 +100,7 @@ defaultMapToPaths :: (Show a) => (Coord, a) -> Coord -> Map Coord a -> [[Node a]
 defaultMapToPaths start endCoord = mapToPaths start East endCondition scoreF discardNodeByScoreF keepNextNodeByScoreF sortNodesF
   where
     endCondition c _ = c == endCoord
-    scoreF = (\(a, b) -> a + b) . coordDistance endCoord . nc
+    scoreF = (\(a, b) -> a + b) . manhattanDistance endCoord . nc
     discardNodeByScoreF currScore prevScore = currScore < prevScore
     keepNextNodeByScoreF nextScore currScore = nextScore < currScore
     sortNodesF (node, score) = score

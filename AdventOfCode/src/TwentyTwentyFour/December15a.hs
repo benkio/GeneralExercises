@@ -7,7 +7,7 @@ import Data.Functor ((<&>))
 import Data.Map (Map, fromList, keys, (!?))
 import qualified Data.Map as M (filter)
 import Data.Text (Text, pack, splitOn, unpack)
-import Lib.Coord (Coord, coordDistance)
+import Lib.Coord (Coord, manhattanDistance)
 import Lib.CoordMove (coordMove)
 import Lib.Map (updateKeys)
 import Lib.Move (Move (..))
@@ -74,7 +74,7 @@ move =
     until (null . sMoves) moveSingle
 
 calculateGPS :: Sea -> Int
-calculateGPS = sum . fmap (uncurry (+) . second (* 100) . coordDistance (0, 0)) . keys . M.filter (== Box) . sMap
+calculateGPS = sum . fmap (uncurry (+) . second (* 100) . manhattanDistance (0, 0)) . keys . M.filter (== Box) . sMap
 
 solution1 :: Sea -> Int
 solution1 = calculateGPS . move

@@ -4,7 +4,7 @@ import Debug.Trace (traceShow, traceShowId)
 
 import Data.Map (Map, fromList)
 import Data.Maybe (mapMaybe)
-import Lib.Coord (Coord, coordDistance)
+import Lib.Coord (Coord, manhattanDistance)
 import Lib.CoordMap (findBranches)
 import Lib.Direction (Direction (..))
 import Lib.List (find')
@@ -44,7 +44,7 @@ paths :: Int -> Map Coord Char -> [[Node Char]]
 paths range = mapToPaths start East (isTheEnd range) (calculateScore range) filterNodeF keepNextNodeByScoreF (sortNodesF range)
 
 calculateScore :: Int -> Node Char -> Int
-calculateScore range n = uncurry (+) (coordDistance (nc n) (fst (end range)))
+calculateScore range n = uncurry (+) (manhattanDistance (nc n) (fst (end range)))
 filterNodeF, keepNextNodeByScoreF :: Int -> Int -> Bool
 filterNodeF curr past = curr >= (past + stepsAwayFilter)
 keepNextNodeByScoreF next past = next <= (past + stepsAwayFilter)

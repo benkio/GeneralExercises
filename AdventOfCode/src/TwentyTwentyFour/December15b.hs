@@ -11,7 +11,7 @@ import qualified Data.Map as M
 import Data.Maybe (fromJust, isJust)
 import Data.Text (Text, pack, splitOn, unpack)
 import Debug.Trace
-import Lib.Coord (Coord, coordDistance)
+import Lib.Coord (Coord, manhattanDistance)
 import Lib.CoordMove (coordMove)
 import Lib.Map (updateKeys)
 import Lib.Move (Move (..))
@@ -123,7 +123,7 @@ move =
     until (null . sMoves) moveSingle
 
 calculateGPS :: Sea -> Int
-calculateGPS = sum . fmap (uncurry (+) . second (* 100) . coordDistance (0, 0)) . keys . M.filter (== BoxL) . sMap
+calculateGPS = sum . fmap (uncurry (+) . second (* 100) . manhattanDistance (0, 0)) . keys . M.filter (== BoxL) . sMap
 
 solution2 :: Sea -> Int
 solution2 = calculateGPS . move
