@@ -1,4 +1,6 @@
-module Lib.List ((\\), find', null') where
+module Lib.List ((\\), find', null', pairsWith, pairs) where
+
+import Data.List (tails)
 
 (\\) :: Eq a => [a] -> [a] -> [a]
 (\\) xs c = filter (`notElem` c) xs
@@ -12,3 +14,9 @@ find' p (x:xs)
 null' :: [a] -> Bool
 null' [] = True
 null' _ = False
+
+pairs :: [a] -> [(a, a)]
+pairs l = [(x,y) | (x:ys) <- tails l, y <- ys]
+
+pairsWith :: (a -> a -> c) -> [a] -> [c]
+pairsWith f = fmap (uncurry f) . pairs

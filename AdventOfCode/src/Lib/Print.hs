@@ -1,8 +1,10 @@
 module Lib.Print (printGrid, printGridMap, printMove, printGridMapDefault) where
 
-import Data.Map (Map, findMax, (!?))
+import Data.Map (Map, findMax, (!?), keys)
 import Lib.Coord (Coord)
 import Lib.Move (Move (..))
+import Data.List (maximumBy)
+import Data.Ord (comparing)
 
 {-
   Print the coords in input by the function in input
@@ -29,10 +31,11 @@ printGridMap f ms = do
     let c = if x == (maxX + 1) then "\n" else f (x, y) $ ms !? (x, y)
     c
   where
-    ((maxX, maxY), _) = findMax ms
+    maxX = fst . maximumBy (comparing fst) . keys $ ms
+    maxY = snd . maximumBy (comparing snd) . keys $ ms
 
 printGridMapDefault :: (Show a) => Map Coord a -> String
-printGridMapDefault = printGridMap (\_ ma -> maybe "." show ma)
+printGridMapDefault = printGridMap (\_ ma -> maybe "#" show ma)
 
 printMove :: Move -> Char
 printMove U = '^'

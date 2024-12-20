@@ -7,7 +7,7 @@ import Data.Functor ((<&>))
 import Data.Map (Map, toList, (!?))
 import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
 import Debug.Trace
-import Lib.Coord (Coord, cardinalNeighboors, findCardinalNeighboors)
+import Lib.Coord (Coord)
 import Text.Printf (printf)
 
 import Lib.Coord (Coord)

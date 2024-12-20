@@ -126,7 +126,7 @@ parseInput =
     ( \[s, m] ->
         let (seaMap, robotCoord) = first fromList $ parseGridWithElemSelection parseSeaObj (unpack s)
             moves = parseMoves m
-         in S{sMap = seaMap, sRobot = Robot{rCoord = robotCoord}, sMoves = moves}
+         in S{sMap = seaMap, sRobot = Robot{rCoord = head robotCoord}, sMoves = moves}
     )
         . splitOn "\n\n"
   where

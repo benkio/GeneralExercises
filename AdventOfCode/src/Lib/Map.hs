@@ -1,6 +1,6 @@
-module Lib.Map (updateKeys,updateLowestScore) where
+module Lib.Map (updateKeys) where
 
-import Lib.Coord (Coord, cardinalNeighboors, findCardinalNeighboors)
+import Lib.Coord (Coord)
 
 import qualified Data.Map as M
 
@@ -11,7 +11,3 @@ updateKeys originalMap updates = foldl updateMap originalMap updates
     updateMap m ((cOld, cNew), v) =
       let mWithoutOld = M.delete cOld m
       in M.insert cNew v mWithoutOld
-
-updateLowestScore :: Coord -> Int -> M.Map Coord Int -> M.Map Coord Int
-updateLowestScore c v =
-    M.alter (\mv -> maybe (Just v) (Just . min v) mv) c

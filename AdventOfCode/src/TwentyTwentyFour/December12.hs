@@ -20,7 +20,8 @@ import Data.Map (
  )
 import qualified Data.Map as M (filter, map, null)
 import Data.Maybe (isJust)
-import Lib.Coord (Coord, cardinalNeighboors, findCardinalNeighboors)
+import Lib.Coord (Coord, cardinalNeighboors)
+import Lib.CoordMap (findCardinalNeighboors)
 import Lib.List ((\\))
 import Lib.Parse (parseGridWithElemSelection)
 

@@ -60,10 +60,9 @@ parseNumGrid = fmap parseInts . lines
   #.........
   ......#...
 -}
-parseGridWithElemSelection :: (Int -> Int -> Char -> Maybe (Either a b)) -> String -> ([a], b)
+parseGridWithElemSelection :: (Int -> Int -> Char -> Maybe (Either a b)) -> String -> ([a], [b])
 parseGridWithElemSelection f s =
-    second head
-        . partitionEithers
+        partitionEithers
         . concatMap
             ( \(y, s) ->
                 mapMaybe

@@ -11,8 +11,8 @@ import qualified Data.Set as S (fromList, size)
 import Data.Tree (Tree, drawTree, foldTree)
 import Data.Void
 import Debug.Trace
-import Lib.Coord (Coord, coordDistance, findCardinalNeighboors)
-import Lib.CoordMap (findBranches)
+import Lib.Coord (Coord, coordDistance)
+import Lib.CoordMap (findBranches,findCardinalNeighboors)
 import Lib.Direction (Direction (..), turnsToDirection)
 import Lib.Parse (parseGridWithElemSelection)
 import Lib.Pathfinding (Node (..), mapToPaths, pathToCoord)

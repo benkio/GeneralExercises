@@ -1,12 +1,26 @@
-module Lib.CoordMap (findBranches, findBranchesFull) where
+{-# LANGUAGE TupleSections #-}
+
+module Lib.CoordMap (
+    findBranches,
+    findBranchesFull,
+    updateLowestScore,
+    findCardinalNeighboors,
+    findOrdinalNeighboors,
+    findBridges,
+    notKeys
+) where
 
 import Data.Bifunctor (bimap, first)
-import Data.Map (Map, keys, toList, (!?))
+import Data.List (maximumBy)
+import Data.Map (Map, alter, fromList, keys, toList, (!?))
 import qualified Data.Map as M (filterWithKey)
-import Data.Maybe (listToMaybe, mapMaybe)
-import Lib.Coord (Coord, findCardinalNeighboors)
+import Data.Maybe (isNothing, listToMaybe, mapMaybe)
+import Data.Ord (comparing)
+import Debug.Trace
+import Lib.Coord (Coord, cardinalNeighboors, onTheSameLine, ordinalNeighboors)
 import Lib.CoordDirection (changeDirection)
 import Lib.Direction (Direction)
+import Lib.List (pairsWith)
 
 {-
   Given a:
@@ -72,3 +86,32 @@ findBranchesFull c d extraNodeF ms = mapMaybe (\x -> go [c] ((0, 0), d) 1 x) cNe
                     )
                         . fst
                         =<< maybeHead
+
+updateLowestScore :: Coord -> Int -> Map Coord Int -> Map Coord Int
+updateLowestScore c v =
+    alter (\mv -> maybe (Just v) (Just . min v) mv) c
+
+-- Returns non-existing coordinates in the map that:
+-- - connect 2 or more existing points
+-- - at least 2 neighbours are in opposite directions
+findBridges :: Map Coord a -> [Coord]
+findBridges ms = filter neighboursCheck . notKeys $ ms
+  where
+    ns c = findCardinalNeighboors c ms
+    neighboursCheck c =
+        length (ns c) >= 2
+            && ( any id
+                    . pairsWith onTheSameLine
+                    . keys
+               )
+                (ns c)
+
+findCardinalNeighboors, findOrdinalNeighboors :: Coord -> Map Coord a -> Map Coord a
+findCardinalNeighboors c ms = fromList . mapMaybe (\x -> (x,) <$> ms !? x) $ cardinalNeighboors c
+findOrdinalNeighboors c ms = fromList . mapMaybe (\x -> (x,) <$> ms !? x) $ ordinalNeighboors c
+
+notKeys :: Map Coord a -> [Coord]
+notKeys ms = [(x,y) | x <- [0..maxY], y <- [0..maxY], isNothing (ms !? (x,y))]
+  where
+    maxX = fst . maximumBy (comparing fst) . keys $ ms
+    maxY = snd . maximumBy (comparing snd) . keys $ ms

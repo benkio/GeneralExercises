@@ -55,7 +55,7 @@ stepsAwayFilter :: Int
 stepsAwayFilter = 0
 
 solution1 :: Int -> Int -> [Coord] -> Int
-solution1 range byteAmount = minimumSteps . paths range . makeMap range byteAmount
+solution1 range byteAmount = fst . minimumSteps . paths range . makeMap range byteAmount
 
 december18Solution1 :: IO Int
 december18Solution1 = solution1 inputRange solution1ByteAmount <$> input

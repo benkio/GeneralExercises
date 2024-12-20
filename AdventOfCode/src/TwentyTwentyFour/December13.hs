@@ -8,7 +8,8 @@ import Data.Maybe (mapMaybe)
 
 import Control.Monad (guard)
 import Data.List.Split (splitOn)
-import Lib.Coord (Coord, cardinalNeighboors, findCardinalNeighboors)
+import Lib.Coord (Coord, cardinalNeighboors)
+import Lib.CoordMap (findCardinalNeighboors)
 import Lib.Math (isInteger, twoLinearEqSolver)
 
 data Arcade = A
