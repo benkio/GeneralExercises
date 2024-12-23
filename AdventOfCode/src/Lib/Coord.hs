@@ -3,11 +3,13 @@ module Lib.Coord (
     cardinalNeighboors,
     ordinalNeighboors,
     manhattanDistance,
+    manhattanDistanceSigned,
     manhattanDistance',
     manhattanPath,
     onTheSameLine,
     isCardinalNeighboor,
     isOrdinalNeighboor,
+    coordPlus
 ) where
 
 import Data.Functor ((<&>))
@@ -17,6 +19,9 @@ import qualified Data.Map as M (filterWithKey)
 import Data.Maybe (listToMaybe, mapMaybe)
 
 type Coord = (Int, Int)
+
+coordPlus :: Coord -> Coord -> Coord
+coordPlus (x,y) (a,b) = (x+a, y+b)
 
 cardinalNeighboors, ordinalNeighboors :: Coord -> [Coord]
 cardinalNeighboors (x, y) = [(a, b) | a <- [x - 1 .. x + 1], b <- [y - 1 .. y + 1], a == x || b == y, (a, b) /= (x, y)]
@@ -28,6 +33,8 @@ isOrdinalNeighboor (x, y) c = c `elem` ordinalNeighboors (x, y)
 
 manhattanDistance :: Coord -> Coord -> (Int, Int)
 manhattanDistance (x, y) (a, b) = (abs (x - a), abs (y - b))
+manhattanDistanceSigned :: Coord -> Coord -> (Int, Int)
+manhattanDistanceSigned (x, y) (a, b) = ((x - a), (y - b))
 manhattanDistance' :: Coord -> Coord -> Int
 manhattanDistance' c c' = (\(a,b) -> a + b) $ manhattanDistance c c'
 
