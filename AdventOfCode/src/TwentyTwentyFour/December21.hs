@@ -17,6 +17,7 @@ import Lib.CoordMove (coordMove, manhattanDistanceSignedToMove)
 import Lib.List (prependToLists, rotate)
 import Lib.Move (Move (..))
 import Text.Printf (printf)
+import Control.Monad ((>=>))
 
 type NumericCode = [NumericKeypadBtn]
 type DirectionalCode = [DirectionalKeypadBtn]
@@ -87,39 +88,39 @@ robotMoveToDirectionalKeypadBtn (RM m) = M m
 robotMovesToDirectionalCode :: [RobotMove] -> DirectionalCode
 robotMovesToDirectionalCode = fmap robotMoveToDirectionalKeypadBtn
 
-numericRobotToDirectionalRobot :: NumericCode -> [[RobotMove]]
-numericRobotToDirectionalRobot nc = movesSequenceDirectionalKeypad =<< robotMovesToDirectionalCode <$> movesSequenceNumericKeypad nc
-directionalRobotToDirectionalRobot :: DirectionalCode -> [[RobotMove]]
-directionalRobotToDirectionalRobot dc = movesSequenceDirectionalKeypad =<< robotMovesToDirectionalCode <$> movesSequenceDirectionalKeypad dc
-yourMoves :: NumericCode -> [[RobotMove]]
-yourMoves nc = movesSequenceDirectionalKeypad =<< robotMovesToDirectionalCode <$> numericRobotToDirectionalRobot nc
+numericRobotToDirectionalRobot :: NumericCode -> [DirectionalCode]
+numericRobotToDirectionalRobot nc = robotMovesToDirectionalCode <$> movesSequenceNumericKeypad nc
+directionalRobotToDirectionalRobot :: DirectionalCode -> [DirectionalCode]
+directionalRobotToDirectionalRobot dc = robotMovesToDirectionalCode <$> movesSequenceDirectionalKeypad dc
+yourMoves :: Int -> NumericCode -> [[RobotMove]]
+yourMoves robotNum nc = do
+  secondDirectionalCode <- numericRobotToDirectionalRobot nc
+  finalDirectionalCode <- (\f -> f secondDirectionalCode) $ foldl (>=>) directionalRobotToDirectionalRobot $ replicate (robotNum - 2) directionalRobotToDirectionalRobot
+  movesSequenceDirectionalKeypad finalDirectionalCode
 test =
     -- "<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A" `elem` (concat . fmap show <$> yourMoves [Num 0,Num 2,Num 9,NKPA])
     -- "<v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A" `elem` (concat . fmap show <$> yourMoves [Num 9,Num 8,Num 0,NKPA])
     -- "<v<A>>^A<vA<A>>^AAvAA<^A>A<v<A>>^AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" `elem` (concat . fmap show <$> yourMoves [Num 1,Num 7,Num 9,NKPA])
     -- "<v<A>>^AA<vA<A>>^AAvAA<^A>A<vA>^A<A>A<vA>^A<A>A<v<A>A>^AAvA<^A>A" `elem` (concat . fmap show <$> yourMoves [Num 4,Num 5,Num 6,NKPA])
-    "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" `elem` (concat . fmap show <$> yourMoves [Num 3, Num 7, Num 9, NKPA])
+    "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" `elem` (concat . fmap show  <$> yourMoves 2 [Num 3, Num 7, Num 9, NKPA])
 
 -- (movesSequenceDirectionalKeypad . robotMovesToDirectionalCode)
 -- [RM D,RM L, RM L,PushA,RM R,RM R,RM U,PushA,RM L,PushA,RM R,PushA,RM D,PushA,RM L,RM U,PushA,PushA,RM R,PushA,RM L,RM D,PushA,PushA,PushA,RM R,RM U,PushA]
 
-shortestButtonSequence :: NumericCode -> Int
-shortestButtonSequence = length . minimumBy (comparing length) . yourMoves
+shortestButtonSequence :: Int -> NumericCode -> Int
+shortestButtonSequence robotNum = length . minimumBy (comparing length) . yourMoves robotNum
 
-solution1 :: [NumericCode] -> Int
-solution1 = foldl (\acc c -> acc + shortestButtonSequence c * numericParts c) 0
+solution :: Int -> [NumericCode] -> Int
+solution robotNum = foldl (\acc c -> acc + shortestButtonSequence robotNum c * numericParts c) 0
   where
     numericParts :: NumericCode -> Int
     numericParts = sum . zipWith (*) (iterate (* 10) 1) . reverse . mapMaybe getNum
 
 december21Solution1 :: IO Int
-december21Solution1 = solution1 <$> input
-
-solution2 :: [NumericCode] -> Int
-solution2 = undefined
+december21Solution1 = solution 2 <$> input
 
 december21Solution2 :: IO Int
-december21Solution2 = solution2 <$> input
+december21Solution2 = solution 25 <$> input
 
 parseInput :: String -> [NumericCode]
 parseInput = (fmap . fmap) parseNumericKeypad . lines
