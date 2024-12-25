@@ -1,6 +1,6 @@
 module Main where
 
-import TwentyTwentyFour.December20
+import TwentyTwentyFour.December21
 
 main :: IO ()
-main = december20Solution1 >>= print
+main = december21Solution2 >>= print
