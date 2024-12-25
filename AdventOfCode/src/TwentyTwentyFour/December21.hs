@@ -10,7 +10,7 @@ import Control.Monad ((>=>))
 import Data.Bifunctor (bimap, first)
 import Data.Containers.ListUtils (nubOrd)
 import Data.List (minimumBy)
-import Data.Map (Map, adjust, elems, empty, fromList, insert, keys, toList, (!?))
+import Data.Map (Map, adjust, elems, empty, fromList, insert, keys, toList, (!?), size)
 import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
 import Data.Text (Text, pack)
 import Debug.Trace
@@ -23,7 +23,7 @@ import Text.Printf (printf)
 type NumericCode = [NumericKeypadBtn]
 type DirectionalCode = [DirectionalKeypadBtn]
 type DirectionalMemory = Map (Coord, DirectionalCode) ([RobotMove], Coord)
-type DirectionalMemoryCount = Map (Int, Coord, DirectionalKeypadBtn) (Int, Coord)
+type DirectionalMemoryCount = Map (Int, Map Int Coord, DirectionalKeypadBtn) (Int, Map Int Coord)
 data NumericKeypadBtn = NKPA | Num Int deriving (Show, Eq, Ord)
 data DirectionalKeypadBtn = DKPA | M Move deriving (Show, Eq, Ord)
 data RobotMove = PushA | RM Move deriving (Eq, Ord)
@@ -139,27 +139,33 @@ robotMovesInitialMap = fromList $ (\(c, sdc) -> ((c, sdc), (\(x, y, _) -> (x, y)
 expandSingleDirectionalBtn :: DirectionalMemoryCount -> Int -> DirectionalKeypadBtn -> Map Int Coord -> (Int, Map Int Coord, DirectionalMemoryCount)
 expandSingleDirectionalBtn mem 0 btn coordMap = (1, adjust (nextCoord btn) 0 coordMap, mem)
 expandSingleDirectionalBtn mem n btn coordMap =
-  trace (printf ("next: " ++ show next ++ " - " ++ show n ++ " - " ++ show result)) (result, insert n nextCurrentC coordMap', mem')
+    trace
+        (printf ("next: " ++ show next ++ " - " ++ show n ++ " - " ++ show result ++ " - " ++ show (size mem)))
+        ( result
+        , coordMap''
+        , insert (n, coordMap, btn) (result, coordMap'') mem'
+        )
   where
     currentC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? n
-    upC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? (n-1)
+    upC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? (n - 1)
     nextCurrentC = nextCoord btn currentC
     next = fst . first robotMovesToDirectionalCode . fromMaybe (error "there should be a sequence here") $ robotMovesInitialMap !? (upC, [btn])
     (result, coordMap', mem') =
         foldl
             ( \(acc, cm, m) nex ->
                 let
-                    upC = fromMaybe (error ("expected coord in coordMap n-1: " ++ show (n - 1))) $ cm !? (n - 1)
-                    (v, cm', mem') = --expandSingleDirectionalBtn m (n - 1) nex cm
-                        fromMaybe (expandSingleDirectionalBtn m (n - 1) nex cm) $
-                            (\(memR, memC) -> (memR, insert (n - 1) memC cm, m)) <$> m !? (n - 1, upC, nex)
-                    upC' = traceShowId $ fromMaybe (error ("expected coord in coordMap n-1: " ++ show (n - 1))) $ cm' !? (n - 1)
-                    mem'' = insert (n - 1, upC, nex) (v, upC') mem'
+                    (v, cm', mem') =
+                        -- expandSingleDirectionalBtn m (n - 1) nex cm
+                        fromMaybe
+                            (expandSingleDirectionalBtn m (n - 1) nex cm)
+                            $ (\(memR, memC) -> trace "cache" (memR, memC, m)) <$> m !? (n - 1, cm, nex)
+                    mem'' = insert (n - 1, cm, nex) (v, cm') mem'
                  in
                     (acc + v, cm', mem'')
             )
             (0, coordMap, mem)
             next
+    coordMap'' = insert n nextCurrentC coordMap'
 expandDirectionalCode :: DirectionalMemoryCount -> Int -> DirectionalCode -> (Int, DirectionalMemoryCount)
 expandDirectionalCode mem n code = (\(x, y, z) -> (x, z)) $ foldl computeDirectionalCode (0, coordMap, mem) code
   where
@@ -171,7 +177,7 @@ nextCoord (M m) c = coordMove m c
 nextCoord DKPA c = c
 
 shortestButtonSequence :: DirectionalMemoryCount -> Int -> NumericCode -> (Int, DirectionalMemoryCount)
-shortestButtonSequence mem robotNum nc = (r, mem')
+shortestButtonSequence mem robotNum nc = (traceShowId r, mem')
   where
     (r, mem') =
         first minimum
