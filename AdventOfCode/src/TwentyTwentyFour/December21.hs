@@ -10,7 +10,7 @@ import Control.Monad ((>=>))
 import Data.Bifunctor (bimap, first)
 import Data.Containers.ListUtils (nubOrd)
 import Data.List (minimumBy)
-import Data.Map (Map, adjust, elems, empty, fromList, insert, keys, toList, (!?), size)
+import Data.Map (Map, adjust, elems, empty, fromList, insert, keys, size, toList, (!?))
 import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
 import Data.Text (Text, pack)
 import Debug.Trace
@@ -23,7 +23,7 @@ import Text.Printf (printf)
 type NumericCode = [NumericKeypadBtn]
 type DirectionalCode = [DirectionalKeypadBtn]
 type DirectionalMemory = Map (Coord, DirectionalCode) ([RobotMove], Coord)
-type DirectionalMemoryCount = Map (Int, Map Int Coord, DirectionalKeypadBtn) (Int, Map Int Coord)
+type DirectionalMemoryCount = Map (Int, Coord, Coord, DirectionalCode) (Int, Coord)
 data NumericKeypadBtn = NKPA | Num Int deriving (Show, Eq, Ord)
 data DirectionalKeypadBtn = DKPA | M Move deriving (Show, Eq, Ord)
 data RobotMove = PushA | RM Move deriving (Eq, Ord)
@@ -137,13 +137,13 @@ robotMovesInitialMap = fromList $ (\(c, sdc) -> ((c, sdc), (\(x, y, _) -> (x, y)
     singleDirectionalCodes = concatMap (\x -> fmap (,[x]) (elems directionalKeypad)) . keys $ directionalKeypad
 
 expandSingleDirectionalBtn :: DirectionalMemoryCount -> Int -> DirectionalKeypadBtn -> Map Int Coord -> (Int, Map Int Coord, DirectionalMemoryCount)
-expandSingleDirectionalBtn mem 0 btn coordMap = (1, adjust (nextCoord btn) 0 coordMap, mem)
+expandSingleDirectionalBtn mem 0 btn coordMap = trace "check" (1, adjust (nextCoord btn) 0 coordMap, mem)
 expandSingleDirectionalBtn mem n btn coordMap =
     trace
         (printf ("next: " ++ show next ++ " - " ++ show n ++ " - " ++ show result ++ " - " ++ show (size mem)))
         ( result
         , coordMap''
-        , insert (n, coordMap, btn) (result, coordMap'') mem'
+        , mem''
         )
   where
     currentC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? n
@@ -151,21 +151,23 @@ expandSingleDirectionalBtn mem n btn coordMap =
     nextCurrentC = nextCoord btn currentC
     next = fst . first robotMovesToDirectionalCode . fromMaybe (error "there should be a sequence here") $ robotMovesInitialMap !? (upC, [btn])
     (result, coordMap', mem') =
-        foldl
-            ( \(acc, cm, m) nex ->
-                let
-                    (v, cm', mem') =
-                        -- expandSingleDirectionalBtn m (n - 1) nex cm
-                        fromMaybe
-                            (expandSingleDirectionalBtn m (n - 1) nex cm)
-                            $ (\(memR, memC) -> trace "cache" (memR, memC, m)) <$> m !? (n - 1, cm, nex)
-                    mem'' = insert (n - 1, cm, nex) (v, cm') mem'
-                 in
-                    (acc + v, cm', mem'')
+        fromMaybe
+            ( foldl
+                ( \(acc, cm, m) nex ->
+                    let
+                        (v, cm', m') = expandSingleDirectionalBtn m (n - 1) nex cm
+                     in
+                        (acc + v, cm', m')
+                )
+                (0, coordMap, mem)
+                next
             )
-            (0, coordMap, mem)
-            next
+            $ (\(r, c) -> (r, insert (n - 1) c coordMap, mem)) <$> mem !? (n - 1, currentC, upC, next)
     coordMap'' = insert n nextCurrentC coordMap'
+    upC' = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap'' !? (n - 1)
+    mem'' :: DirectionalMemoryCount
+    mem'' = insert (n - 1, currentC, upC, next) (result, upC') mem'
+
 expandDirectionalCode :: DirectionalMemoryCount -> Int -> DirectionalCode -> (Int, DirectionalMemoryCount)
 expandDirectionalCode mem n code = (\(x, y, z) -> (x, z)) $ foldl computeDirectionalCode (0, coordMap, mem) code
   where
@@ -177,7 +179,7 @@ nextCoord (M m) c = coordMove m c
 nextCoord DKPA c = c
 
 shortestButtonSequence :: DirectionalMemoryCount -> Int -> NumericCode -> (Int, DirectionalMemoryCount)
-shortestButtonSequence mem robotNum nc = (traceShowId r, mem')
+shortestButtonSequence mem robotNum nc = (r,  mem')
   where
     (r, mem') =
         first minimum
@@ -201,6 +203,7 @@ december21Solution1 :: IO Int
 december21Solution1 = solution 2 <$> input
 
 -- too high 215929898128098
+--          86261890651796
 december21Solution2 :: IO Int
 december21Solution2 = solution 25 <$> input
 
