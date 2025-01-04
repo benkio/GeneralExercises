@@ -51,16 +51,16 @@ robotarmToNumericKeypad robotPos targetBtn =
              in (,robotPos `coordPlus` distance) . nubOrd $ robotMovess
         )
         $ numericKeypad !? targetBtn
-robotarmToDirectionalKeypad :: Coord -> DirectionalKeypadBtn -> ([RobotMove], Coord)
+robotarmToDirectionalKeypad :: Coord -> DirectionalKeypadBtn -> ([[RobotMove]], Coord)
 robotarmToDirectionalKeypad robotPos targetBtn =
     maybe
         (error "[robotarmToDirectionalKeypad] Impossible WrongKeypad")
         ( \kpc ->
             let distance = manhattanDistanceSigned kpc robotPos
                 moves = manhattanDistanceSignedToMove distance
-                selectedMove = listToMaybe . filterByMostConsecutiveEqElems $ rotateMovesKeepValid robotPos moves invalidDirectionalKeypadCoord
-                robotMoves = fromMaybe [PushA] $ (++ [PushA]) . fmap RM <$> selectedMove
-             in (robotMoves, robotPos `coordPlus` distance)
+                rotatedMovess = rotateMovesKeepValid robotPos moves invalidDirectionalKeypadCoord
+                robotMovess = if null rotatedMovess then [[PushA]] else (++ [PushA]) . fmap (RM) <$> rotatedMovess
+             in (,robotPos `coordPlus` distance) . nubOrd $ robotMovess
         )
         $ directionalKeypad !? targetBtn
 
@@ -78,95 +78,83 @@ movesSequenceNumericKeypad code = fst $ go initialNumericKeypadPosition code
     go robotPos [] = ([], robotPos)
     go robotPos (c : cs) = (\(mss, robotPos') -> first (prependToLists mss) (go robotPos' cs)) $ robotarmToNumericKeypad robotPos c
 
-movesSequenceDirectionalKeypad' :: DirectionalMemory -> Coord -> DirectionalCode -> ([RobotMove], Coord, DirectionalMemory)
-movesSequenceDirectionalKeypad' mem robotPos [] = ([], robotPos, mem)
-movesSequenceDirectionalKeypad' mem robotPos (c : cs) =
+movesSequenceDirectionalKeypad' :: Coord -> DirectionalCode -> ([[RobotMove]], Coord)
+movesSequenceDirectionalKeypad' robotPos [] = ([], robotPos)
+movesSequenceDirectionalKeypad' robotPos (c : cs) =
     ( \(ms, robotPos') ->
-        let (rs, c', mem') = computeTail robotPos'
-         in -- mem'' = insert (robotPos, chunk) computeHead mem'
-            (ms ++ rs, c', mem')
+        let (rs, c') = computeTail robotPos'
+         in (ms ++ rs, c')
     )
         $ computeHead
   where
-    -- (chunk, rest) = (\(x, y) -> (x ++ [head y], tail y)) . break (== DKPA) $ code
-    computeHead = robotarmToDirectionalKeypad robotPos c -- fromMaybe (foldl (\(acc, coord) c -> first (acc ++) (robotarmToDirectionalKeypad coord c)) ([], robotPos) chunk) $ mem !? (robotPos, chunk)
-    computeTail robotPos' = movesSequenceDirectionalKeypad' mem robotPos' cs -- maybe (movesSequenceDirectionalKeypad' mem robotPos' cs) (\(x,y) -> (x,y,mem)) $ mem !? (robotPos', cs)
+    computeHead = robotarmToDirectionalKeypad robotPos c
+    computeTail robotPos' = movesSequenceDirectionalKeypad' robotPos' cs
 
-movesSequenceDirectionalKeypad :: DirectionalMemory -> DirectionalCode -> ([RobotMove], DirectionalMemory)
-movesSequenceDirectionalKeypad mem code = (\(x, _, y) -> (x, y)) $ movesSequenceDirectionalKeypad' mem initialDirectionalKeypadPosition code
+robotMovesInitialMap :: Map (Coord, DirectionalCode) ([[RobotMove]], Coord)
+robotMovesInitialMap = fromList $ (\(c, sdc) -> ((c, sdc), movesSequenceDirectionalKeypad' c sdc)) <$> singleDirectionalCodes
+  where
+    singleDirectionalCodes :: [(Coord, DirectionalCode)]
+    singleDirectionalCodes = concatMap (\x -> fmap (,[x]) (elems directionalKeypad)) . keys $ directionalKeypad
 
 robotMoveToDirectionalKeypadBtn :: RobotMove -> DirectionalKeypadBtn
 robotMoveToDirectionalKeypadBtn PushA = DKPA
 robotMoveToDirectionalKeypadBtn (RM m) = M m
 robotMovesToDirectionalCode :: [RobotMove] -> DirectionalCode
 robotMovesToDirectionalCode = fmap robotMoveToDirectionalKeypadBtn
-
 numericRobotToDirectionalRobot :: NumericCode -> [DirectionalCode]
 numericRobotToDirectionalRobot nc = robotMovesToDirectionalCode <$> movesSequenceNumericKeypad nc
-directionalRobotToDirectionalRobot :: (DirectionalCode, DirectionalMemory) -> (DirectionalCode, DirectionalMemory)
-directionalRobotToDirectionalRobot (dc, mem) = (\(xs, mem') -> (robotMovesToDirectionalCode xs, mem')) $ movesSequenceDirectionalKeypad mem dc
-yourMoves :: DirectionalMemory -> Int -> NumericCode -> ([RobotMove], DirectionalMemory)
-yourMoves mem robotNum nc =
-    first (minimumBy (comparing length))
-        . ( \(m, rss) ->
-                foldl (\(acc, m') rs -> first ((acc ++) . (: [])) (movesSequenceDirectionalKeypad m' rs)) ([], m) rss
-          )
-        <$> foldl go (mem, [])
-        $ numericRobotToDirectionalRobot nc
+
+evaluateSingleNext :: DirectionalMemoryCount -> Map Int Coord -> Int -> Coord -> Coord -> DirectionalCode -> (Int, Map Int Coord, DirectionalMemoryCount)
+evaluateSingleNext mem coordMap n currentC upC next =
+    trace ("evaluateSingleNext - result: " ++ show result ++ " - next: " ++ show next ++ " - upC': " ++ show upC' ++ " - n: " ++ show n) (result, coordMap', mem'')
   where
-    go (m, acc) ds =
-        let (rs, m') = pipeline (ds, m)
-         in (m', acc ++ [rs])
-    pipeline = foldl (>>>) directionalRobotToDirectionalRobot $ replicate (robotNum - 2) directionalRobotToDirectionalRobot
-
--- test =
---     "<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A" `elem` (concat . fmap show <$> yourMoves 2 [Num 0, Num 2, Num 9, NKPA])
-
--- "<v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A" `elem` (concat . fmap show <$> yourMoves [Num 9,Num 8,Num 0,NKPA])
--- "<v<A>>^A<vA<A>>^AAvAA<^A>A<v<A>>^AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" `elem` (concat . fmap show <$> yourMoves [Num 1,Num 7,Num 9,NKPA])
--- "<v<A>>^AA<vA<A>>^AAvAA<^A>A<vA>^A<A>A<vA>^A<A>A<v<A>A>^AAvA<^A>A" `elem` (concat . fmap show <$> yourMoves [Num 4,Num 5,Num 6,NKPA])
--- "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" `elem` (concat . fmap show <$> yourMoves 2 [Num 3, Num 7, Num 9, NKPA])
-
--- -- (movesSequenceDirectionalKeypad . robotMovesToDirectionalCode)
--- -- [RM D,RM L, RM L,PushA,RM R,RM R,RM U,PushA,RM L,PushA,RM R,PushA,RM D,PushA,RM L,RM U,PushA,PushA,RM R,PushA,RM L,RM D,PushA,PushA,PushA,RM R,RM U,PushA]
-
-robotMovesInitialMap :: Map (Coord, DirectionalCode) ([RobotMove], Coord)
-robotMovesInitialMap = fromList $ (\(c, sdc) -> ((c, sdc), (\(x, y, _) -> (x, y)) (movesSequenceDirectionalKeypad' empty c sdc))) <$> singleDirectionalCodes
-  where
-    singleDirectionalCodes :: [(Coord, DirectionalCode)]
-    singleDirectionalCodes = concatMap (\x -> fmap (,[x]) (elems directionalKeypad)) . keys $ directionalKeypad
-
-expandSingleDirectionalBtn :: DirectionalMemoryCount -> Int -> DirectionalKeypadBtn -> Map Int Coord -> (Int, Map Int Coord, DirectionalMemoryCount)
-expandSingleDirectionalBtn mem 0 btn coordMap = trace "check" (1, adjust (nextCoord btn) 0 coordMap, mem)
-expandSingleDirectionalBtn mem n btn coordMap =
-    trace
-        (printf ("next: " ++ show next ++ " - " ++ show n ++ " - " ++ show result ++ " - " ++ show (size mem)))
-        ( result
-        , coordMap''
-        , mem''
-        )
-  where
-    currentC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? n
-    upC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? (n - 1)
-    nextCurrentC = nextCoord btn currentC
-    next = fst . first robotMovesToDirectionalCode . fromMaybe (error "there should be a sequence here") $ robotMovesInitialMap !? (upC, [btn])
     (result, coordMap', mem') =
         fromMaybe
             ( foldl
                 ( \(acc, cm, m) nex ->
                     let
-                        (v, cm', m') = expandSingleDirectionalBtn m (n - 1) nex cm
+                        (v, cm', m') = expandSingleDirectionalBtn m n nex cm
                      in
                         (acc + v, cm', m')
                 )
                 (0, coordMap, mem)
                 next
             )
-            $ (\(r, c) -> (r, insert (n - 1) c coordMap, mem)) <$> mem !? (n - 1, currentC, upC, next)
+            $ (\(r, c) -> (r, insert n c coordMap, mem)) <$> mem !? (n, currentC, upC, next)
+    upC' = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap' !? n
+    mem'' :: DirectionalMemoryCount
+    mem'' = insert (n, currentC, upC, next) (result, upC') mem'
+
+expandSingleDirectionalBtn :: DirectionalMemoryCount -> Int -> DirectionalKeypadBtn -> Map Int Coord -> (Int, Map Int Coord, DirectionalMemoryCount)
+expandSingleDirectionalBtn mem 0 DKPA coordMap = (1, coordMap, mem)
+expandSingleDirectionalBtn mem 0 btn coordMap = (1, coordMap', mem)
+  where
+    coordMap' = adjust nextCurrentC 0 coordMap
+    nextCurrentC c = snd . fromMaybe (error "The move should be present in the robotMovesMap") $ robotMovesInitialMap !? (c, [btn])
+expandSingleDirectionalBtn mem n btn coordMap =
+  trace ("expandSingleDirectionalBtn - result: " ++ show result ++ " - next: " ++ show btn ++ " - n: " ++ show n ++ " - coordMap: " ++ show coordMap ++ " - coordMap'': " ++ show coordMap'')
+    ( result
+    , coordMap''
+    , mem'
+    )
+  where
+    currentC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? n
+    upC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? (n - 1)
+    (nexts, nextCurrentC) = first (fmap robotMovesToDirectionalCode) . fromMaybe (error "The move should be present in the robotMovesMap") $ robotMovesInitialMap !? (upC, [btn])
+    (resultsCoordMap, mem') =
+        foldl
+            ( \(acc, m) nex ->
+                let (v, cm', m') = evaluateSingleNext m coordMap (n - 1) currentC upC nex
+                 in (acc ++ [(v, cm')], m')
+            )
+            ([], mem)
+            nexts
+    (result, coordMap') = minimumBy (comparing fst) resultsCoordMap
     coordMap'' = insert n nextCurrentC coordMap'
     upC' = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap'' !? (n - 1)
-    mem'' :: DirectionalMemoryCount
-    mem'' = insert (n - 1, currentC, upC, next) (result, upC') mem'
+
+-- TODO: it should return 10. check the coordMap
+test = let dc = [M L,DKPA] in expandDirectionalCode empty 1 dc 
 
 expandDirectionalCode :: DirectionalMemoryCount -> Int -> DirectionalCode -> (Int, DirectionalMemoryCount)
 expandDirectionalCode mem n code = (\(x, y, z) -> (x, z)) $ foldl computeDirectionalCode (0, coordMap, mem) code
@@ -174,12 +162,8 @@ expandDirectionalCode mem n code = (\(x, y, z) -> (x, z)) $ foldl computeDirecti
     computeDirectionalCode (acc, c, m) dbtn = (\(x, y, z) -> (acc + x, y, z)) $ expandSingleDirectionalBtn m n dbtn c
     coordMap = fromList $ (,initialDirectionalKeypadPosition) <$> [0 .. n]
 
-nextCoord :: DirectionalKeypadBtn -> Coord -> Coord
-nextCoord (M m) c = coordMove m c
-nextCoord DKPA c = c
-
 shortestButtonSequence :: DirectionalMemoryCount -> Int -> NumericCode -> (Int, DirectionalMemoryCount)
-shortestButtonSequence mem robotNum nc = (r,  mem')
+shortestButtonSequence mem robotNum nc = (r, mem')
   where
     (r, mem') =
         first minimum
@@ -202,8 +186,8 @@ solution robotNum ncs = fst $ foldl go (0, empty) ncs
 december21Solution1 :: IO Int
 december21Solution1 = solution 2 <$> input
 
--- too high 215929898128098
---          86261890651796
+-- -- too high 215929898128098
+-- --          86261890651796
 december21Solution2 :: IO Int
 december21Solution2 = solution 25 <$> input
 
