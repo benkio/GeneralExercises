@@ -132,15 +132,17 @@ expandSingleDirectionalBtn mem 0 btn coordMap = (1, coordMap', mem)
     coordMap' = adjust nextCurrentC 0 coordMap
     nextCurrentC c = snd . fromMaybe (error "The move should be present in the robotMovesMap") $ robotMovesInitialMap !? (c, [btn])
 expandSingleDirectionalBtn mem n btn coordMap =
-  trace ("expandSingleDirectionalBtn - result: " ++ show result ++ " - next: " ++ show btn ++ " - n: " ++ show n ++ " - coordMap: " ++ show coordMap ++ " - coordMap'': " ++ show coordMap'')
-    ( result
-    , coordMap''
-    , mem'
-    )
+    trace
+        ("expandSingleDirectionalBtn - result: " ++ show result ++ " - next: " ++ show btn ++ " - n: " ++ show n ++ " - coordMap: " ++ show coordMap ++ " - coordMap'': " ++ show coordMap'')
+        ( result
+        , coordMap''
+        , mem'
+        )
   where
     currentC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? n
     upC = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap !? (n - 1)
-    (nexts, nextCurrentC) = first (fmap robotMovesToDirectionalCode) . fromMaybe (error "The move should be present in the robotMovesMap") $ robotMovesInitialMap !? (upC, [btn])
+    (nexts, _) = first (fmap robotMovesToDirectionalCode) . fromMaybe (error "The move should be present in the robotMovesMap") $ robotMovesInitialMap !? (upC, [btn])
+    nextCurrentC = moveSingle btn currentC
     (resultsCoordMap, mem') =
         foldl
             ( \(acc, m) nex ->
@@ -153,8 +155,17 @@ expandSingleDirectionalBtn mem n btn coordMap =
     coordMap'' = insert n nextCurrentC coordMap'
     upC' = fromMaybe (error ("expected coord in coordMap n: " ++ show n)) $ coordMap'' !? (n - 1)
 
--- TODO: it should return 10. check the coordMap
-test = let dc = [M L,DKPA] in expandDirectionalCode empty 1 dc 
+moveSingle :: DirectionalKeypadBtn -> Coord -> Coord
+moveSingle DKPA c = c
+moveSingle (M m) c = coordMove m c
+
+-- TODO: it should return 18. check the coordMap
+-- <vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A
+-- v<<A>>^A<A>AvA<^AA>A<vAAA>^A
+-- <A^A>^^AvvvA
+test =
+    let dc = [M L, DKPA] -- [M L,DKPA,M U,DKPA,M R,M U,M U,DKPA,M D,M D,M D,DKPA]
+     in expandDirectionalCode empty 2 dc
 
 expandDirectionalCode :: DirectionalMemoryCount -> Int -> DirectionalCode -> (Int, DirectionalMemoryCount)
 expandDirectionalCode mem n code = (\(x, y, z) -> (x, z)) $ foldl computeDirectionalCode (0, coordMap, mem) code
