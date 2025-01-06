@@ -2,7 +2,8 @@ module Lib.Bit (
     toBaseBit,
     fromBaseBit,
     fillBitToN,
-    bitWiseXor3bits,
+    bitWiseXorWithBase,
+    bitWiseXor
 ) where
 
 import Data.List.Split (chunksOf)
@@ -24,8 +25,11 @@ fromBaseBit b xs = go (reverse xs) 0
 fillBitToN :: Int -> [Int] -> [Int]
 fillBitToN n xs = replicate (n - length xs) 0 ++ xs
 
-bitWiseXor3bits :: Int -> Int -> Int -> Int
-bitWiseXor3bits b x y =
+bitWiseXor :: Int -> Int -> Int
+bitWiseXor = bitWiseXorWithBase 2
+
+bitWiseXorWithBase :: Int -> Int -> Int -> Int
+bitWiseXorWithBase b x y =
     fromBaseBit b
         . fmap (fromBaseBit 2)
         . chunksOf 3

@@ -7,7 +7,7 @@ import Data.List (find)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromJust, isJust, isNothing, maybeToList)
 import Lib.Bit (
-    bitWiseXor3bits,
+    bitWiseXorWithBase,
     fillBitToN,
     fromBaseBit,
     toBaseBit,
@@ -114,7 +114,7 @@ runInstruction (Adv op) computer =
     , Nothing
     )
 runInstruction (Blx op) computer =
-    ( moveInstructionPointer $ writeRegister computer 'B' $ bitWiseXor3bits 8 (readRegister computer 'B') (runOperand op computer)
+    ( moveInstructionPointer $ writeRegister computer 'B' $ bitWiseXorWithBase 8 (readRegister computer 'B') (runOperand op computer)
     , Nothing
     )
 runInstruction (Bst op) computer =
@@ -125,7 +125,7 @@ runInstruction (Jnz op) computer
     | readRegister computer 'A' == 0 = (moveInstructionPointer computer, Nothing)
     | otherwise = (computer{instructionPointer = runOperand op computer}, Nothing)
 runInstruction Bxc computer =
-    ( moveInstructionPointer $ writeRegister computer 'B' $ bitWiseXor3bits 8 (readRegister computer 'B') (readRegister computer 'C')
+    ( moveInstructionPointer $ writeRegister computer 'B' $ bitWiseXorWithBase 8 (readRegister computer 'B') (readRegister computer 'C')
     , Nothing
     )
 runInstruction (Out op) computer =
