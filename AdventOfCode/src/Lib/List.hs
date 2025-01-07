@@ -1,5 +1,6 @@
 module Lib.List (
     (\\),
+    (!?),
     find',
     null',
     pairsWith,
@@ -7,11 +8,12 @@ module Lib.List (
     rotate,
     prependToLists,
     filterByShortLength,
-    filterByMostConsecutiveEqElems
+    filterByMostConsecutiveEqElems,
+    slidingWindow,
 ) where
 
-import Data.List (tails, groupBy, sortOn, group)
-import Data.Maybe (listToMaybe, fromMaybe)
+import Data.List (group, groupBy, sortOn, tails)
+import Data.Maybe (fromMaybe, listToMaybe)
 
 (\\) :: (Eq a) => [a] -> [a] -> [a]
 (\\) xs c = filter (`notElem` c) xs
@@ -40,9 +42,9 @@ prependToLists :: [[a]] -> [[a]] -> [[a]]
 prependToLists [] yss = yss
 prependToLists xss [] = xss
 prependToLists xss yss = do
-  ys <- yss
-  xs <- xss
-  return $ xs ++ ys
+    ys <- yss
+    xs <- xss
+    return $ xs ++ ys
 
 filterByShortLength :: [[a]] -> [[a]]
 filterByShortLength = fromMaybe [] . listToMaybe . groupBy (\x y -> length x == length y) . sortOn length
@@ -50,5 +52,22 @@ filterByShortLength = fromMaybe [] . listToMaybe . groupBy (\x y -> length x == 
 filterByMostConsecutiveEqElems :: (Eq a, Ord a) => [[a]] -> [[a]]
 filterByMostConsecutiveEqElems = fromMaybe [] . listToMaybe . groupBy (\x y -> nonConsecutiveEqElems x == nonConsecutiveEqElems y) . sortOn nonConsecutiveEqElems
   where
-    nonConsecutiveEqElems :: Ord a => [a] -> Int
-    nonConsecutiveEqElems = length . filter (==1) . fmap length . group
+    nonConsecutiveEqElems :: (Ord a) => [a] -> Int
+    nonConsecutiveEqElems = length . filter (== 1) . fmap length . group
+
+slidingWindow :: Int -> [a] -> [[a]]
+slidingWindow m = foldr (zipWith (:)) (repeat []) . take m . tails
+
+(!?) :: [a] -> Int -> Maybe a
+{-# INLINEABLE (!?) #-}
+xs !? n
+    | n < 0 = Nothing
+    | otherwise =
+        foldr
+            ( \x r k -> case k of
+                0 -> Just x
+                _ -> r (k - 1)
+            )
+            (const Nothing)
+            xs
+            n
