@@ -3,10 +3,13 @@ module TwentyTwentyFour.December22 where
 import Control.Arrow
 import Control.Parallel
 import Control.Parallel.Strategies
+import Data.Containers.ListUtils (nubOrd)
 import Data.Functor ((<&>))
-import Data.Maybe (fromMaybe, listToMaybe)
-import Data.Set (Set, empty, fromList, toList)
-import qualified Data.Set as S (union)
+import Data.Map (Map)
+import qualified Data.Map as M (empty, fromList, insert, keys, (!?))
+import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
+import Data.Set hiding (foldl, take)
+import qualified Data.Set as S (foldl, take)
 import Debug.Trace
 import Lib.Bit (bitWiseXor)
 import Lib.List (slidingWindow, (!?))
@@ -62,8 +65,13 @@ solution1 = sum . parMap rdeepseq endOfTheDaySecret
 december22Solution1 :: IO Int
 december22Solution1 = solution1 <$> input
 
-secretDifferences :: Int -> [Int]
-secretDifferences = (\xs -> zipWith (\x y -> firstDigit y - firstDigit x) xs (tail xs)) . take 2001 . nextSecrets
+secretDifferencesAndPrices :: Int -> ([Int], [Int])
+secretDifferencesAndPrices s =
+    ( (\xs -> zipWith (\x y -> firstDigit y - firstDigit x) xs (tail xs)) prices
+    , prices
+    )
+  where
+    prices = (take 2001 . nextSecrets) s
 
 firstDigit :: Int -> Int
 firstDigit = read . (: []) . last . show
@@ -71,12 +79,12 @@ firstDigit = read . (: []) . last . show
 monkeySequnces :: [Int] -> [[Int]]
 monkeySequnces = slidingWindow 4
 
-allMonkeySequences :: [[Int]] -> Set [Int]
-allMonkeySequences = foldl (\acc x -> acc `S.union` ((fromList . monkeySequnces) x)) empty
-
 findBananaPrice :: [Int] -> [[Int]] -> [Int] -> Int
 findBananaPrice sequence sellerDiffSequences sellerPrices =
-    fromMaybe 0 $ (maybePriceIndex 0 sellerDiffSequences) >>= (sellerPrices !?) <&> firstDigit
+    maybe
+        0
+        firstDigit
+        (maybePriceIndex 0 sellerDiffSequences >>= (sellerPrices !?))
   where
     maybePriceIndex _ [] = Nothing
     maybePriceIndex firstIndex (x : xs)
@@ -84,19 +92,30 @@ findBananaPrice sequence sellerDiffSequences sellerPrices =
         | otherwise = maybePriceIndex (firstIndex + 1) xs
 
 seqBananaPrice :: [Int] -> [([[Int]], [Int])] -> Int
-seqBananaPrice sequence sellers =
-    foldl go 0 sellers
+seqBananaPrice sequence =
+    foldl go 0
   where
     go acc = (acc +) . uncurry (findBananaPrice sequence)
 
-test =
-    seqBananaPrice [-2, 1, -1, 3] (sellerDiffSequences `zip` sellerPrices)
-  where
-    sellerDiffSequences = fmap (monkeySequnces . secretDifferences) testInput'
-    sellerPrices = fmap (take 2001 . nextSecrets) testInput'
+mapBananaPrice :: ([[Int]], [Int]) -> Map [Int] Int
+mapBananaPrice (sequences, prices) =
+    foldl (\m s -> M.insert s (findBananaPrice s sequences prices) m) M.empty sequences
+
+test = solution2 testInput'
 
 solution2 :: [Int] -> Int
-solution2 = undefined
+solution2 i =
+    S.foldl go 0 allSequences
+  where
+    sellersMap = trace "sellers Computed" $ fmap (mapBananaPrice . first monkeySequnces . secretDifferencesAndPrices) i
+    allSequences = (\x -> trace ("allSequences Computed: " ++ show (size x)) x) . fromList . concatMap M.keys $ sellersMap
+    go result sequence =
+        ( \x ->
+            trace
+                (" sequence: " ++ show sequence ++ " result: " ++ show x)
+                x
+        )
+            (max result (sum (mapMaybe (M.!? sequence) sellersMap)))
 
 december22Solution2 :: IO Int
 december22Solution2 = solution2 <$> input
