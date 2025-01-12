@@ -1,10 +1,10 @@
 module Lib.Print (printGrid, printGridMap, printMove, printGridMapDefault) where
 
-import Data.Map (Map, findMax, (!?), keys)
+import Data.List (maximumBy)
+import Data.Map (Map, findMax, keys, (!?))
+import Data.Ord (comparing)
 import Lib.Coord (Coord)
 import Lib.Move (Move (..))
-import Data.List (maximumBy)
-import Data.Ord (comparing)
 
 {-
   Print the coords in input by the function in input

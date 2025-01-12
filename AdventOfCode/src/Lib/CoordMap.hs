@@ -12,15 +12,15 @@ module Lib.CoordMap (
 
 import Data.Bifunctor (bimap, first)
 import Data.List (maximumBy)
-import Data.Map (Map, alter, fromList, keys, toList, (!?), notMember)
+import Data.Map (Map, alter, fromList, keys, notMember, toList, (!?))
 import qualified Data.Map as M (filterWithKey)
 import Data.Maybe (isNothing, listToMaybe, mapMaybe)
 import Data.Ord (comparing)
 import Debug.Trace
-import Lib.Coord (Coord, cardinalNeighboors, onTheSameLine, ordinalNeighboors, manhattanPath, manhattanDistance)
+import Lib.Coord (Coord, cardinalNeighboors, manhattanDistance, manhattanPath, onTheSameLine, ordinalNeighboors)
 import Lib.CoordDirection (changeDirection)
 import Lib.Direction (Direction)
-import Lib.List (pairsWith, pairs)
+import Lib.List (pairs, pairsWith)
 
 {-
   Given a:
@@ -41,10 +41,10 @@ findBranches ::
     (Coord -> a -> Bool) ->
     Map Coord a ->
     [(Coord, Int, (Int, Int), Direction)]
-findBranches c d extraNodeF ms = mapMaybe (\x -> go [c] ((0, 0), d) 1 x) cNeighboors
+findBranches c d extraNodeF ms = mapMaybe (go [c] ((0, 0), d) 1) cNeighboors
   where
     splitTurns t = if t < 0 then (abs t, 0) else (0, t)
-    calcTurns dir current target = (first splitTurns (changeDirection dir current target))
+    calcTurns dir current target = first splitTurns (changeDirection dir current target)
     cNeighboors = keys $ findCardinalNeighboors c ms
     go :: [Coord] -> ((Int, Int), Direction) -> Int -> Coord -> Maybe (Coord, Int, (Int, Int), Direction)
     go visited ((tl, tr), direction) distance x =
@@ -64,10 +64,10 @@ findBranchesFull ::
     (Coord -> a -> Bool) ->
     Map Coord a ->
     [[(Coord, Int, (Int, Int), Direction)]]
-findBranchesFull c d extraNodeF ms = mapMaybe (\x -> go [c] ((0, 0), d) 1 x) cNeighboors
+findBranchesFull c d extraNodeF ms = mapMaybe (go [c] ((0, 0), d) 1) cNeighboors
   where
     splitTurns t = if t < 0 then (abs t, 0) else (0, t)
-    calcTurns dir current target = (first splitTurns (changeDirection dir current target))
+    calcTurns dir current target = first splitTurns (changeDirection dir current target)
     cNeighboors = keys $ findCardinalNeighboors c ms
     go :: [Coord] -> ((Int, Int), Direction) -> Int -> Coord -> Maybe [(Coord, Int, (Int, Int), Direction)]
     go visited ((tl, tr), direction) distance x =
@@ -89,7 +89,7 @@ findBranchesFull c d extraNodeF ms = mapMaybe (\x -> go [c] ((0, 0), d) 1 x) cNe
 
 updateLowestScore :: Coord -> Int -> Map Coord Int -> Map Coord Int
 updateLowestScore c v =
-    alter (\mv -> maybe (Just v) (Just . min v) mv) c
+    alter (maybe (Just v) (Just . min v)) c
 
 -- Returns non-existing coordinates in the map that:
 -- - connect 2 or more existing points
@@ -97,15 +97,15 @@ updateLowestScore c v =
 findBridges :: Int -> Map Coord a -> [[Coord]]
 findBridges bridgeLength ms = manhattanPaths
   where
-    cPairsAtDistance = filter ((\(a,b ) -> a + b == bridgeLength) . uncurry manhattanDistance) . pairs . keys $ ms
-    manhattanPaths = filter (\xs -> any (`notMember` ms) xs) . fmap (uncurry manhattanPath) $ cPairsAtDistance
+    cPairsAtDistance = filter ((\(a, b) -> a + b == bridgeLength) . uncurry manhattanDistance) . pairs . keys $ ms
+    manhattanPaths = filter (any (`notMember` ms)) . fmap (uncurry manhattanPath) $ cPairsAtDistance
 
 findCardinalNeighboors, findOrdinalNeighboors :: Coord -> Map Coord a -> Map Coord a
 findCardinalNeighboors c ms = fromList . mapMaybe (\x -> (x,) <$> ms !? x) $ cardinalNeighboors c
 findOrdinalNeighboors c ms = fromList . mapMaybe (\x -> (x,) <$> ms !? x) $ ordinalNeighboors c
 
 notKeys :: Map Coord a -> [Coord]
-notKeys ms = [(x,y) | x <- [0..maxY], y <- [0..maxY], isNothing (ms !? (x,y))]
+notKeys ms = [(x, y) | x <- [0 .. maxY], y <- [0 .. maxY], isNothing (ms !? (x, y))]
   where
     maxX = fst . maximumBy (comparing fst) . keys $ ms
     maxY = snd . maximumBy (comparing snd) . keys $ ms

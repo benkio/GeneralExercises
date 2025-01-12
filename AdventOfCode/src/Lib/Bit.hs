@@ -3,7 +3,7 @@ module Lib.Bit (
     fromBaseBit,
     fillBitToN,
     bitWiseXorWithBase,
-    bitWiseXor
+    bitWiseXor,
 ) where
 
 import Data.List.Split (chunksOf)
@@ -35,8 +35,8 @@ bitWiseXorWithBase b x y =
         . chunksOf 3
         $ zipWith xOr xOrMaskX xOrMaskY
   where
-    binX = concat $ fillBitToN 3 . toBaseBit 2 <$> toBaseBit b x
-    binY = concat $ fillBitToN 3 . toBaseBit 2 <$> toBaseBit b y
+    binX = concatMap (fillBitToN 3 . toBaseBit 2) (toBaseBit b x)
+    binY = concatMap (fillBitToN 3 . toBaseBit 2) (toBaseBit b y)
     xOrMaskY = replicate (length binX - length binY) 0 ++ binY
     xOrMaskX = replicate (length binY - length binX) 0 ++ binX
     xOr a b = if a == b then 0 else 1

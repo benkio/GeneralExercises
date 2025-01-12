@@ -1,5 +1,5 @@
 module Lib.Seq (
-    rotate
+    rotate,
 ) where
 
 import Data.Sequence (Seq, cycleTaking)

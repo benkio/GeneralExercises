@@ -52,7 +52,7 @@ trailStep tr c v = if nextSlope > 9 then [] else ns
     ns = filter ((== nextSlope) . snd) $ mapMaybe (\x -> (x,) <$> tr !? x) $ neighbours c
 
 isPeak :: TrailMap -> Coord -> Bool
-isPeak tr c = (Just 9 == ) $ tr !? c
+isPeak tr c = (Just 9 ==) $ tr !? c
 
 trails :: TrailMap -> Coord -> Int -> [(Coord, Int)]
 trails tr c v = peaks ++ concatMap (uncurry (trails tr)) noPeaks

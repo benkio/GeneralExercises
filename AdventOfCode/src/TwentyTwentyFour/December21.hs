@@ -113,7 +113,7 @@ evaluateSingleNext mem coordMap n currentC next =
                 (0, coordMap, mem)
                 next
             )
-            (, coordMap, mem)
+            (,coordMap,mem)
             (mem !? (n, currentC, next))
     mem'' :: DirectionalMemoryCount
     mem'' = insert (n, currentC, next) result mem'

@@ -61,8 +61,8 @@ parseNumGrid = fmap parseInts . lines
   ......#...
 -}
 parseGridWithElemSelection :: (Int -> Int -> Char -> Maybe (Either a b)) -> String -> ([a], [b])
-parseGridWithElemSelection f s =
-        partitionEithers
+parseGridWithElemSelection f =
+    partitionEithers
         . concatMap
             ( \(y, s) ->
                 mapMaybe
@@ -71,7 +71,6 @@ parseGridWithElemSelection f s =
             )
         . zip [0 ..]
         . lines
-        $ s
 
 {-
   75,47,61,53,29

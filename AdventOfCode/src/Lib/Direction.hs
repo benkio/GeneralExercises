@@ -1,12 +1,12 @@
 module Lib.Direction (
-  Direction(..),
+    Direction (..),
     turn90,
     turn180,
     turn270,
     turn90N,
     turnsToDirection,
-    allDirection
-    ) where
+    allDirection,
+) where
 
 import Data.Bifunctor
 
@@ -24,8 +24,7 @@ turn180 = turn90N 2
 turn270 = turn90N 3
 
 turn90N :: Int -> Direction -> Direction
-turn90N i= (!! i) . iterate turn90
+turn90N i = (!! i) . iterate turn90
 
 turnsToDirection :: Direction -> Direction -> Int
-turnsToDirection d d' = (\i -> if i == 3 then (-1) else i) . snd $ until ((==d') . fst) (bimap turn90 (+1)) (d,0)
-
+turnsToDirection d d' = (\i -> if i == 3 then (-1) else i) . snd $ until ((== d') . fst) (bimap turn90 (+ 1)) (d, 0)

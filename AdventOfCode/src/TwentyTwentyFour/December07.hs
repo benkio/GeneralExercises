@@ -27,7 +27,7 @@ testEq ops (E{test = t, terms = ts}) = elem t $ computeTerms ops ts
 computeTerms :: [Operator] -> [Int] -> [Int]
 computeTerms _ [] = error "shouldn't happen"
 computeTerms _ [a] = [a]
-computeTerms ops (a : b : xs) = ops >>= (\ x -> computeTerms ops (x : xs)) . (\ o -> o a b)
+computeTerms ops (a : b : xs) = ops >>= (\x -> computeTerms ops (x : xs)) . (\o -> o a b)
 
 testInput :: [Equation]
 testInput =
@@ -49,8 +49,9 @@ december07Solution1 :: IO Int
 december07Solution1 = solution operators <$> input
 
 operators' :: [Operator]
-operators' = concatOp:operators
-  where concatOp x y = read (show x ++ show y) :: Int
+operators' = concatOp : operators
+  where
+    concatOp x y = read (show x ++ show y) :: Int
 
 december07Solution2 :: IO Int
 december07Solution2 = solution operators' <$> input

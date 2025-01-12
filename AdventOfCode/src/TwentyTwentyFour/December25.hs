@@ -22,4 +22,3 @@ solution2 = undefined
 
 december25Solution2 :: IO Int
 december25Solution2 = solution2 <$> input
-

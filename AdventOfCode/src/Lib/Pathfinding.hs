@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module Lib.Pathfinding (Node (..), mapToPaths, pathToCoord, minimumSteps, defaultMapToPaths) where
 
 import Text.Printf (printf)
@@ -55,7 +53,7 @@ mapToPaths (sc, v) direction extraNodeF scoreNodeF discardNodeByScoreF keepNextN
         filterNext =
             filter
                 ( \(n', tot, _) ->
-                    (nc n' /= c && (maybe True (keepNextNodeByScoreF tot) (visitedScoreMap' !? nc n')))
+                    (nc n' /= c && maybe True (keepNextNodeByScoreF tot) (visitedScoreMap' !? nc n'))
                         || (nc n' == c && keepNextNodeByScoreF tot currentTot)
                 )
         sortByDistanceToTarget =
@@ -83,11 +81,11 @@ searchTreeBranches c dir tot extraNodeF prev ms =
         $ findBranches c dir extraNodeF ms
 
 pathToCoord :: [Node a] -> Map Coord a -> (Coord -> a -> Bool) -> [Coord]
-pathToCoord ns ms extraNodeF = ((nc . head) ns:) . foldl foldNodes [] $ zip ns (tail ns)
+pathToCoord ns ms extraNodeF = ((nc . head) ns :) . foldl foldNodes [] $ zip ns (tail ns)
   where
     branch n n' =
         head
-            . filter (\cs -> ((== (nc n')) . last) cs && length cs == distanceFromParent n')
+            . filter (\cs -> ((== nc n') . last) cs && length cs == distanceFromParent n')
             . fmap (fmap (\(c, _, _, _) -> c))
             $ findBranchesFull (nc n) (direction n) extraNodeF ms
     foldNodes acc (n, n') =
@@ -100,7 +98,7 @@ defaultMapToPaths :: (Show a) => (Coord, a) -> Coord -> Map Coord a -> [[Node a]
 defaultMapToPaths start endCoord = mapToPaths start East endCondition scoreF discardNodeByScoreF keepNextNodeByScoreF sortNodesF
   where
     endCondition c _ = c == endCoord
-    scoreF = (\(a, b) -> a + b) . manhattanDistance endCoord . nc
+    scoreF = uncurry (+) . manhattanDistance endCoord . nc
     discardNodeByScoreF currScore prevScore = currScore < prevScore
     keepNextNodeByScoreF nextScore currScore = nextScore < currScore
     sortNodesF (node, score) = score

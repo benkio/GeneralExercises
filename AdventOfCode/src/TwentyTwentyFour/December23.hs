@@ -1,9 +1,11 @@
 module TwentyTwentyFour.December23 where
 
 import Control.Arrow (second)
-import Data.List (isPrefixOf)
-import Data.Map (keys)
-import Lib.Graph (fromConnectionList, nextPaths, uniqueConnectedPathOfLength, uniquePathOfLength)
+import Data.List (intercalate, isPrefixOf, maximumBy)
+import Data.Map (Map, empty, keys, (!?))
+import Data.Maybe (mapMaybe)
+import Data.Ord (comparing)
+import Lib.Graph (fromConnectionList, longestConnectedPath, nextPaths, uniqueConnectedPathOfLength, uniquePathOfLength)
 
 input :: IO [(String, String)]
 input = parseInput <$> readFile "input/2024/December23.txt"
@@ -56,8 +58,19 @@ solution1 x = length $ uniqueConnectedPathOfLength 3 i m
 december23Solution1 :: IO Int
 december23Solution1 = solution1 <$> input
 
-solution2 :: [(String, String)] -> Int
-solution2 = undefined
+test s i = longestConnectedPath [s] m empty
+  where
+    m = fromConnectionList testInput
 
-december23Solution2 :: IO Int
+test' = test "co" testInput
+test'' s = test s <$> input
+
+solution2 :: [(String, String)] -> String
+solution2 x = intercalate "," . maximumBy (comparing length) $ mapMaybe (longest !?) ks
+  where
+    m = fromConnectionList x
+    ks = (: []) <$> keys m
+    longest = foldl (\r k -> longestConnectedPath k m r) empty ks
+
+december23Solution2 :: IO String
 december23Solution2 = solution2 <$> input

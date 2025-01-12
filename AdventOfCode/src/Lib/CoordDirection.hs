@@ -8,10 +8,8 @@ import Data.Map (Map, toList, (!?))
 import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
 import Debug.Trace
 import Lib.Coord (Coord)
-import Text.Printf (printf)
-
-import Lib.Coord (Coord)
 import Lib.Direction (Direction (..), turn180, turnsToDirection)
+import Text.Printf (printf)
 
 {-
   Given a:

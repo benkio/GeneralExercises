@@ -12,7 +12,7 @@ import Data.Tree (Tree, drawTree, foldTree)
 import Data.Void
 import Debug.Trace
 import Lib.Coord (Coord, manhattanDistance)
-import Lib.CoordMap (findBranches,findCardinalNeighboors)
+import Lib.CoordMap (findBranches, findCardinalNeighboors)
 import Lib.Direction (Direction (..), turnsToDirection)
 import Lib.Parse (parseGridWithElemSelection)
 import Lib.Pathfinding (Node (..), mapToPaths, pathToCoord)
@@ -35,7 +35,7 @@ parseInput = fromList . fst . parseGridWithElemSelection parseReindeerMap
 detectEnd _ endValue = endValue == E
 filterNode currentScore prevScore = prevScore + 1000 < currentScore
 filterNextNode nextScore prevScore = nextScore < (prevScore + 1000)
-sortNodesF (_,score) = score
+sortNodesF (_, score) = score
 
 buildPaths :: (Coord, Terrain) -> Coord -> ReindeerMap -> [[Node Terrain]]
 buildPaths startingPoint target = mapToPaths startingPoint East detectEnd calculateScore filterNode filterNextNode sortNodesF
