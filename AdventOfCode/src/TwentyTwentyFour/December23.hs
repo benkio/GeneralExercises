@@ -48,11 +48,10 @@ testInput =
         \td-yn\n"
 
 solution1 :: [(String, String)] -> Int
-solution1 x = length . filter containsTPC $ uniqueConnectedPathOfLength 3 i m
+solution1 x = length $ uniqueConnectedPathOfLength 3 i m
   where
     m = fromConnectionList x
-    i = (: []) <$> keys m
-    containsTPC xs = any ("t" `isPrefixOf`) xs
+    i = (: []) <$> (filter ("t" `isPrefixOf`) . keys) m
 
 december23Solution1 :: IO Int
 december23Solution1 = solution1 <$> input

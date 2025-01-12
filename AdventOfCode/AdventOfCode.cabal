@@ -25,6 +25,7 @@ library
       Lib.CoordMap
       Lib.CoordMove
       Lib.Direction
+      Lib.Graph
       Lib.List
       Lib.Map
       Lib.Math
