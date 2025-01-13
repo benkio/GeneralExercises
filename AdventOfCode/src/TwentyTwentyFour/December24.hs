@@ -1,7 +1,14 @@
+{-# LANGUAGE TupleSections #-}
+
 module TwentyTwentyFour.December24 where
 
+import Lib.Bit (fromBaseBit)
+
 import Data.Bifunctor (bimap)
-import Data.Map (Map, fromList, (!?), insert)
+import Data.Map (Map, fromList, insert, size, (!?))
+import Data.Maybe (fromJust, fromMaybe, isNothing)
+import Debug.Trace
+import Text.Printf (printf)
 
 type Wires = Map String Int
 data Op = AND | OR | XOR deriving (Show, Read)
@@ -17,8 +24,38 @@ data Device = Device
     }
     deriving (Show)
 
+runDevice :: Device -> Device
+runDevice =
+    until
+        (null . gates)
+        runDeviceSingle
+  where
+
+runDeviceSingle :: Device -> Device
+runDeviceSingle (Device{wires = ws, gates = gs}) =
+    Device{wires = ws', gates = gs'}
+  where
+    (ws', gs') = foldl evolveWires (ws, []) gs
+    evolveWires :: (Wires, [Gate]) -> Gate -> (Wires, [Gate])
+    evolveWires (ws, acc) g = maybe (ws, acc ++ [g]) (,acc) $ executeGate ws g
+
+executeGate :: Wires -> Gate -> Maybe Wires
+executeGate ws (Gate{inputWires = (w1, w2), outputWire = ow, op = o}) = do
+    w1v <- ws !? w1
+    w2v <- ws !? w2
+    let ov = opToFun o w1v w2v
+    return $ insert ow ov ws
+
+extractZValue :: Wires -> Int
+extractZValue ws = result
+  where
+    toZKey :: Wires -> Int -> Maybe Int
+    toZKey m = (m !?) . printf "z%02d"
+    result =
+        fromBaseBit 2 . snd $ until (\(i, _) -> isNothing (toZKey ws i)) (\(i, acc) -> (i + 1, fromJust (toZKey ws i) : acc)) (0, [])
+
 solution1 :: Device -> Int
-solution1 = undefined
+solution1 = extractZValue . wires . runDevice
 
 december24Solution1 :: IO Int
 december24Solution1 = solution1 <$> input
@@ -28,14 +65,6 @@ solution2 = undefined
 
 december24Solution2 :: IO Int
 december24Solution2 = solution2 <$> input
-
-
-executeGate :: Wires -> Gate -> Maybe Wires
-executeGate ws (Gate{inputWires = (w1, w2), outputWire = ow, op = o}) = do
-    w1v <- ws !? w1
-    w2v <- ws !? w1
-    let ov = opToFun o w1v w2v
-    return $ insert ow ov ws
 
 -- Transformations --------------------------------------
 
