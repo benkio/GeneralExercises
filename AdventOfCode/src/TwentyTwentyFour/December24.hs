@@ -39,11 +39,19 @@ findFullAdder gs (x, y) c = do
     or <- maybe (Left (ha2c, ha1c)) (Right) $ find' (\g -> op g == OR && (inputWires g == (ha2c, ha1c) || inputWires g == (ha1c, ha2c))) gs
     return (ha2v, outputWire or)
 
+findFullNAdder :: Device -> Either (String,String) (String, String)
+findFullNAdder (Device {gates = gs}) = undefined
+
+maxZ :: Device -> Int
+maxZ = maximum . (mapMaybe (fmap (\x -> read x :: Int) . ("z" `stripPrefix`) . outputWire)) . gates
+
 test =
-    input <&> \i -> do
-        (ha1v, ha1c) <- findHalfAdder (gates i) ("x00", "y00")
-        (fa1v, fa1c) <- findFullAdder (gates i) ("x01", "y01") ha1c
-        return (fa1v, fa1c)
+    input <&> \i ->
+                maxZ i
+                -- do
+        -- (ha1v, ha1c) <- findHalfAdder (gates i) ("x00", "y00")
+        -- (fa1v, fa1c) <- findFullAdder (gates i) ("x01", "y01") ha1c
+        -- return (fa1v, fa1c)
 
 runDevice :: Device -> Device
 runDevice =
