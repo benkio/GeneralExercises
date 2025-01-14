@@ -2,27 +2,48 @@
 
 module TwentyTwentyFour.December24 where
 
-import Lib.Bit (fromBaseBit)
-
 import Data.Bifunctor (bimap)
+import Data.Functor ((<&>))
 import Data.Map (Map, fromList, insert, size, (!?))
 import Data.Maybe (fromJust, fromMaybe, isNothing)
 import Debug.Trace
+import Lib.Bit (fromBaseBit)
+import Lib.List (find')
 import Text.Printf (printf)
 
 type Wires = Map String Int
-data Op = AND | OR | XOR deriving (Show, Read)
+data Op = AND | OR | XOR deriving (Show, Read, Eq)
 data Gate = Gate
     { inputWires :: (String, String)
     , outputWire :: String
     , op :: Op
     }
+    deriving (Eq)
 
 data Device = Device
     { wires :: Wires
     , gates :: [Gate]
     }
     deriving (Show)
+
+findHalfAdder :: [Gate] -> (String, String) -> Maybe (String, String)
+findHalfAdder gs (x, y) = do
+    xor <- find' (\g -> op g == XOR && (inputWires g == (x, y) || inputWires g == (y, x))) gs
+    and <- find' (\g -> op g == AND && (inputWires g == (x, y) || inputWires g == (y, x))) gs
+    return (outputWire xor, outputWire and)
+
+findFullAdder :: [Gate] -> (String, String) -> String -> Maybe (String, String)
+findFullAdder gs (x, y) c = do
+    (ha1v, ha1c) <- findHalfAdder gs (x, y)
+    (ha2v, ha2c) <- findHalfAdder gs (c, ha1v)
+    or <- find' (\g -> op g == OR && (inputWires g == (ha2c, ha1c) || inputWires g == (ha1c, ha2c))) gs
+    return (ha2v, outputWire or)
+
+test =
+    input <&> \i -> do
+        (ha1v, ha1c) <- findHalfAdder (gates i) ("x00", "y00")
+        (fa1v, fa1c) <- findFullAdder (gates i) ("x01", "y01") ha1c
+        return (fa1v, fa1c)
 
 runDevice :: Device -> Device
 runDevice =
