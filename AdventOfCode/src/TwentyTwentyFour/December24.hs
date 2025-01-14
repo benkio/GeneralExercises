@@ -2,7 +2,7 @@
 
 module TwentyTwentyFour.December24 where
 
-import Data.Bifunctor (bimap)
+import Data.Bifunctor (bimap, second)
 import Data.Functor ((<&>))
 import Data.Map (Map, fromList, insert, size, (!?))
 import Data.Maybe (fromJust, fromMaybe, isNothing)
@@ -26,17 +26,17 @@ data Device = Device
     }
     deriving (Show)
 
-findHalfAdder :: [Gate] -> (String, String) -> Maybe (String, String)
-findHalfAdder gs (x, y) = do
+findHalfAdder :: [Gate] -> (String, String) -> Either (String,String) (String, String)
+findHalfAdder gs (x, y) = maybe (Left (x,y)) (Right) $ do
     xor <- find' (\g -> op g == XOR && (inputWires g == (x, y) || inputWires g == (y, x))) gs
     and <- find' (\g -> op g == AND && (inputWires g == (x, y) || inputWires g == (y, x))) gs
     return (outputWire xor, outputWire and)
 
-findFullAdder :: [Gate] -> (String, String) -> String -> Maybe (String, String)
+findFullAdder :: [Gate] -> (String, String) -> String -> Either (String,String) (String, String)
 findFullAdder gs (x, y) c = do
     (ha1v, ha1c) <- findHalfAdder gs (x, y)
     (ha2v, ha2c) <- findHalfAdder gs (c, ha1v)
-    or <- find' (\g -> op g == OR && (inputWires g == (ha2c, ha1c) || inputWires g == (ha1c, ha2c))) gs
+    or <- maybe (Left (ha2c, ha1c)) (Right) $ find' (\g -> op g == OR && (inputWires g == (ha2c, ha1c) || inputWires g == (ha1c, ha2c))) gs
     return (ha2v, outputWire or)
 
 test =
