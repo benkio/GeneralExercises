@@ -2,10 +2,11 @@
 
 module TwentyTwentyFour.December24 where
 
+import Data.List (stripPrefix, maximum)
 import Data.Bifunctor (bimap, second)
 import Data.Functor ((<&>))
 import Data.Map (Map, fromList, insert, size, (!?))
-import Data.Maybe (fromJust, fromMaybe, isNothing)
+import Data.Maybe (fromJust, fromMaybe, isNothing, mapMaybe)
 import Debug.Trace
 import Lib.Bit (fromBaseBit)
 import Lib.List (find')
