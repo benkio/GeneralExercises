@@ -2,12 +2,13 @@
 
 module TwentyTwentyFour.December24 where
 
-import Data.List (stripPrefix, maximum)
 import Data.Bifunctor (bimap, second)
+import Data.Either (fromLeft)
 import Data.Functor ((<&>))
+import Data.List (intercalate, maximum, sort, stripPrefix)
 import Data.Map (Map, fromList, insert, size, (!?))
 import Data.Maybe (fromJust, fromMaybe, isNothing, mapMaybe)
-import Debug.Trace
+import GHC.Data.Maybe (expectJust, firstJusts)
 import Lib.Bit (fromBaseBit)
 import Lib.List (find')
 import Text.Printf (printf)
@@ -27,39 +28,86 @@ data Device = Device
     }
     deriving (Show)
 
-findHalfAdder :: [Gate] -> (String, String) -> Either (String,String) (String, String)
-findHalfAdder gs (x, y) = maybe (Left (x,y)) (Right) $ do
-    xor <- find' (\g -> op g == XOR && (inputWires g == (x, y) || inputWires g == (y, x))) gs
-    and <- find' (\g -> op g == AND && (inputWires g == (x, y) || inputWires g == (y, x))) gs
+findHalfAdder :: [Gate] -> (String, String) -> Either (String, String) (String, String)
+findHalfAdder gs (x, y) = do
+    xor <- maybe (Left (findErrorGate gs (x, y) XOR)) Right $ searchGate (x, y) XOR gs
+    and <- maybe (Left (findErrorGate gs (x, y) AND)) Right $ searchGate (x, y) AND gs
     return (outputWire xor, outputWire and)
 
-findFullAdder :: [Gate] -> (String, String) -> String -> Either (String,String) (String, String)
+findFullAdder :: [Gate] -> (String, String) -> String -> Either (String, String) (String, String)
 findFullAdder gs (x, y) c = do
     (ha1v, ha1c) <- findHalfAdder gs (x, y)
     (ha2v, ha2c) <- findHalfAdder gs (c, ha1v)
-    or <- maybe (Left (ha2c, ha1c)) (Right) $ find' (\g -> op g == OR && (inputWires g == (ha2c, ha1c) || inputWires g == (ha1c, ha2c))) gs
+    or <- maybe (Left (findErrorGate gs (ha2c, ha1c) OR)) Right $ searchGate (ha2c, ha1c) OR gs
     return (ha2v, outputWire or)
 
-findFullNAdder :: Device -> Either (String,String) (String, String)
-findFullNAdder (Device {gates = gs}) = undefined
+searchGate :: (String, String) -> Op -> [Gate] -> Maybe Gate
+searchGate (x, y) o = find' (\g -> op g == o && (inputWires g == (x, y) || inputWires g == (y, x)))
+
+findErrorGate :: [Gate] -> (String, String) -> Op -> (String, String)
+findErrorGate gs (x, y) o =
+    gateToFixedWiring (x, y)
+        . expectJust (printf "[findErrorGate]: can't find a gate to fix %s - %s" (show (x, y)) (show o))
+        . firstJusts
+        $ [searchGateSingle x o gs, searchGateSingle y o gs]
+  where
+    searchGateSingle :: String -> Op -> [Gate] -> Maybe Gate
+    searchGateSingle i o = find' (\g -> op g == o && ((fst . inputWires) g == i || (snd . inputWires) g == i))
+    gateToFixedWiring :: (String, String) -> Gate -> (String, String)
+    gateToFixedWiring (x, y) (Gate{inputWires = (x', y')})
+        | x == x' = (y, y')
+        | x == y' = (x', y)
+        | y == x' = (x, y')
+        | y == y' = (x, x')
+
+findFullNAdder :: Device -> Either (String, String) (String, String)
+findFullNAdder d@(Device{gates = gs}) = fst $ foldl foldAdder (findHalfAdder gs ("x00", "y00"), 0) adder
+  where
+    mz = maxZ d
+    adder = replicate (mz - 1) (findFullAdder gs)
+    foldAdder ::
+        (Either (String, String) (String, String), Int) ->
+        ((String, String) -> String -> Either (String, String) (String, String)) ->
+        (Either (String, String) (String, String), Int)
+    foldAdder (acc, i) fa =
+        let
+            xN = printf "x%02d" (i + 1)
+            yN = printf "y%02d" (i + 1)
+         in
+            (acc >>= \(_, c) -> fa (xN, yN) c, i + 1)
+
+replaceOutputWire :: Gate -> String -> String -> Gate
+replaceOutputWire g@(Gate{outputWire = ow}) start end
+    | ow == start = g{outputWire = end}
+    | ow == end = g{outputWire = start}
+    | otherwise = g{outputWire = ow}
+
+swapWires :: Device -> (String, String) -> Device
+swapWires d@(Device{gates = gs}) (x, y) =
+    d{gates = foldl fixGates [] gs}
+  where
+    fixGates acc g =
+        acc ++ [replaceOutputWire g x y]
+    xGates = filter (\g -> (fst . inputWires) g == x || (snd . inputWires) g == x || outputWire g == x) gs
+    yGates = filter (\g -> (fst . inputWires) g == y || (snd . inputWires) g == y || outputWire g == y) gs
+
+fixDevice :: Device -> ([String], Device)
+fixDevice = go 4
+  where
+    go 0 d = ([], d)
+    go n d =
+        let (start, end) = fromLeft (error "expected Left got Right") $ findFullNAdder d
+            (swaps, d') = go (n - 1) $ swapWires d (start, end)
+         in (swaps ++ [start, end], d')
 
 maxZ :: Device -> Int
-maxZ = maximum . (mapMaybe (fmap (\x -> read x :: Int) . ("z" `stripPrefix`) . outputWire)) . gates
-
-test =
-    input <&> \i ->
-                maxZ i
-                -- do
-        -- (ha1v, ha1c) <- findHalfAdder (gates i) ("x00", "y00")
-        -- (fa1v, fa1c) <- findFullAdder (gates i) ("x01", "y01") ha1c
-        -- return (fa1v, fa1c)
+maxZ = maximum . mapMaybe (fmap (\x -> read x :: Int) . ("z" `stripPrefix`) . outputWire) . gates
 
 runDevice :: Device -> Device
 runDevice =
     until
         (null . gates)
         runDeviceSingle
-  where
 
 runDeviceSingle :: Device -> Device
 runDeviceSingle (Device{wires = ws, gates = gs}) =
@@ -90,10 +138,10 @@ solution1 = extractZValue . wires . runDevice
 december24Solution1 :: IO Int
 december24Solution1 = solution1 <$> input
 
-solution2 :: Device -> Int
-solution2 = undefined
+solution2 :: Device -> String
+solution2 = intercalate "," . sort . fst . fixDevice
 
-december24Solution2 :: IO Int
+december24Solution2 :: IO String
 december24Solution2 = solution2 <$> input
 
 -- Transformations --------------------------------------
@@ -119,7 +167,7 @@ input :: IO Device
 input = parseInput <$> readFile "input/2024/December24.txt"
 
 parseInput :: String -> Device
-parseInput = (\(ws, gs) -> Device{wires = ws, gates = gs}) . bimap (parseWires) (parseGates . tail) . break (== "") . lines
+parseInput = (\(ws, gs) -> Device{wires = ws, gates = gs}) . bimap parseWires (parseGates . tail) . break (== "") . lines
   where
     parseWires :: [String] -> Wires
     parseWires = fromList . fmap parseWire
