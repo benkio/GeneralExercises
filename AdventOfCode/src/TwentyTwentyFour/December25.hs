@@ -1,24 +1,74 @@
 module TwentyTwentyFour.December25 where
 
-input :: IO a
+import Data.Bifunctor (bimap)
+import Data.List (transpose)
+import Data.List.Split (splitWhen)
+import Debug.Trace
+import Lib.List (pairs, pairsWith)
+
+type Keylock = [String]
+
+input :: IO [Keylock]
 input = parseInput <$> readFile "input/2024/December25.txt"
 
-parseInput :: String -> a
-parseInput = undefined
+parseInput :: String -> [Keylock]
+parseInput = fmap parseKeylock . splitWhen (== "") . lines -- . splitOn "\n"
+  where
+    parseKeylock :: [String] -> Keylock
+    parseKeylock =
+        -- fmap (\xs -> (break (/=head xs)) xs) .
+        transpose
 
-testInput :: a
+testInput :: [Keylock]
 testInput =
     parseInput
-        ""
+        "#####\n\
+        \.####\n\
+        \.####\n\
+        \.####\n\
+        \.#.#.\n\
+        \.#...\n\
+        \.....\n\
+        \\n\
+        \#####\n\
+        \##.##\n\
+        \.#.##\n\
+        \...##\n\
+        \...#.\n\
+        \...#.\n\
+        \.....\n\
+        \\n\
+        \.....\n\
+        \#....\n\
+        \#....\n\
+        \#...#\n\
+        \#.#.#\n\
+        \#.###\n\
+        \#####\n\
+        \\n\
+        \.....\n\
+        \.....\n\
+        \#.#..\n\
+        \###..\n\
+        \###.#\n\
+        \###.#\n\
+        \#####\n\
+        \\n\
+        \.....\n\
+        \.....\n\
+        \.....\n\
+        \#....\n\
+        \#.#..\n\
+        \#.#.#\n\
+        \#####\n"
 
-solution1 :: a -> Int
-solution1 = undefined
+keyLockMatch :: Keylock -> Keylock -> Bool
+keyLockMatch [] [] = True
+keyLockMatch (k : ks) (l : ls) =
+    all (\(x, y) -> (x == '.' && y == '.') || x /= y) (zip k l) && keyLockMatch ks ls
+
+solution1 :: [Keylock] -> Int
+solution1 = length . filter (uncurry keyLockMatch) . pairs
 
 december25Solution1 :: IO Int
 december25Solution1 = solution1 <$> input
-
-solution2 :: a -> Int
-solution2 = undefined
-
-december25Solution2 :: IO Int
-december25Solution2 = solution2 <$> input
