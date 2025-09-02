@@ -167,3 +167,31 @@ function deleteFiles(files) {
     )
     .catch((err) => console.log("err deleting all files: ", err));
 }
+
+// Event-Driven Programming ///////////////////////////////////////////////////
+
+const EventEmitter = require("node:events");
+class MyEmitter extends EventEmitter {}
+const eventEmitter = new MyEmitter();
+
+const eventHandler = () => {
+  console.log(`userJoined received event!`);
+};
+const eventHandler1 = () => {
+  console.log(`Hello joined user`);
+};
+const eventHandler2 = () => {
+  console.log(`Enjoy your stay`);
+};
+
+eventEmitter.on("userJoined", eventHandler);
+eventEmitter.on("userJoined", eventHandler1);
+eventEmitter.on("userJoined", eventHandler2);
+eventEmitter.emit("userJoined");
+
+const happyBirthdayWishes = (name, age) => {
+  console.log(`Happy ${age} birthday ${name}`);
+};
+
+eventEmitter.on("birthdayEvent", happyBirthdayWishes);
+eventEmitter.emit("birthdayEvent", "benkio", 36);
