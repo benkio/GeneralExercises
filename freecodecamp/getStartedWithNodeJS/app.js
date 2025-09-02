@@ -195,3 +195,39 @@ const happyBirthdayWishes = (name, age) => {
 
 eventEmitter.on("birthdayEvent", happyBirthdayWishes);
 eventEmitter.emit("birthdayEvent", "benkio", 36);
+
+// HTTP Module ////////////////////////////////////////////////////////////////
+
+const http = require("http");
+const server = http.createServer((req, res) => {
+  switch (req.url) {
+    case "/":
+      res.writeHeader(200, { "content-type": `text/html` });
+      res.write(`<h1>Home Page<h1>`);
+      res.end();
+      break;
+    case "/about":
+      res.writeHeader(200, { "content-type": `text/html` });
+      res.write(`<h1>About Hello World!<h1>`);
+      res.end();
+      break;
+    case "/test":
+      res.writeHeader(200, { "content-type": `text/html` });
+      res.write(`<h1>Test Hello World!<h1>`);
+      res.end();
+      break;
+    case "/benkio":
+      res.writeHeader(200, { "content-type": `text/html` });
+      res.write(`<h1>Benkio Hello World!<h1>`);
+      res.end();
+      break;
+    default:
+      res.writeHeader(404, { "content-type": `text/html` });
+      res.write(`<h1>404 Content Not Found!<h1>`);
+      res.write(`<a href="/">Go Back<h1>`);
+      res.end();
+  }
+});
+server.listen(8000, () => {
+  console.log(`Server Successfully Created. Listening at port: 8000`);
+});
