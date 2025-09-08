@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http = require("node:http");
 const node_fs_1 = require("node:fs");
 const node_util_1 = require("node:util");
+const path = require("node:path");
 function fileToResponse(res, filePromise, statusCode = 200) {
     return filePromise
         .then(data => {
@@ -16,14 +17,14 @@ function fileToResponse(res, filePromise, statusCode = 200) {
         return res;
     });
 }
-const index = (0, node_util_1.promisify)(node_fs_1.readFile)('./pages/index.html', {
+const index = (0, node_util_1.promisify)(node_fs_1.readFile)(path.resolve(__dirname, './pages/index.html'), {
     encoding: 'utf8',
 });
-const about = (0, node_util_1.promisify)(node_fs_1.readFile)('./pages/about.html', {
+const about = (0, node_util_1.promisify)(node_fs_1.readFile)(path.resolve(__dirname, './pages/about.html'), {
     encoding: 'utf8',
 });
-const contactMe = (0, node_util_1.promisify)(node_fs_1.readFile)('./pages/contact-me.html', { encoding: 'utf8' });
-const notFound = (0, node_util_1.promisify)(node_fs_1.readFile)('./pages/404.html', {
+const contactMe = (0, node_util_1.promisify)(node_fs_1.readFile)(path.resolve(__dirname, './pages/contact-me.html'), { encoding: 'utf8' });
+const notFound = (0, node_util_1.promisify)(node_fs_1.readFile)(path.resolve(__dirname, './pages/404.html'), {
     encoding: 'utf8',
 });
 // Create a local server to receive data from
@@ -49,9 +50,7 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(500);
         res.end(`An error occurred when fetching the files ${err}`);
     }
-    finally {
-        return res;
-    }
+    return res;
 });
 const port = 8000;
 console.log(`Running Server at ${port}`);

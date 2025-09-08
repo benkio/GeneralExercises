@@ -2,6 +2,7 @@ import {ServerResponse} from 'node:http';
 import * as http from 'node:http';
 import {readFile} from 'node:fs';
 import {promisify} from 'node:util';
+import * as path from 'node:path';
 
 function fileToResponse(
   res: ServerResponse,
@@ -21,19 +22,28 @@ function fileToResponse(
     });
 }
 
-const index: Promise<string> = promisify(readFile)('./pages/index.html', {
-  encoding: 'utf8',
-});
-const about: Promise<string> = promisify(readFile)('./pages/about.html', {
-  encoding: 'utf8',
-});
+const index: Promise<string> = promisify(readFile)(
+  path.resolve(__dirname, '../pages/index.html'),
+  {
+    encoding: 'utf8',
+  },
+);
+const about: Promise<string> = promisify(readFile)(
+  path.resolve(__dirname, '../pages/about.html'),
+  {
+    encoding: 'utf8',
+  },
+);
 const contactMe: Promise<string> = promisify(readFile)(
-  './pages/contact-me.html',
+  path.resolve(__dirname, '../pages/contact-me.html'),
   {encoding: 'utf8'},
 );
-const notFound: Promise<string> = promisify(readFile)('./pages/404.html', {
-  encoding: 'utf8',
-});
+const notFound: Promise<string> = promisify(readFile)(
+  path.resolve(__dirname, '../pages/404.html'),
+  {
+    encoding: 'utf8',
+  },
+);
 // Create a local server to receive data from
 const server = http.createServer(async (req, res) => {
   let promiseResponse: Promise<ServerResponse> = Promise.resolve(res);
