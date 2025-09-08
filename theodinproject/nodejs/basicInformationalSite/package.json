@@ -1,4 +1,10 @@
 {
+  "name": "basic-informational-site",
+  "version": "1.0.0",
+  "description": "Project for https://www.theodinproject.com/lessons/nodejs-basic-informational-site",
+  "main": "./build/src/index.js",
+  "author": "Enrico Benini",
+  "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.7.5",
     "gts": "^6.0.2",
