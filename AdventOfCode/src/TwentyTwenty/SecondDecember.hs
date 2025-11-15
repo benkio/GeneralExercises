@@ -4,7 +4,8 @@
 module TwentyTwenty.SecondDecember (
     solution1,
     solution2,
-) where
+)
+where
 
 import Data.Maybe (fromJust, isJust, mapMaybe)
 

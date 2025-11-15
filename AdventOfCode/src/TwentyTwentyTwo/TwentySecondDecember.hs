@@ -13,8 +13,11 @@ import Data.Maybe (fromJust, fromMaybe, isJust, listToMaybe, mapMaybe, maybeToLi
 import Text.Printf
 
 data Field = Empty | Wall deriving (Eq, Show)
+
 type Position = (Int, Int)
+
 data Move = ML | MR | M Int deriving (Eq, Show)
+
 data Direction = R | D | L | U deriving (Show, Eq, Ord)
 
 directionPassword :: Direction -> Int
@@ -63,6 +66,7 @@ wrapPos mf _ p U = maybe ((fst p, (snd . (`colBounds` mf) . fst) p), U) (const (
 
 rowBounds :: Int -> Map Position Field -> (Int, Int)
 rowBounds row = (minimum &&& maximum) . fmap fst . filter ((== row) . snd) . keys
+
 colBounds :: Int -> Map Position Field -> (Int, Int)
 colBounds col = (minimum &&& maximum) . fmap snd . filter ((== col) . fst) . keys
 
@@ -80,8 +84,11 @@ twentySecondDecemberSolution1 = (\(mf, ms) -> solution (wrapPos mf) mf ms) <$> i
 data AnglePosition = TL | TR | BL | BR
 
 data Vertex = Vertex {v1 :: Position, v2 :: Position, v3 :: Position} | IncompleteVertex {v1 :: Position, v2 :: Position} deriving (Show)
+
 newtype Face = Face {angles :: [Position]} deriving (Show)
+
 data Cube = Cube {faces :: [Face], vertexes :: [Vertex]} deriving (Show)
+
 data CompleteFace = CompleteFace
     { tl :: (Position, Vertex)
     , tr :: (Position, Vertex)
@@ -89,6 +96,7 @@ data CompleteFace = CompleteFace
     , bl :: (Position, Vertex)
     }
     deriving (Show)
+
 data CompleteCube = CompleteCube
     { front :: CompleteFace
     , back :: CompleteFace
@@ -101,21 +109,28 @@ data CompleteCube = CompleteCube
 
 instance Eq Face where
     (==) f1 f2 = all (`elem` angles f2) (angles f1) && all (`elem` angles f1) (angles f2)
+
 instance Eq Vertex where
     (==) v1 v2 = all (`elem` vertexToPos v2) (vertexToPos v1) && all (`elem` vertexToPos v1) (vertexToPos v2)
 
 vertexToPos (Vertex{v1 = v', v2 = v'', v3 = v'''}) = [v', v'', v''']
 vertexToPos (IncompleteVertex{v1 = v', v2 = v''}) = [v', v'']
+
 vertexIsIncomplete (IncompleteVertex{}) = True
 vertexIsIncomplete _ = False
+
 findKey :: Map Position Field -> Position -> Maybe Position
 findKey mf k = (mf !? k) $> k
+
 completeFaceAngles cf = [(fst . tl) cf, (fst . tr) cf, (fst . br) cf, (fst . bl) cf]
+
 completeFaceVertexes cf = [(snd . tl) cf, (snd . tr) cf, (snd . br) cf, (snd . bl) cf]
+
 completeFaceEdges = genEdges . completeFaceAngles
   where
     genEdges [] = []
     genEdges ((x, y) : xs) = (fmap (\(x', y') -> [(a, b) | a <- [min x x' .. max x x'], b <- [min y y' .. max y y']]) . filter (\(x', y') -> x == x' || y == y')) xs ++ genEdges xs
+
 completeCubeFaces c = [front c, top c, right c, bottom c, left c, back c]
 
 mergeIncompleteVertexes cvs [] = cvs
@@ -308,6 +323,7 @@ test = solution (wrapPosCube completeCube mf) mf ms
     cube = (\cs -> mergeCubes (head cs) (tail cs)) $ buildPartialCubes mf faceSize
     cfront = completeFace cube (head (faces cube))
     completeCube = connectFaces cube cfront
+
 test2 = do
     (mf, ms) <- input
     let faceSize = 50

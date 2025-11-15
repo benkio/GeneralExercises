@@ -53,16 +53,20 @@ mapStoneClassify m = (zeros, r2map, r3map)
 
 rule1Check :: String -> Bool
 rule1Check = (== "0")
+
 rule2 :: String -> (String, String)
 rule2 s =
     fmap (\xs -> if null xs then "0" else xs)
         . bimap (dropWhile (== '0')) (dropWhile (== '0'))
         . splitAt (length s `div` 2)
         $ s
+
 rule2Check :: String -> Bool
 rule2Check s = even (length s) && not (rule1Check s)
+
 rule3 :: String -> String
 rule3 s = show $ 2024 * (read s :: Int)
+
 rule3Check :: String -> Bool
 rule3Check s = all (\f -> not (f s)) [rule1Check, rule2Check]
 

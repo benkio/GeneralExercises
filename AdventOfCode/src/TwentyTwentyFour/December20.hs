@@ -1,7 +1,6 @@
 module TwentyTwentyFour.December20 where
 
 import Data.Bifunctor (bimap, first, second)
-
 import Data.Functor ((<&>))
 import Data.List (minimumBy)
 import Data.Map (Map, fromList, insert, toList, (!?))
@@ -14,6 +13,7 @@ import Lib.Pathfinding (Node (..), defaultMapToPaths, minimumSteps, pathToCoord)
 import Lib.Print (printGridMapDefault)
 
 data ChipField = S | E | Empty deriving (Eq, Ord)
+
 type ChipMap = Map Coord ChipField
 
 instance Show ChipField where
@@ -37,7 +37,9 @@ parseInput =
 
 printInput :: (ChipMap, [(Coord, ChipField)]) -> IO ()
 printInput = putStrLn . printGridMapDefault . fst
+
 printTestInput = printInput testInput
+
 printActualInput = printInput =<< input
 
 startPoint, endPoint :: (ChipMap, [(Coord, ChipField)]) -> (Coord, ChipField)

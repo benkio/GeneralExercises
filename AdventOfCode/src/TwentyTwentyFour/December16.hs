@@ -18,6 +18,7 @@ import Lib.Parse (parseGridWithElemSelection)
 import Lib.Pathfinding (Node (..), mapToPaths, pathToCoord)
 
 data Terrain = S | E | T deriving (Show, Eq)
+
 type ReindeerMap = Map Coord Terrain
 
 input :: IO ReindeerMap
@@ -33,8 +34,11 @@ parseInput = fromList . fst . parseGridWithElemSelection parseReindeerMap
     parseReindeerMap y x 'E' = Just $ Left ((x, y), E)
 
 detectEnd _ endValue = endValue == E
+
 filterNode currentScore prevScore = prevScore + 1000 < currentScore
+
 filterNextNode nextScore prevScore = nextScore < (prevScore + 1000)
+
 sortNodesF (_, score) = score
 
 buildPaths :: (Coord, Terrain) -> Coord -> ReindeerMap -> [[Node Terrain]]
@@ -69,7 +73,9 @@ calculateScoreToNorth (N{distanceFromParent = dist, turnL = tl, turnR = tr, dire
 
 findMinimumScore :: [[Node Terrain]] -> Int
 findMinimumScore = minimum . fmap getPathScore . findEndPaths
+
 getPathScore = sum . fmap calculateScore
+
 findEndPaths :: [[Node Terrain]] -> [[Node Terrain]]
 findEndPaths = filter ((== E) . val . last)
 

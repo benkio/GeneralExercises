@@ -9,6 +9,7 @@ import Data.List.Split (wordsBy)
 import Data.Maybe (isJust, isNothing, mapMaybe)
 
 type Rules = IntMap [Int]
+
 type Updates = [[Int]]
 
 input :: IO (Rules, Updates)
@@ -19,11 +20,9 @@ parseInput = bimap (fromListWith (++) . fmap parseRule) (fmap parseUpdate . tail
   where
     parseRule :: String -> (Int, [Int])
     parseRule s =
-        let
-            start = read (take 2 s) :: Int
+        let start = read (take 2 s) :: Int
             end = ((\x -> read x :: Int) . take 2 . drop 3) s
-         in
-            (start, [end])
+         in (start, [end])
     parseUpdate :: String -> [Int]
     parseUpdate = fmap ((\x -> read x :: Int) . take 2) . wordsBy (== ',')
 

@@ -4,8 +4,6 @@
 
 module TwentyTwentyThree.TwentyThirdDecember where
 
-import Text.Printf (printf)
-
 import Data.List (group, partition, sort)
 import Data.Map (Map, findMax)
 import qualified Data.Map as M (fromList, lookup)
@@ -13,10 +11,14 @@ import Data.Maybe (catMaybes, fromMaybe, isJust)
 import Data.Set (Set)
 import qualified Data.Set as S (empty, filter, fromList, insert, notMember, size, toList)
 import Debug.Trace
+import Text.Printf (printf)
 
 data FieldBlock = Empty | SlopeU | SlopeL | SlopeD | SlopeR deriving (Eq)
+
 type HikeMap = Map (Int, Int) FieldBlock
+
 data Direction = U | D | L | R deriving (Show, Enum, Eq)
+
 data Path = Path
     { visited :: Set (Int, Int)
     , current :: (Int, Int)
@@ -51,25 +53,31 @@ parseInput = M.fromList . concat . zipWith parseLine [0 ..] . lines
 
 startingPath :: Path
 startingPath = Path{visited = S.empty, current = startingPoint, dir = D}
+
 startingPoint :: (Int, Int)
 startingPoint = (1, 0)
+
 endingPoint :: HikeMap -> (Int, Int)
 endingPoint = fst . findMax
 
 nextDirections :: Direction -> [Direction]
 nextDirections d = filter (/= reverseDirection d) $ enumFrom U
+
 reverseDirection :: Direction -> Direction
 reverseDirection U = D
 reverseDirection R = L
 reverseDirection D = U
 reverseDirection L = R
+
 step :: (Int, Int) -> Direction -> (Int, Int)
 step (x, y) U = (x, y - 1)
 step (x, y) D = (x, y + 1)
 step (x, y) L = (x - 1, y)
 step (x, y) R = (x + 1, y)
+
 isNotForest :: (Int, Int) -> HikeMap -> Bool
 isNotForest p hm = isJust $ M.lookup p hm
+
 isNotCounterSlope :: (Int, Int) -> HikeMap -> Direction -> Bool
 isNotCounterSlope p hm U = maybe False (/= SlopeD) (M.lookup p hm)
 isNotCounterSlope p hm D = maybe False (/= SlopeU) (M.lookup p hm)
@@ -161,11 +169,9 @@ buildGraphPath start d hm = go [(start, d)] S.empty
   where
     go [] gs = gs
     go ((current, dir) : cs) gs =
-        let
-            (gs', next) = buildGraphPathsSingle current dir hm
+        let (gs', next) = buildGraphPathsSingle current dir hm
             newgs = filter (`notElem` gs) gs'
-         in
-            if null newgs
+         in if null newgs
                 then go cs gs
                 else go (cs ++ next) (foldl (flip S.insert) gs newgs)
 

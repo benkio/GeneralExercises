@@ -16,6 +16,7 @@ data MachinePart = MP
     deriving (Show)
 
 data Flow = F {fId :: String, checks :: [Check]} deriving (Show)
+
 newtype Check = C (MachinePart -> Maybe String)
 
 instance Show Check where
@@ -123,8 +124,11 @@ data MetaMachinePart = MMP
     , mmp_s :: (Int, Int)
     }
     deriving (Show)
+
 data MetaFlow = MF {mfId :: String, mChecks :: [MetaCheck]} deriving (Show)
+
 data Ior a b = L a | R b | B (a, b)
+
 newtype MetaCheck = MC (MetaMachinePart -> Ior (MetaMachinePart, String) MetaMachinePart)
 
 instance Show MetaCheck where
@@ -201,12 +205,10 @@ parseMetaCheck s
     valueFlow = tail . dropWhile (/= ':') $ s
     metaCheckLogic :: Char -> (MetaMachinePart -> Ior (MetaMachinePart, String) MetaMachinePart)
     metaCheckLogic c mmp =
-        let
-            selector = valueString c s
+        let selector = valueString c s
             (minV, maxV) = metaMachinePartValueFromString selector mmp
             tv = valueCheck c s
-         in
-            buildMetaMachinePart c selector tv (minV, maxV) mmp
+         in buildMetaMachinePart c selector tv (minV, maxV) mmp
     buildMetaMachinePart :: Char -> String -> Int -> (Int, Int) -> MetaMachinePart -> Ior (MetaMachinePart, String) MetaMachinePart
     buildMetaMachinePart '<' selector tv (minV, maxV) mmp =
         case (tv < minV, tv > minV && tv < maxV, tv > maxV) of

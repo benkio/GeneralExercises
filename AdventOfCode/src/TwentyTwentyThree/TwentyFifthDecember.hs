@@ -43,12 +43,10 @@ testInput =
 
 mergeNodes :: Connections -> IO Connections
 mergeNodes cs = do
-    let
-        ns = toList cs
+    let ns = toList cs
     (node1K, node1V) <- (ns !!) <$> randomRIO (0, length ns - 1)
     (node2K, node2V) <- (\k -> (k, fromMaybe (error ("can't find key: " ++ k ++ " - " ++ show cs)) (M.lookup k cs))) . (node1V !!) <$> randomRIO (0, length node1V - 1)
-    let
-        node1K' = node1K ++ ";" ++ node2K
+    let node1K' = node1K ++ ";" ++ node2K
         cs' = (M.map (fmap (\x -> if x == node2K || x == node1K then node1K' else x)) . delete node1K . delete node2K) cs
         node1V' = filter (`notElem` [node1K, node2K]) (node1V ++ node2V)
     return $ insert node1K' node1V' cs'

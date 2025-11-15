@@ -42,17 +42,22 @@ nextCandidate = minimumBy (\g g' -> value g `compare` value g')
 
 getX :: Ground -> Int
 getX = fst . position
+
 getY :: Ground -> Int
 getY = snd . position
+
 getTarget :: Map Position Ground -> Ground
 getTarget = fromJust . find ((== '{') . height) . elems
+
 getStart :: Map Position Ground -> Ground
 getStart = fromJust . find ((== '`') . height) . elems
+
 computeDistance :: Ground -> Ground -> Int
 computeDistance t x = abs x' + abs y'
   where
     x' = getX x - getX t
     y' = getY x - getY t
+
 computeDistance' :: Ground -> Int
 computeDistance' (Ground{distance = d, distanceTraveled = d', height = h}) = d + d' + (fromEnum '{' - fromEnum h) ^ 2
 

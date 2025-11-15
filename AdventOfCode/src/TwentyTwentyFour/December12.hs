@@ -26,6 +26,7 @@ import Lib.List ((\\))
 import Lib.Parse (parseGridWithElemSelection)
 
 type Crop = Char
+
 type Farm = Map Coord Crop
 
 input :: IO Farm

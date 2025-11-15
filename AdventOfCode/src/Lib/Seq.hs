@@ -1,6 +1,7 @@
 module Lib.Seq (
     rotate,
-) where
+)
+where
 
 import Data.Sequence (Seq, cycleTaking)
 import qualified Data.Sequence as S (drop, length)

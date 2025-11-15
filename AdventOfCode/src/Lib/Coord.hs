@@ -10,7 +10,8 @@ module Lib.Coord (
     isCardinalNeighboor,
     isOrdinalNeighboor,
     coordPlus,
-) where
+)
+where
 
 import Data.Functor ((<&>))
 import Data.List (sortOn)
@@ -33,8 +34,10 @@ isOrdinalNeighboor (x, y) c = c `elem` ordinalNeighboors (x, y)
 
 manhattanDistance :: Coord -> Coord -> (Int, Int)
 manhattanDistance (x, y) (a, b) = (abs (x - a), abs (y - b))
+
 manhattanDistanceSigned :: Coord -> Coord -> (Int, Int)
 manhattanDistanceSigned (x, y) (a, b) = (x - a, y - b)
+
 manhattanDistance' :: Coord -> Coord -> Int
 manhattanDistance' c c' = uncurry (+) $ manhattanDistance c c'
 

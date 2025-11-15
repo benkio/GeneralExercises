@@ -1,9 +1,8 @@
 module TwentyTwentyFour.December04 where
 
+import Data.List (transpose)
 import Data.Map (Map, fromList, keys, (!?))
 import qualified Data.Map as Map (filter)
-
-import Data.List (transpose)
 import Text.Regex.TDFA
 
 type WordSearch = [String]

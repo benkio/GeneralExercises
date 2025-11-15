@@ -3,7 +3,8 @@ module Lib.Math (
     isInteger,
     calculateSlope,
     areParallel,
-) where
+)
+where
 
 {-
 input (a,b) (c,d) (r1,r2)

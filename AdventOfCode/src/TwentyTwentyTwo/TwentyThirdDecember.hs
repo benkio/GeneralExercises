@@ -10,7 +10,9 @@ import Debug.Trace
 import Text.Printf
 
 type Position = (Int, Int)
+
 type Elf = Int
+
 data Direction = N | S | W | E deriving (Show, Eq)
 
 input :: IO (Map Elf Position)
@@ -27,15 +29,19 @@ positionByDirection p@(x, y) N = (northProposalPositions p, (x, y - 1))
 positionByDirection p@(x, y) S = (southProposalPositions p, (x, y + 1))
 positionByDirection p@(x, y) W = (westProposalPositions p, (x - 1, y))
 positionByDirection p@(x, y) E = (estProposalPositions p, (x + 1, y))
+
 positionProposal :: Position -> Direction -> [([Position], Position)]
 positionProposal p d = positionByDirection p <$> directionsFrom d
 
 northProposalPositions :: Position -> [Position]
 northProposalPositions (x, y) = [(x, y - 1), (x + 1, y - 1), (x - 1, y - 1)]
+
 southProposalPositions :: Position -> [Position]
 southProposalPositions (x, y) = [(x, y + 1), (x + 1, y + 1), (x - 1, y + 1)]
+
 estProposalPositions :: Position -> [Position]
 estProposalPositions (x, y) = [(x + 1, y - 1), (x + 1, y), (x + 1, y + 1)]
+
 westProposalPositions :: Position -> [Position]
 westProposalPositions (x, y) = [(x - 1, y - 1), (x - 1, y), (x - 1, y + 1)]
 

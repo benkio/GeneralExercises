@@ -37,6 +37,7 @@ parseInput =
         | otherwise =
             let (num, rest) = span ((`elem` ['0' .. '9']) . snd) cs
              in PN{pnValue = read (c : fmap snd num) :: Int, coords = (x, y) : fmap fst num} : groupEngineSchemas rest
+
 testInput :: [EngineSchema]
 testInput =
     parseInput

@@ -11,7 +11,9 @@ import Debug.Trace
 import Text.Printf (printf)
 
 newtype HeatLossMap = HLM (Map (Int, Int) Int) deriving (Show)
+
 data Direction = U | D | L | R deriving (Eq, Show, Ord)
+
 data Node = N {coord :: (Int, Int), dir :: Direction, dirStreak :: Int} deriving (Show, Eq, Ord)
 
 input :: IO HeatLossMap
@@ -63,7 +65,9 @@ testInput2 =
 initialNode = N{coord = (0, 0), dir = R, dirStreak = 0}
 
 test1 = loop testInput (solution1AvailableDirectionsF 3) solution1EndCondition
+
 test2a = loop testInput solution2AvailableDirectionsF solution2EndCondition
+
 test2b = loop testInput2 solution2AvailableDirectionsF solution2EndCondition
 
 loop :: HeatLossMap -> (Int -> Direction -> [Direction]) -> (Node -> (Int, Int) -> Bool) -> Int

@@ -1,14 +1,15 @@
 module TwentyTwentyFour.December06 where
 
-import Text.Printf (printf)
-
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (either, isRight, partitionEithers, rights)
 import Data.List (isSubsequenceOf, nub)
 import Data.Maybe (mapMaybe)
+import Text.Printf (printf)
 
 type Coord = (Int, Int)
+
 data Direction = U | D | L | R
+
 type Field = [Coord]
 
 input :: IO (Field, Coord)

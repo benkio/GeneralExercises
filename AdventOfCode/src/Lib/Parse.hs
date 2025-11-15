@@ -5,7 +5,8 @@ module Lib.Parse (
     parseTwoColumnNum,
     parseMove,
     parseCoords,
-) where
+)
+where
 
 import Control.Applicative (many)
 import Data.Bifunctor (bimap, first, second)

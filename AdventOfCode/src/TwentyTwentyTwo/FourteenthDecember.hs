@@ -11,9 +11,13 @@ import Text.Printf
 import Prelude hiding (filter, lookup)
 
 type Position = (Int, Int)
+
 type Rock = [Position]
+
 data Tile = Rock | Sand deriving (Eq)
+
 type Waterfall = Map Position Tile
+
 data SandStatus = Rest Waterfall | NoMoreSand deriving (Show)
 
 instance Show Tile where

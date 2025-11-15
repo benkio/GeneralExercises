@@ -8,7 +8,8 @@ module Lib.CoordMap (
     findOrdinalNeighboors,
     findBridges,
     notKeys,
-) where
+)
+where
 
 import Data.Bifunctor (bimap, first)
 import Data.List (maximumBy)
@@ -48,13 +49,11 @@ findBranches c d extraNodeF ms = mapMaybe (go [c] ((0, 0), d) 1) cNeighboors
     cNeighboors = keys $ findCardinalNeighboors c ms
     go :: [Coord] -> ((Int, Int), Direction) -> Int -> Coord -> Maybe (Coord, Int, (Int, Int), Direction)
     go visited ((tl, tr), direction) distance x =
-        let
-            next = M.filterWithKey (\k _ -> k `notElem` visited) $ findCardinalNeighboors x ms
+        let next = M.filterWithKey (\k _ -> k `notElem` visited) $ findCardinalNeighboors x ms
             extraCondition = maybe False (extraNodeF x) (ms !? x)
             maybeHead = listToMaybe (toList next)
             calcTurnsNext c' = first (bimap (+ tl) (+ tr)) $ calcTurns direction x c'
-         in
-            if length next > 1 || extraCondition
+         in if length next > 1 || extraCondition
                 then Just (x, distance, (tl, tr), direction)
                 else (\nc -> go (x : visited) (calcTurnsNext nc) (distance + 1) nc) . fst =<< maybeHead
 
@@ -71,13 +70,11 @@ findBranchesFull c d extraNodeF ms = mapMaybe (go [c] ((0, 0), d) 1) cNeighboors
     cNeighboors = keys $ findCardinalNeighboors c ms
     go :: [Coord] -> ((Int, Int), Direction) -> Int -> Coord -> Maybe [(Coord, Int, (Int, Int), Direction)]
     go visited ((tl, tr), direction) distance x =
-        let
-            next = M.filterWithKey (\k _ -> k `notElem` visited) $ findCardinalNeighboors x ms
+        let next = M.filterWithKey (\k _ -> k `notElem` visited) $ findCardinalNeighboors x ms
             extraCondition = maybe False (extraNodeF x) (ms !? x)
             maybeHead = listToMaybe (toList next)
             calcTurnsNext c' = first (bimap (+ tl) (+ tr)) $ calcTurns direction x c'
-         in
-            if length next > 1 || extraCondition
+         in if length next > 1 || extraCondition
                 then Just [(x, distance, (tl, tr), direction)]
                 else
                     ( \nc ->

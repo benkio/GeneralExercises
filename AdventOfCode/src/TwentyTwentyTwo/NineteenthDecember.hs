@@ -8,9 +8,13 @@ import Debug.Trace
 import Text.Read
 
 newtype OreRobotCost = OreRobotCost {oreCost :: Int} deriving (Show)
+
 newtype ClayRobotCost = ClayRobotCost {clayOreCost :: Int} deriving (Show)
+
 data ObsidianRobotCost = ObsidianRobotCost {obsidianOreCost :: Int, obsidianClayCost :: Int} deriving (Show)
+
 data GeodeRobotCost = GeodeRobotCost {geodeOreCost :: Int, geodeObsidianCost :: Int} deriving (Show)
+
 data Robot = Ore | Clay | Obsidian | Geode deriving (Show)
 
 data Blueprint = Blueprint

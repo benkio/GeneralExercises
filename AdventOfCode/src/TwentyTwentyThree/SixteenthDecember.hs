@@ -11,9 +11,13 @@ import Data.Set (Set, elems, empty, insert, notMember, size)
 import Debug.Trace
 
 type PositionDirection = ((Int, Int), Direction)
+
 type Cave = Map (Int, Int) Tile
+
 type Visited = Set PositionDirection
+
 data Direction = U | D | R | L deriving (Show, Eq, Ord)
+
 data Tile
     = E
     | VS

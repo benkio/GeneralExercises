@@ -4,6 +4,7 @@ import Data.List (subsequences)
 import Data.Maybe (mapMaybe)
 
 type Reports = [Levels]
+
 type Levels = [Int]
 
 input :: IO Reports
@@ -29,10 +30,12 @@ levelInOrder :: Levels -> Bool
 levelInOrder ls = all (uncurry (<)) levelsPair || all (uncurry (>)) levelsPair
   where
     levelsPair = zip ls (tail ls)
+
 levelDiffer :: Levels -> Bool
 levelDiffer ls = all (\(v1, v2) -> abs (v1 - v2) `elem` [1 .. 3]) levelsPair
   where
     levelsPair = zip ls (tail ls)
+
 levelCheck :: Levels -> Bool
 levelCheck l = levelInOrder l && levelDiffer l
 

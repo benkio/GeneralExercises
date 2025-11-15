@@ -68,8 +68,7 @@ fieldToDestination' fs s =
     foldl
         ( \rs fms ->
             concatMap
-                ( mapToDestination' fms
-                )
+                (mapToDestination' fms)
                 rs
         )
         [s]

@@ -8,7 +8,9 @@ import Numeric (readHex)
 import Text.Printf (printf)
 
 data Direction = R | D | L | U deriving (Show, Enum)
+
 data DigPlan = DP {direction :: Direction, steps :: Int, color :: String} deriving (Show)
+
 type EdgeBlock = ((Int, Int), Direction)
 
 parseInput :: String -> [DigPlan]

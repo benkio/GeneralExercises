@@ -67,6 +67,7 @@ testInput =
 solution expRate xs = (sum . fmap (uncurry (manhattanDistance emptyRows emptyColumns expRate)) . galaxyPairs . galaxyCoordinates) xs
   where
     (emptyRows, emptyColumns) = expandUniverse xs
+
 eleventhDecemberSolution1 :: IO Int
 eleventhDecemberSolution1 = solution 2 <$> input
 

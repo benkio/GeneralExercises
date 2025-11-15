@@ -1,28 +1,27 @@
 module TwentyTwentyThree.FifteenthDecember where
 
-import Data.Map (Map, foldrWithKey)
-import qualified Data.Map as M (alter, empty)
-
 import Data.Bifunctor (bimap, first, second)
-
 import Data.Char (ord)
 import Data.List.Split (splitOn)
+import Data.Map (Map, foldrWithKey)
+import qualified Data.Map as M (alter, empty)
 
 data LensesOp
     = LA {labelA :: String, focal :: Int}
     | LR {labelR :: String}
     deriving (Show)
+
 data Lens = L {l :: String, v :: Int} deriving (Show)
+
 type Box = [Lens]
+
 type Boxes = Map Int Box
 
 instance Read LensesOp where
     readsPrec _ s =
-        let
-            (label, op : rest) = break (`elem` "=-") s
+        let (label, op : rest) = break (`elem` "=-") s
             (mayFocal, rest') = second (drop 1) $ break (== ',') rest
-         in
-            if op == '-' then [(LR{labelR = label}, rest')] else [(LA{labelA = label, focal = read mayFocal :: Int}, rest')]
+         in if op == '-' then [(LR{labelR = label}, rest')] else [(LA{labelA = label, focal = read mayFocal :: Int}, rest')]
 
 input :: IO [String]
 input = parseInput . head . lines <$> readFile "input/2023/15December.txt"

@@ -20,8 +20,11 @@ data Sea = S
     , sMoves :: [Move]
     }
     deriving (Show)
+
 data SeaObj = Box | Wall deriving (Show, Eq)
+
 type SeaMap = Map Coord SeaObj
+
 newtype Robot = Robot {rCoord :: Coord} deriving (Show)
 
 input :: IO Sea

@@ -10,7 +10,8 @@ module Lib.List (
     filterByShortLength,
     filterByMostConsecutiveEqElems,
     slidingWindow,
-) where
+)
+where
 
 import Data.List (group, groupBy, sortOn, tails)
 import Data.Maybe (fromMaybe, listToMaybe)

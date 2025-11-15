@@ -1,9 +1,8 @@
 module TwentyTwentyFour.December18 where
 
-import Debug.Trace (traceShow, traceShowId)
-
 import Data.Map (Map, fromList)
 import Data.Maybe (mapMaybe)
+import Debug.Trace (traceShow, traceShowId)
 import Lib.Coord (Coord, manhattanDistance)
 import Lib.CoordMap (findBranches)
 import Lib.Direction (Direction (..))
@@ -18,13 +17,18 @@ input = parseInput <$> readFile "input/2024/December18.txt"
 
 inputRange :: Int
 inputRange = 70
+
 solution1ByteAmount :: Int
 solution1ByteAmount = 1024
+
 startPosition :: Coord
 startPosition = (0, 0)
+
 endPosition :: Int -> Coord
 endPosition range = (range, range)
+
 start = (startPosition, 'S')
+
 end range = (endPosition range, 'E')
 
 makeMap :: Int -> Int -> [Coord] -> Map Coord Char
@@ -45,9 +49,11 @@ paths range = mapToPaths start East (isTheEnd range) (calculateScore range) filt
 
 calculateScore :: Int -> Node Char -> Int
 calculateScore range n = uncurry (+) (manhattanDistance (nc n) (fst (end range)))
+
 filterNodeF, keepNextNodeByScoreF :: Int -> Int -> Bool
 filterNodeF curr past = curr >= (past + stepsAwayFilter)
 keepNextNodeByScoreF next past = next <= (past + stepsAwayFilter)
+
 sortNodesF :: Int -> (Node Char, Int) -> Int
 sortNodesF range (_, score) = score * 4
 
@@ -96,8 +102,10 @@ parseInput = parseCoords
 
 testRange :: Int
 testRange = 6
+
 testSolution1ByteAmount :: Int
 testSolution1ByteAmount = 12
+
 testInput :: [Coord]
 testInput =
     parseInput

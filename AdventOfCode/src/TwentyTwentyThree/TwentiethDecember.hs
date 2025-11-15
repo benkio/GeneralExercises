@@ -7,12 +7,15 @@ import qualified Data.Map as Map (foldr, lookup)
 import Data.Maybe (fromJust, isNothing)
 
 data Pulse = P Bool String String deriving (Show)
+
 type Modules = Map String Module
+
 data Module
     = FF String Bool [String]
     | C String (Map String Bool) [String]
     | BR [String]
     deriving (Show)
+
 data ButtonResult = ButtonResult
     { modules :: Modules
     , highPulses :: Int
@@ -29,10 +32,12 @@ getModuleKey :: Module -> String
 getModuleKey (FF k _ _) = k
 getModuleKey (C k _ _) = k
 getModuleKey (BR _) = "broadcaster"
+
 getModuleOutput :: Module -> [String]
 getModuleOutput (FF _ _ o) = o
 getModuleOutput (C _ _ o) = o
 getModuleOutput (BR o) = o
+
 getModuleMem :: Module -> Map String Bool
 getModuleMem (C _ m _) = m
 
@@ -62,6 +67,7 @@ setPulseSrc src (P v _ d) = P v src d
 
 setPulseDst :: String -> Pulse -> Pulse
 setPulseDst dst (P v s _) = P v s dst
+
 getPulseDst :: Pulse -> String
 getPulseDst (P _ _ d) = d
 
@@ -118,14 +124,12 @@ pushButton br = go br{lowPulses = lowPulses br + 1, buttonPushNum = buttonPushNu
         | isNothing (Map.lookup (getPulseDst p) m) =
             go (((`checkModules` p) . updatePulsesCounter br) p) ps
         | otherwise =
-            let
-                pDst = getPulseDst p
+            let pDst = getPulseDst p
                 modul = fromJust $ Map.lookup pDst m
                 (modul', pulses) = processPulse modul p
                 m' = insert pDst modul' m
                 br' = (checkModules (updatePulsesCounter br p) p){modules = m'}
-             in
-                go br' (ps ++ pulses)
+             in go br' (ps ++ pulses)
 
 solution1 :: Modules -> Int
 solution1 =

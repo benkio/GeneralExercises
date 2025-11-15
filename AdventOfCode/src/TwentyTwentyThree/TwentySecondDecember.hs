@@ -1,7 +1,5 @@
 module TwentyTwentyThree.TwentySecondDecember where
 
-import Text.Printf (printf)
-
 import Data.Bifunctor (bimap)
 import Data.Either (isLeft, isRight)
 import Data.List (find, sortOn)
@@ -9,9 +7,12 @@ import Data.List.Split (splitOn)
 import Data.Maybe (fromJust, isJust, isNothing, mapMaybe)
 import qualified Data.Set as S (Set, empty, insert, size)
 import Debug.Trace
+import Text.Printf (printf)
 
 type Coord = (Int, Int, Int)
+
 data Block = B {bid :: Int, cs :: [Coord]} deriving (Show)
+
 type Tetris = [Block]
 
 instance Eq Block where
@@ -22,8 +23,10 @@ instance Ord Block where
 
 getBricksByLevel :: Tetris -> Int -> [Coord]
 getBricksByLevel ts z = concatMap (filter (\(_, _, bz) -> bz == z) . cs) ts
+
 getBlockByLevel :: Tetris -> Int -> [Block]
 getBlockByLevel ts z = filter ((== z) . minimum . fmap (\(_, _, bz) -> bz) . cs) ts
+
 getMaximumBlockLevel :: Tetris -> Int
 getMaximumBlockLevel = maximum . fmap (\(_, _, z) -> z) . concatMap cs
 
@@ -47,14 +50,12 @@ moveTetris tetris = go tetris S.empty
   where
     go :: Tetris -> S.Set Block -> (Tetris, S.Set Block)
     go ts rs =
-        let
-            nts = moveBlocksBelow ts
+        let nts = moveBlocksBelow ts
             lefts = filter isLeft nts
             leftsLength = length lefts
             rights = filter isRight nts
             rightsLength = length rights
-         in
-            if rightsLength > 0
+         in if rightsLength > 0
                 then
                     trace (printf "debug: moved, leftsLength %d rightsLength %d" leftsLength rightsLength) $
                         go

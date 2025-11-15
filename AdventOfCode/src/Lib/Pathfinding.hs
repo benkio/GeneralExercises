@@ -1,19 +1,17 @@
 module Lib.Pathfinding (Node (..), mapToPaths, pathToCoord, minimumSteps, defaultMapToPaths) where
 
-import Text.Printf (printf)
-
 import Data.Functor ((<&>))
 import Data.IORef
 import Data.List (minimumBy, sortOn)
 import Data.Map (Map, alter, elems, empty, size, (!?))
 import Data.Maybe (mapMaybe)
 import Data.Ord (comparing)
+import Data.Tree (Tree, unfoldTreeM)
 import Debug.Trace
 import Lib.Coord (Coord, manhattanDistance)
 import Lib.CoordMap (findBranches, findBranchesFull, findCardinalNeighboors, updateLowestScore)
 import Lib.Direction (Direction (..))
-
-import Data.Tree (Tree, unfoldTreeM)
+import Text.Printf (printf)
 
 data Node a = N {nc :: Coord, val :: a, distanceFromParent :: Int, turnL :: Int, turnR :: Int, direction :: Direction}
 

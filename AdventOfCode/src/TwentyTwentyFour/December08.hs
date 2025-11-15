@@ -7,7 +7,9 @@ import Data.List (maximum, tails)
 import Data.Set (fromList, toList)
 
 type Coord = (Int, Int)
+
 type MapContent = Char
+
 type CityMap = [(Coord, MapContent)] -- Map Coord MapContent
 
 input :: IO CityMap
@@ -80,19 +82,15 @@ findAntinodes' (_, '.') (_, _) = []
 findAntinodes' (_, _) (_, '.') = []
 findAntinodes' ((x, y), a) ((x', y'), a')
     | a == a' =
-        let
-            p = (x + (x - x'), y + (y - y'))
+        let p = (x + (x - x'), y + (y - y'))
             p' = (x' + (x' - x), y' + (y' - y))
-         in
-            [(x, y), (x', y')] ++ go p p'
+         in [(x, y), (x', y')] ++ go p p'
     | otherwise = []
   where
     go (c, d) (e, f) =
-        let
-            q = (c + (x - x'), d + (y - y'))
+        let q = (c + (x - x'), d + (y - y'))
             q' = (e + (x' - x), f + (y' - y))
-         in
-            [(c, d), (e, f)] ++ go q q'
+         in [(c, d), (e, f)] ++ go q q'
 
 solution2 :: CityMap -> Int
 solution2 as =

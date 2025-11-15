@@ -47,10 +47,13 @@ tiltHorizontal tiltWest s = (\(s, mrrs) -> if tiltWest then fromMaybe "" mrrs ++
 
 tiltNorth :: Platform -> Platform
 tiltNorth = rotateRight . fmap (tiltHorizontal True) . rotateLeft
+
 tiltWest :: Platform -> Platform
 tiltWest = fmap (tiltHorizontal True)
+
 tiltEst :: Platform -> Platform
 tiltEst = fmap (tiltHorizontal False)
+
 tiltSouth :: Platform -> Platform
 tiltSouth = rotateLeft . fmap (tiltHorizontal True) . rotateRight
 

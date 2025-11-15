@@ -3,26 +3,25 @@
 
 module TwentyTwentyFour.December19 where
 
+import Data.Bifunctor (bimap, first)
 import Data.IORef
 import Data.List (drop, nub, stripPrefix, transpose)
 import Data.Map (Map, adjust, empty, fromList, insert, keys, member, notMember, size, union, (!?))
 import Data.Maybe (catMaybes, isJust, listToMaybe, mapMaybe)
+import Data.Text (Text, pack, splitOn, takeWhile, unpack)
+import Data.Text as Text (pack, splitOn, takeWhile, unpack)
+import qualified Data.Text as T (lines)
 import Data.Tree (Tree, drawTree, foldTree, unfoldForestM, unfoldTree)
 import Lib.List (null')
-import Text.Printf (printf)
-
-import Data.Text (Text, pack, splitOn, takeWhile, unpack)
-import qualified Data.Text as T (lines)
-
-import Data.Bifunctor (bimap, first)
 import Text.ParserCombinators.ReadP (char, choice)
 import Text.ParserCombinators.ReadPrec (lift)
+import Text.Printf (printf)
 import Text.Read (Read (..), read)
 
-import Data.Text as Text (pack, splitOn, takeWhile, unpack)
-
 data Stripe = W | U | B | R | G deriving (Ord, Eq)
+
 newtype Towel = T {p :: [Stripe]} deriving (Eq)
+
 newtype Design = D {design :: [Stripe]} deriving (Eq, Ord)
 
 instance Read Stripe where
@@ -43,8 +42,10 @@ instance Show Stripe where
     show B = "b"
     show R = "r"
     show G = "g"
+
 instance Show Towel where
     show T{p = stripes} = concatMap show stripes
+
 instance Show Design where
     show D{design = stripes} = concatMap show stripes
 
@@ -96,6 +97,7 @@ towelsDesign kds ts d =
         k'' = updateKnowns dRest underSeq k'
 
     updateKnowns = insert
+
 isImpossibleDesign :: Map Design [[Towel]] -> [Towel] -> Design -> (Bool, Map Design [[Towel]])
 isImpossibleDesign kds ts d = (null' combos, kds')
   where
@@ -140,12 +142,10 @@ buildDesignForest msRef ts d = do
         (ms !? d)
   where
     unknownDesignF knowns =
-        let
-            nextDesigns = fmap snd (suitableTowels ts d)
+        let nextDesigns = fmap snd (suitableTowels ts d)
             childrenMapped = fmap (knowns !?) nextDesigns
             sumChildrens = sum . catMaybes $ childrenMapped
-         in
-            case (all isJust childrenMapped, null' childrenMapped, null (design d)) of
+         in case (all isJust childrenMapped, null' childrenMapped, null (design d)) of
                 (_, True, True) -> putStrLn ("No Children No Design " ++ show d) >> modifyIORef msRef (insert d 1) >> return (1, [])
                 (_, True, _) -> putStrLn ("No Children with design " ++ show d) >> modifyIORef msRef (insert d 0) >> return (0, [])
                 (True, _, _) ->

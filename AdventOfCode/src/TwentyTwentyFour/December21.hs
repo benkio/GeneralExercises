@@ -17,10 +17,15 @@ import Lib.Move (Move (..))
 import Text.Printf (printf)
 
 type NumericCode = [NumericKeypadBtn]
+
 type DirectionalCode = [DirectionalKeypadBtn]
+
 type DirectionalMemoryCount = Map (Int, Coord, DirectionalCode) Int
+
 data NumericKeypadBtn = NKPA | Num Int deriving (Show, Eq, Ord)
+
 data DirectionalKeypadBtn = DKPA | M Move deriving (Show, Eq, Ord)
+
 data RobotMove = PushA | RM Move deriving (Eq, Ord)
 
 instance Show RobotMove where
@@ -46,6 +51,7 @@ robotarmToNumericKeypad robotPos targetBtn =
              in (,robotPos `coordPlus` distance) . nubOrd $ robotMovess
         )
         $ numericKeypad !? targetBtn
+
 robotarmToDirectionalKeypad :: Coord -> DirectionalKeypadBtn -> ([[RobotMove]], Coord)
 robotarmToDirectionalKeypad robotPos targetBtn =
     maybe
@@ -94,8 +100,10 @@ robotMovesInitialMap = fromList $ (\(c, sdc) -> ((c, sdc), movesSequenceDirectio
 robotMoveToDirectionalKeypadBtn :: RobotMove -> DirectionalKeypadBtn
 robotMoveToDirectionalKeypadBtn PushA = DKPA
 robotMoveToDirectionalKeypadBtn (RM m) = M m
+
 robotMovesToDirectionalCode :: [RobotMove] -> DirectionalCode
 robotMovesToDirectionalCode = fmap robotMoveToDirectionalKeypadBtn
+
 numericRobotToDirectionalRobot :: NumericCode -> [DirectionalCode]
 numericRobotToDirectionalRobot nc = robotMovesToDirectionalCode <$> movesSequenceNumericKeypad nc
 

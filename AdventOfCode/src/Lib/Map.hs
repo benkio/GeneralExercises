@@ -1,8 +1,7 @@
 module Lib.Map (updateKeys) where
 
-import Lib.Coord (Coord)
-
 import qualified Data.Map as M
+import Lib.Coord (Coord)
 
 -- Update the map with the new keys
 updateKeys :: (Ord k) => M.Map k v -> [((k, k), v)] -> M.Map k v

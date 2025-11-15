@@ -1,7 +1,7 @@
 module TwentyFifteen.TwentysecondDecember where
 
-import Control.Monad.State
 import Control.Monad (when)
+import Control.Monad.State
 import System.Random
 
 data Spell

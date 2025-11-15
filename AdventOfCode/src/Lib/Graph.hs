@@ -5,7 +5,8 @@ module Lib.Graph (
     uniqueConnectedPathOfLength,
     longestPath,
     longestConnectedPath,
-) where
+)
+where
 
 import Data.Foldable (asum)
 import Data.Functor ((<&>))

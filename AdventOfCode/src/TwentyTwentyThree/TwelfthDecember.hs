@@ -76,6 +76,7 @@ singleGroupCheck s xs = matchesAndRests
 minimalGroupLength :: [Int] -> Int
 minimalGroupLength [x] = x + 1
 minimalGroupLength xs = ((+ (length xs - 1)) . sum) xs
+
 cropToMatchingSpringRegion :: String -> [Int] -> (String, String)
 cropToMatchingSpringRegion s xs = splitAt (length s - minimalGroupLength (tail xs)) s
 

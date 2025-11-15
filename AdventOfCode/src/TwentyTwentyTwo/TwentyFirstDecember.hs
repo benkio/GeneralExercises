@@ -9,9 +9,11 @@ import Text.Printf
 import Text.Read (readMaybe)
 
 root = "root"
+
 hmn = "humn"
 
 type MonkeyId = String
+
 data MonkeyValue
     = MV Int
     | Add MonkeyId MonkeyId
@@ -19,6 +21,7 @@ data MonkeyValue
     | Div MonkeyId MonkeyId
     | Mul MonkeyId MonkeyId
     deriving (Show)
+
 data MonkeyValueResolved
     = MVR Int
     | HV
@@ -149,6 +152,7 @@ parseInput = fromList . fmap parseMonkey . lines
 
 parseMonkey :: String -> (MonkeyId, Monkey)
 parseMonkey = (\(i, v) -> (i, Monkey{mid = i, value = v})) . second (parseMonkeyVal . drop 2) . break (== ':')
+
 parseMonkeyVal :: String -> Either MonkeyValue MonkeyValueResolved
 parseMonkeyVal s = maybe (parseMonkeyValOp s) (Left . MV) mayNum
   where

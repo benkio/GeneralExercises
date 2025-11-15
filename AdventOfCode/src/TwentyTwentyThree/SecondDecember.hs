@@ -5,10 +5,15 @@ import Data.List.Split
 import Debug.Trace
 
 data Color = Blue | Green | Red deriving (Show)
+
 type ExtractionGroup = [Extraction]
+
 type Extraction = [ExtractionSingle]
+
 data ExtractionSingle = ExtractionSingle {value :: Int, color :: Color}
+
 data Game = Game {gid :: Int, extractionGroup :: ExtractionGroup} deriving (Show)
+
 data Bag = Bag {blue :: Int, red :: Int, green :: Int} deriving (Show)
 
 instance Show ExtractionSingle where

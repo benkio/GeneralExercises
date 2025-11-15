@@ -3,19 +3,17 @@
 
 module TwentyTwentyFour.December14 where
 
-import Text.Printf (printf)
-
-import Lib.Coord (Coord)
-
 import Data.List (group, nub, sortBy, sortOn)
 import Data.Ord (comparing)
 import Data.Text (Text, pack)
 import Data.Void
 import Debug.Trace
+import Lib.Coord (Coord)
 import Lib.Print (printGrid)
 import Text.Megaparsec
 import Text.Megaparsec.Char (newline, space, string)
 import Text.Megaparsec.Char.Lexer (decimal, signed)
+import Text.Printf (printf)
 
 data Robot = R
     { pos :: Coord

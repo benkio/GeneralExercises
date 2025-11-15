@@ -7,7 +7,9 @@ import Data.Maybe (fromJust, maybe)
 import Debug.Trace
 
 data Move = L | R deriving (Read, Show, Eq)
+
 data Node = N {nId :: String, nl :: String, nr :: String} deriving (Show)
+
 data DesertMap = DM {moves :: [Move], nodes :: Map String Node} deriving (Show)
 
 input :: IO DesertMap

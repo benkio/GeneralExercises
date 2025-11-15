@@ -1,7 +1,8 @@
 module Lib.CoordDirection (
     changeDirection,
     coordDirection,
-) where
+)
+where
 
 import Data.Functor ((<&>))
 import Data.Map (Map, toList, (!?))

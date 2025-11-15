@@ -98,6 +98,7 @@ buildPairs xs = [(x, y) | (x : ys) <- tails xs, y <- ys]
 
 testAreaLow :: Double
 testAreaLow = 200000000000000
+
 testAreaHigh :: Double
 testAreaHigh = 400000000000000
 
@@ -127,8 +128,10 @@ toTrajectory2d PV{px = x, py = y, pz = z, vx = vx', vy = vy', vz = vz'} =
 
 areParallel :: Trajectory2D -> Trajectory2D -> Bool
 areParallel T2D{t2d_a = a1} T2D{t2d_a = a2} = a1 == a2
+
 areCoincident :: Trajectory2D -> Trajectory2D -> Bool
 areCoincident T2D{t2d_a = a1, t2d_b = b1} T2D{t2d_a = a2, t2d_b = b2} = a1 == a2 && b1 == b2
+
 collisionPoint :: Trajectory2D -> Trajectory2D -> (Double, Double)
 collisionPoint T2D{t2d_a = a1, t2d_b = b1} T2D{t2d_a = a2, t2d_b = b2} =
     ( (b2 - b1) / (a1 - a2)

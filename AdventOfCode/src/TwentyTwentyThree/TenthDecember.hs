@@ -11,9 +11,13 @@ import Data.Set (Set, empty, insert, size)
 import Debug.Trace
 
 type Coordinate = (Int, Int)
+
 data PipeOrientation = NS | EW | NE | NW | SW | SE deriving (Show, Eq, Ord)
+
 data Field = P PipeOrientation | D | A deriving (Eq, Ord)
+
 data AnimalMove = N | S | E | W deriving (Show, Enum, Eq)
+
 type FieldMap = Map Coordinate Field
 
 instance Show Field where

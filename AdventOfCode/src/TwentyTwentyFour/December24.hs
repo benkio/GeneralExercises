@@ -14,7 +14,9 @@ import Lib.List (find')
 import Text.Printf (printf)
 
 type Wires = Map String Int
+
 data Op = AND | OR | XOR deriving (Show, Read, Eq)
+
 data Gate = Gate
     { inputWires :: (String, String)
     , outputWire :: String
@@ -70,11 +72,9 @@ findFullNAdder d@(Device{gates = gs}) = fst $ foldl foldAdder (findHalfAdder gs 
         ((String, String) -> String -> Either (String, String) (String, String)) ->
         (Either (String, String) (String, String), Int)
     foldAdder (acc, i) fa =
-        let
-            xN = printf "x%02d" (i + 1)
+        let xN = printf "x%02d" (i + 1)
             yN = printf "y%02d" (i + 1)
-         in
-            (acc >>= \(_, c) -> fa (xN, yN) c, i + 1)
+         in (acc >>= \(_, c) -> fa (xN, yN) c, i + 1)
 
 replaceOutputWire :: Gate -> String -> String -> Gate
 replaceOutputWire g@(Gate{outputWire = ow}) start end

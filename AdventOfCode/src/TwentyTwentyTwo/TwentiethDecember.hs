@@ -17,17 +17,23 @@ data Node = Node
 --     show = show . value
 
 findEid i ns = ns ! i
+
 findZero ns = snd . head . toList $ M.filter ((== 0) . value) ns
+
 nodeAtDistanceRight n 0 _ = n
 nodeAtDistanceRight n d ns = nodeAtDistanceRight nr (d - 1) ns
   where
     nr = findEid (right n) ns
+
 nodeAtDistanceLeft n 0 _ = n
 nodeAtDistanceLeft n d ns = nodeAtDistanceLeft nl (d + 1) ns
   where
     nl = findEid (left n) ns
+
 constrainIndex i ns = signum i * mod (abs i) (length ns - 1)
+
 stepsToMove n = constrainIndex (value n)
+
 extractNode n ns = ns'
   where
     nl = findEid (left n) ns

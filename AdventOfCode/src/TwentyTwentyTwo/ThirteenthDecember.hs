@@ -77,6 +77,7 @@ thirteenthDecemberSolution1 :: IO Int
 thirteenthDecemberSolution1 = countOrderedPackets <$> input
 
 newInput1 = read "[[2]]" :: Packet
+
 newInput2 = read "[[6]]" :: Packet
 
 solution2Input :: [(Int, Packet, Packet)] -> [Packet]

@@ -181,11 +181,9 @@ search t c =
         until
             (\(y, _) -> condition y)
             ( \(x, exp) ->
-                let
-                    output = solution1 x
+                let output = solution1 x
                     distanceToTarget = length t - length output
-                 in
-                    ( -- trace ("regA: " ++ show (regA x) ++ " - " ++ show output ++ " - " ++ show exp) $
+                 in ( -- trace ("regA: " ++ show (regA x) ++ " - " ++ show output ++ " - " ++ show exp) $
                       writeRegister x 'A' exp
                     , next exp distanceToTarget output
                     )

@@ -7,6 +7,7 @@ data Equation = E
     , terms :: [Int]
     }
     deriving (Show)
+
 type Operator = Int -> Int -> Int
 
 input :: IO [Equation]

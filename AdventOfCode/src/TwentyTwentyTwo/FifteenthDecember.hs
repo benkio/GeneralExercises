@@ -8,6 +8,7 @@ import Text.Printf
 import Prelude hiding (lookup)
 
 type Position = (Int, Int)
+
 type SensorList = [(Position, Position)]
 
 minMaxX :: [Position] -> Position

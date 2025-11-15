@@ -13,6 +13,7 @@ import Text.Printf (printf)
 import Prelude hiding (lookup)
 
 data Rock = HLine | Plus | LShape | VLine | Square deriving (Show, Eq)
+
 data HotGas = R | L deriving (Show, Eq)
 
 data State = State

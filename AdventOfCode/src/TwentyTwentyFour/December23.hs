@@ -63,6 +63,7 @@ test s i = longestConnectedPath [s] m empty
     m = fromConnectionList testInput
 
 test' = test "co" testInput
+
 test'' s = test s <$> input
 
 solution2 :: [(String, String)] -> String

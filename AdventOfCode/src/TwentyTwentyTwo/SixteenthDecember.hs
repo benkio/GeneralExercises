@@ -24,10 +24,12 @@ data State = State
 
 instance Show Valve where
     show v = printf "V: %s %d %s" (name v) (rate v) ((show . connections) v)
+
 instance Show State where
     show s = printf "S: %d %d %s %s" (total s) (cost s) ((name . currentValve) s) ((show . fmap name . openValves) s)
 
 type ValveMap = Map String Valve
+
 type ConnectionCostMap = Map (String, String) (Int, Int)
 
 input :: IO ValveMap

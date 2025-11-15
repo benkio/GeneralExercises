@@ -6,7 +6,8 @@ module Lib.Direction (
     turn90N,
     turnsToDirection,
     allDirection,
-) where
+)
+where
 
 import Data.Bifunctor
 

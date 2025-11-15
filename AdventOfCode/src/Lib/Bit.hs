@@ -4,7 +4,8 @@ module Lib.Bit (
     fillBitToN,
     bitWiseXorWithBase,
     bitWiseXor,
-) where
+)
+where
 
 import Data.List.Split (chunksOf)
 import Debug.Trace

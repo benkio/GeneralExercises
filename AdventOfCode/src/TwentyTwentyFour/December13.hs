@@ -2,12 +2,10 @@
 
 module TwentyTwentyFour.December13 where
 
-import Data.Bifunctor (bimap, first, second)
-
-import Data.Maybe (mapMaybe)
-
 import Control.Monad (guard)
+import Data.Bifunctor (bimap, first, second)
 import Data.List.Split (splitOn)
+import Data.Maybe (mapMaybe)
 import Lib.Coord (Coord, cardinalNeighboors)
 import Lib.CoordMap (findCardinalNeighboors)
 import Lib.Math (isInteger, twoLinearEqSolver)

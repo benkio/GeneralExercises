@@ -5,7 +5,9 @@ import Data.Maybe (mapMaybe)
 import Debug.Trace
 
 type Obsidian = (Int, Int, Int)
+
 data Orientation = L | R | N | S | B | F deriving (Eq, Ord, Show)
+
 data ObsidianFace = ObsidianFace
     { orientation :: Orientation
     , center :: (Float, Float, Float)

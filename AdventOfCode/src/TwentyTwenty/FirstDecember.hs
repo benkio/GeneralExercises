@@ -5,7 +5,8 @@ module TwentyTwenty.FirstDecember (
     firstDecemberSolution1,
     firstDecemberSolution2,
     finder,
-) where
+)
+where
 
 import Data.List (find)
 import Data.Maybe (fromMaybe)

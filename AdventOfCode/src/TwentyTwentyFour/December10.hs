@@ -4,14 +4,14 @@
 module TwentyTwentyFour.December10 where
 
 import Data.List (nub, partition)
+import Data.Map (Map, fromList, toList, (!?))
+import qualified Data.Map as Map (filter)
 import Data.Maybe (mapMaybe)
 import Data.Set (Set, insert)
 import Debug.Trace
 
-import Data.Map (Map, fromList, toList, (!?))
-import qualified Data.Map as Map (filter)
-
 type Coord = (Int, Int)
+
 type TrailMap = Map Coord Int
 
 input :: IO TrailMap
@@ -75,11 +75,9 @@ trails' tr = concatMap search
   where
     search [] = []
     search (reverse -> ((c, v) : trailRev)) =
-        let
-            trails = (\x -> reverse (x : (c, v) : trailRev)) <$> trailStep tr c v
+        let trails = (\x -> reverse (x : (c, v) : trailRev)) <$> trailStep tr c v
             (endTrails, ongoingTrails) = span ((== 9) . snd . last) trails
-         in
-            endTrails ++ trails' tr ongoingTrails
+         in endTrails ++ trails' tr ongoingTrails
 
 testInput' :: TrailMap
 testInput' =
@@ -91,6 +89,7 @@ testInput' =
         \8171848\n\
         \8887658\n\
         \8891888"
+
 testInput'' =
     parseInput
         "3390339\n\

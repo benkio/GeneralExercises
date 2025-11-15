@@ -6,8 +6,11 @@ import Data.Maybe (fromJust)
 import Text.Printf
 
 data Blizzard = NB Position | SB Position | EB Position | WB Position deriving (Show, Eq)
+
 data Move = NM | SM | EM | WM | W deriving (Show)
+
 type Position = (Int, Int)
+
 data Valley = Valley
     { entrance :: Position
     , valleyBlizzards :: [Blizzard]
