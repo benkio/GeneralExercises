@@ -55,7 +55,7 @@ setNumber :: Int -> Grid -> Grid
 setNumber n = fmap (fmap (\(n', v) -> if n' == n then (n', True) else (n', v)))
 
 calculateScore :: (Int, Grid) -> Int
-calculateScore (n, g) = n * (sum . fmap fst . filter (not . snd) . concat) g
+calculateScore (n, g) = n * (sum . fmap fst . concatMap (not . snd)) g
 
 fourthDecemberSolution1 :: IO Int
 fourthDecemberSolution1 = calculateScore . uncurry gameLoop . parseInput <$> input

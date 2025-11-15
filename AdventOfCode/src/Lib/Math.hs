@@ -29,7 +29,7 @@ twoLinearEqSolver a b c1 c d c2
 ax + by = z
 -}
 calculateSlope :: Int -> Int -> Int
-calculateSlope a b = -a `div` b
+calculateSlope a b = -(a `div` b)
 
 areParallel :: (Int, Int) -> (Int, Int) -> Bool
 areParallel (a, b) (c, d) = calculateSlope a b == calculateSlope c d
