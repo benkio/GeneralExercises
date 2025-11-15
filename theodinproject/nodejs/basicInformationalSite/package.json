@@ -1,0 +1,27 @@
+{
+  "name": "basic-informational-site",
+  "version": "1.0.0",
+  "description": "Project for https://www.theodinproject.com/lessons/nodejs-basic-informational-site",
+  "main": "./build/src/index.js",
+  "author": "Enrico Benini",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "gts": "^6.0.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "scripts": {
+    "lint": "gts lint",
+    "clean": "gts clean",
+    "compile": "tsc",
+    "fix": "gts fix",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run lint",
+    "start": "tsx ./src/index.ts"
+  },
+  "dependencies": {
+    "node": "^20.19.5"
+  }
+}
