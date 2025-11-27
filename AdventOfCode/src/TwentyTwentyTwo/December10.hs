@@ -51,18 +51,18 @@ runCRT = fmap (\(d, i) -> buildCRT i (regX d)) . (`zip` [0 ..]) . tail
 buildCRT :: Int -> Int -> CRT
 buildCRT i r = CRT{index = i `mod` 40, sprite = [r - 1 .. r + 1]}
 
-drawCRT :: CRT -> IO ()
+drawCRT :: CRT -> String
 drawCRT c@(CRT{index = i, sprite = xs})
-    | i == 0 && i `elem` xs = putStr "\n#"
-    | i == 0 && i `notElem` xs = putStr "\n."
-    | i /= 0 && i `elem` xs = putStr "#"
-    | i /= 0 && i `notElem` xs = putStr "."
+    | i == 0 && i `elem` xs = "\n#"
+    | i == 0 && i `notElem` xs = "\n."
+    | i /= 0 && i `elem` xs = "#"
+    | i /= 0 && i `notElem` xs = "."
 
-solution2 :: [Instruction] -> IO ()
-solution2 = mapM_ drawCRT . take 240 . runCRT . runDevice . initialDevice
+solution2 :: [Instruction] -> String
+solution2 = concatMap drawCRT . take 240 . runCRT . runDevice . initialDevice
 
-december10Solution2 :: IO ()
-december10Solution2 = input >>= solution2
+december10Solution2 :: IO String
+december10Solution2 = solution2 <$> input
 
 testInputSmall :: [Instruction]
 testInputSmall =

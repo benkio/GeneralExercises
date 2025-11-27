@@ -2,7 +2,6 @@
 
 module TwentyTwentyOne.December13 where
 
-import Control.Monad (mapM_)
 import Data.Bifunctor (bimap)
 import Data.List (nub, stripPrefix)
 import Data.List.Split (chunksOf)
@@ -57,19 +56,19 @@ december13Solution1 = do
     let (m, fs) = parseInput i
     return $ M.size $ performFold m (head fs)
 
-december13Solution2 :: IO ()
+december13Solution2 :: IO String
 december13Solution2 = do
     i <- input
     let (m, fs) = parseInput i
-    printManual $ foldl performFold m fs
+    return $ printManual $ foldl performFold m fs
 
-printManual :: Map (Int, Int) Bool -> IO ()
+printManual :: Map (Int, Int) Bool -> String
 printManual m =
     let maxX = (maximum . fmap fst . M.keys) m
         maxY = (maximum . fmap snd . M.keys) m
         grid = [if isJust (M.lookup (x, y) m) then '#' else '.' | y <- [0 .. maxY], x <- [0 .. maxX]]
         gridByLine = chunksOf (maxX + 1) grid
-     in mapM_ putStrLn gridByLine
+     in unlines gridByLine
 
 inputTest :: String
 inputTest =
