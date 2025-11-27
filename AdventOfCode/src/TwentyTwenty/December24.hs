@@ -47,6 +47,9 @@ solution1 directions =
     (length . filter ((0 /=) . (`mod` 2) . length) . group . sort)
         (calculateTerminalCoordinate <$> directions)
 
+twentyFourthDecemberSolution1 :: IO Int
+twentyFourthDecemberSolution1 = solution1 <$> input
+
 initialBlackTiles :: [[Direction]] -> [Coordinate]
 initialBlackTiles ds =
     (fmap head . filter ((0 /=) . (`mod` 2) . length) . group . sort)

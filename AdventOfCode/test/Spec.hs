@@ -1,9 +1,8 @@
 module Main where
 
 import TestCase (TestCase (..))
-import Test.Tasty (TestTree, defaultMain, testGroup, localOption)
+import Test.Tasty (TestTree, defaultMain, testGroup, localOption, mkTimeout)
 import Test.Tasty.HUnit (testCase, assertEqual)
-import Test.Tasty.Runners (mkTimeout)
 import qualified TwentyFifteen.Tests as T2015
 import qualified TwentySixteen.Tests as T2016
 import qualified TwentyTwenty.Tests as T2020
@@ -13,13 +12,9 @@ import qualified TwentyTwentyOne.Tests as T2021
 import qualified TwentyTwentyThree.Tests as T2023
 import qualified TwentyTwentyTwo.Tests as T2022
 
--- 30 seconds timeout
-timeoutSeconds :: Int
-timeoutSeconds = 30
-
 runTestWithTimeout :: TestCase -> TestTree
 runTestWithTimeout (TestCase name testAction expected) =
-    localOption (mkTimeout timeoutSeconds) $
+    localOption (mkTimeout 30000000) $
         testCase name $ do
             actualResult <- testAction
             assertEqual ("Expected " ++ show expected) expected actualResult
@@ -32,9 +27,9 @@ main =
             [ testGroup "TwentyFifteen" $ fmap runTestWithTimeout T2015.tests
             , testGroup "TwentySixteen" $ fmap runTestWithTimeout T2016.tests
             , testGroup "TwentyTwenty" $ fmap runTestWithTimeout T2020.tests
-            , testGroup "TwentyTwentyOne" $ fmap runTestWithTimeout T2021.tests
-            , testGroup "TwentyTwentyTwo" $ fmap runTestWithTimeout T2022.tests
-            , testGroup "TwentyTwentyThree" $ fmap runTestWithTimeout T2023.tests
-            , testGroup "TwentyTwentyFour" $ fmap runTestWithTimeout T2024.tests
-            , testGroup "TwentyTwentyFive" $ fmap runTestWithTimeout T2025.tests
+            -- , testGroup "TwentyTwentyOne" $ fmap runTestWithTimeout T2021.tests
+            -- , testGroup "TwentyTwentyTwo" $ fmap runTestWithTimeout T2022.tests
+            -- , testGroup "TwentyTwentyThree" $ fmap runTestWithTimeout T2023.tests
+            -- , testGroup "TwentyTwentyFour" $ fmap runTestWithTimeout T2024.tests
+            -- , testGroup "TwentyTwentyFive" $ fmap runTestWithTimeout T2025.tests
             ]

@@ -37,7 +37,7 @@ step ((x, y), W) (R z) = ((x, y + z), N)
 step ((x, y), E) (R z) = ((x, y - z), S)
 
 solution1 :: [Instruction] -> Int
-solution1 = uncurry (+) . move
+solution1 = abs . uncurry (+) . move
 
 december01Solution1 :: IO Int
 december01Solution1 = solution1 <$> input
@@ -59,7 +59,8 @@ generateMiddlePoints (x, y) (a, b) = do
 
 solution2 :: [Instruction] -> Int
 solution2 =
-    uncurry (+)
+    abs
+        . uncurry (+)
         . findDuplicate
         . foldl1 (\l l' -> init l ++ generateMiddlePoints (last l) (head l'))
         . fmap (: [])
