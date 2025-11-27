@@ -77,8 +77,8 @@ loop grid@(HLM hlm) availableDirectiorF endConditionF =
             ( \((n, v) : xs, s) ->
                 if v `mod` 100 == 0
                     then
-                        trace
-                            (printf "debug: %s %s" (show (coord n, v)) (show (length xs, size s)))
+                        -- trace
+                        --     (printf "debug: %s %s" (show (coord n, v)) (show (length xs, size s)))
                             endConditionF
                             n
                             maxCoord

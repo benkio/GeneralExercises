@@ -202,7 +202,8 @@ buildPath hm allGp (gp : gps) !v =
     newGps = buildPathsSingle gp currentPoint allGp
     (endingGps, nextGps) = partition ((== end) . gpEnd . last) newGps
     gps' = S.toList $ S.fromList (gps ++ nextGps)
-    v' = (\x -> trace (printf "debug: %s - %d" (show x) (length gps')) x) $ foldl (\m gp -> max m (graphPathSize gp)) v endingGps
+    v' = (\x -> -- trace (printf "debug: %s - %d" (show x) (length gps'))
+           x) $ foldl (\m gp -> max m (graphPathSize gp)) v endingGps
 
 solution2 hm =
     -- graphPathSize . maximumBy (\p p' -> graphPathSize p `compare` graphPathSize p')

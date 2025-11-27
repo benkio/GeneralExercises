@@ -61,7 +61,8 @@ solution1 cs = do
     [n1, n2] <- karger cs
     if length n1 == 3 && length n2 == 3
         then return $ calculateNodes n1 * calculateNodes n2
-        else trace (printf "debug: %d %d" (length n1) (length n2)) $ solution1 cs
+        else -- trace (printf "debug: %d %d" (length n1) (length n2)) $ 
+      solution1 cs
   where
     calculateNodes = length . splitOn ";" . head
 
