@@ -34,7 +34,7 @@ convertImage m f =
         gridByLine = chunksOf (maxX + 1) grid
      in f gridByLine
 
-printImage m = convertImage m (mapM_ putStrLn)
+printImage m = convertImage m (mapM_ (const (return ()))) -- (mapM_ putStrLn)
 
 mapToString m = convertImage m (intercalate "\n")
 

@@ -14,7 +14,7 @@ solution =
     snd
         . foldl
             ( \(mem, v) sr ->
-                let (mem', v') = trace ("next " ++ show (damagedRecord sr) ++ " - " ++ show (damagedGroups sr)) groupCheck mem (damagedRecord sr) (damagedGroups sr)
+                let (mem', v') = groupCheck mem (damagedRecord sr) (damagedGroups sr)
                  in (mem', v + v')
             )
             (empty, 0)

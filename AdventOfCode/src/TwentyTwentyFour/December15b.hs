@@ -243,7 +243,8 @@ parseInput =
 
 printSeaMap :: Sea -> Move -> IO ()
 printSeaMap S{sMap = sm, sRobot = Robot{rCoord = rc}} m =
-    putStrLn . printGridMap printSeaObj $ sm
+    -- putStrLn . printGridMap printSeaObj $ sm
+    return ()
   where
     printSeaObj _ (Just Wall) = "#"
     printSeaObj _ (Just BoxL) = "["

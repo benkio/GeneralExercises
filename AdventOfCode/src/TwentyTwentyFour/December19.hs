@@ -146,13 +146,17 @@ buildDesignForest msRef ts d = do
             childrenMapped = fmap (knowns !?) nextDesigns
             sumChildrens = sum . catMaybes $ childrenMapped
          in case (all isJust childrenMapped, null' childrenMapped, null (design d)) of
-                (_, True, True) -> putStrLn ("No Children No Design " ++ show d) >> modifyIORef msRef (insert d 1) >> return (1, [])
-                (_, True, _) -> putStrLn ("No Children with design " ++ show d) >> modifyIORef msRef (insert d 0) >> return (0, [])
+                (_, True, True) -> -- putStrLn ("No Children No Design " ++ show d) >> 
+                    modifyIORef msRef (insert d 1) >> return (1, [])
+                (_, True, _) -> -- putStrLn ("No Children with design " ++ show d) >> 
+                    modifyIORef msRef (insert d 0) >> return (0, [])
                 (True, _, _) ->
-                    putStrLn ("from Map by Children " ++ show d ++ " sum " ++ show sumChildrens)
-                        >> modifyIORef msRef (insert d sumChildrens)
+                    -- putStrLn ("from Map by Children " ++ show d ++ " sum " ++ show sumChildrens)
+                    --     >>
+                    modifyIORef msRef (insert d sumChildrens)
                         >> return (sumChildrens, [])
-                (False, False, _) -> putStrLn ("Generate: " ++ show d) >> pure (0, nextDesigns)
+                (False, False, _) -> -- putStrLn ("Generate: " ++ show d) >> 
+                    pure (0, nextDesigns)
 
 countPossibilities :: Tree Int -> Int
 countPossibilities = foldTree foldFunction

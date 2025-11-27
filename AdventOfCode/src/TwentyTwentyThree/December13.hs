@@ -59,7 +59,7 @@ calculateV f = do
 solution :: (Field -> Field) -> [Field] -> Int
 solution f =
     sum
-        . traceShowId
+        -- . traceShowId
         . fmap (calculateReflection . f)
   where
     calculateReflection f = fromMaybe 0 $ calculateH f <|> calculateV f

@@ -141,12 +141,15 @@ drawWaterfall m =
                 foldlM
                     ( \_ x ->
                         if (x, y) == (500, 0)
-                            then putStr "+"
-                            else putStr (maybe "." show (lookup (x, y) m))
+                            then -- putStr "+"
+                            return ()
+                            else -- putStr (maybe "." show (lookup (x, y) m))
+                            return ()
                     )
                     ()
                     [minX .. maxX]
-                    >> putStr "\n"
+                    -- >> putStr "\n"
+                    >> return ()
             )
             ()
             [0 .. maxY]

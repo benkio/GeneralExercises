@@ -80,10 +80,12 @@ modelNumberTree zLimit bs =
 modelNumbers :: Tree (Int, Int) -> Maybe String
 modelNumbers = T.foldTree treeToNum
   where
-    treeToNum (w, z) [] = if z == 0 then Just (traceShow z (show w)) else Nothing
+    treeToNum (w, z) [] = if z == 0 then Just (-- traceShow z 
+        (show w)) else Nothing
     treeToNum (w, _) xs =
         let vals = (fmap (\s -> read s :: Int) . catMaybes) xs
-         in if null vals then Nothing else (Just . traceShowId . (show w ++) . show) $ maximum vals
+         in if null vals then Nothing else (Just . -- traceShowId . 
+            (show w ++) . show) $ maximum vals
 
 search :: [[Instruction]] -> Maybe String
 search = listToMaybe . mapMaybe modelNumbers . modelNumberTree 205000 . take 8

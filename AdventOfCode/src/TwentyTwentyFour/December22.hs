@@ -107,13 +107,15 @@ solution2 :: [Int] -> Int
 solution2 i =
     S.foldl go 0 allSequences
   where
-    sellersMap = trace "sellers Computed" $ fmap (mapBananaPrice . first monkeySequnces . secretDifferencesAndPrices) i
-    allSequences = (\x -> trace ("allSequences Computed: " ++ show (size x)) x) . fromList . concatMap M.keys $ sellersMap
+    sellersMap = -- trace "sellers Computed" $ 
+        fmap (mapBananaPrice . first monkeySequnces . secretDifferencesAndPrices) i
+    allSequences = (\x -> -- trace ("allSequences Computed: " ++ show (size x)) 
+        x) . fromList . concatMap M.keys $ sellersMap
     go result sequence =
         ( \x ->
-            trace
-                (" sequence: " ++ show sequence ++ " result: " ++ show x)
-                x
+            -- trace
+            --     (" sequence: " ++ show sequence ++ " result: " ++ show x)
+            x
         )
             (max result (sum (mapMaybe (M.!? sequence) sellersMap)))
 

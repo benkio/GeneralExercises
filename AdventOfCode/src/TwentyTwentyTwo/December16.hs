@@ -109,7 +109,8 @@ foldToMax m xs =
             )
                 xs
         maxCombination = if null totalCombinations then 0 else maximum totalCombinations
-     in trace (show (show maxCombination, show (length xs))) $ foldToMax (max maxCombination m) (tail xs)
+     in -- trace (show (show maxCombination, show (length xs))) $ 
+        foldToMax (max maxCombination m) (tail xs)
 
 solution2 :: ValveMap -> Int
 solution2 vm = foldToMax 0 treeList

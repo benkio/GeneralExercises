@@ -36,7 +36,7 @@ parseInput =
             )
 
 printInput :: (ChipMap, [(Coord, ChipField)]) -> IO ()
-printInput = putStrLn . printGridMapDefault . fst
+printInput = const (return ()) -- putStrLn . printGridMapDefault . fst
 
 printTestInput = printInput testInput
 

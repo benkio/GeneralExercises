@@ -159,7 +159,8 @@ newRobotTime s b r = case r of
 
 bfs :: [(Int, State)] -> Set State -> Int -> Blueprint -> Int -> Int
 bfs [] _ result _ _ = result
-bfs ((t, s) : sts) visited result b totalTime = trace ((show . length) sts) $ bfs (sts ++ nextStates) visited' (max (geode finalState) result) b totalTime
+bfs ((t, s) : sts) visited result b totalTime = -- trace ((show . length) sts) $ 
+    bfs (sts ++ nextStates) visited' (max (geode finalState) result) b totalTime
   where
     finalState = evolveState (totalTime - t) s
     nextStates = filter ((`Set.notMember` visited) . snd) $ newRobotStates s t totalTime b

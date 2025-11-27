@@ -151,7 +151,8 @@ atLeastNAdjacentRobotsByDirection n (bx, by) rs =
 findByAdjacentRobots :: Int -> Int -> Coord -> [Robot] -> Int
 findByAdjacentRobots adjacents nMax bSize rs = go 1 (moveRobots bSize rs)
   where
-    go !n rs' = if atLeastNAdjacentRobotsByDirection adjacents bSize rs' || n >= nMax then n else go (traceShowId (n + 1)) (moveRobots bSize rs')
+    go !n rs' = if atLeastNAdjacentRobotsByDirection adjacents bSize rs' || n >= nMax then n else go (-- traceShowId 
+        (n + 1)) (moveRobots bSize rs')
 
 solution2 :: [Robot] -> Int
 solution2 xs = findByAdjacentRobots 10 loopValue bathroomSize xs
@@ -163,4 +164,5 @@ december14Solution2 :: IO Int
 december14Solution2 = solution2 <$> input
 
 december14Solution2Print :: IO ()
-december14Solution2Print = (\i -> putStrLn (printRobots bathroomSize (evolveToT (solution2 i) bathroomSize i))) =<< input
+december14Solution2Print = (\i -> -- putStrLn (printRobots bathroomSize (evolveToT (solution2 i) bathroomSize i))
+    return ()) =<< input

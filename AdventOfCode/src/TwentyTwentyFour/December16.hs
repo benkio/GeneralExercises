@@ -53,9 +53,12 @@ findBestPathScore = foldTree foldNCalculateScore
 
 foldNCalculateScore :: (Node Terrain, Int) -> [(Int, [Coord])] -> (Int, [Coord])
 foldNCalculateScore (n, v) xs
-    | val n == E = trace ("calculate on End " ++ show v) (v, [nc n])
-    | null candidates = trace ("discard node " ++ show (nc n)) (-1, [])
-    | otherwise = trace ("calculate on node " ++ show (nc n)) $ minimumBy (comparing fst) candidates
+    | val n == E = -- trace ("calculate on End " ++ show v) 
+        (v, [nc n])
+    | null candidates = -- trace ("discard node " ++ show (nc n)) 
+        (-1, [])
+    | otherwise = -- trace ("calculate on node " ++ show (nc n)) $ 
+        minimumBy (comparing fst) candidates
   where
     candidates = filter ((>= 0) . fst) xs
 
