@@ -127,7 +127,7 @@ tests =
     , TestCase
         { testName = "TwentyTwentyTwo-December10-solution2"
         , testAction = S10.december10Solution2
-        , expectedResult = "####.###...##..###..#....####.####.#..#.  \n...#.#..#.#..#.#..#.#....#.......#.#..#.  \n..#..#..#.#..#.#..#.#....###....#..#..#.  \n.#...###..####.###..#....#.....#...#..#.  \n#....#.#..#..#.#.#..#....#....#....#..#.  \n####.#..#.#..#.#..#.####.#....####..##..\n"
+        , expectedResult = "\n####.###...##..###..#....####.####.#..#.\n...#.#..#.#..#.#..#.#....#.......#.#..#.\n..#..#..#.#..#.#..#.#....###....#..#..#.\n.#...###..####.###..#....#.....#...#..#.\n#....#.#..#..#.#.#..#....#....#....#..#.\n####.#..#.#..#.#..#.####.#....####..##.."
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December11-solution1"
@@ -187,86 +187,91 @@ tests =
     , TestCase
         { testName = "TwentyTwentyTwo-December16-solution2"
         , testAction = S16.december16Solution2
-        , expectedResult = undefined
+        , expectedResult = 2556
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December17-solution1"
         , testAction = S17.december17Solution1
-        , expectedResult = undefined
+        , expectedResult = 3130
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December17-solution2"
         , testAction = S17.december17Solution2
-        , expectedResult = undefined
+        , expectedResult = 1556521739139
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December18-solution1"
         , testAction = S18.december18Solution1
-        , expectedResult = undefined
+        , expectedResult = 4320
+        }
+            , TestCase
+        { testName = "TwentyTwentyTwo-December18-solution2"
+        , testAction = S18.december18Solution2
+        , expectedResult = 2456
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December19-solution1"
         , testAction = S19.december19Solution1
-        , expectedResult = undefined
+        , expectedResult = 1199
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December19-solution2"
         , testAction = S19.december19Solution2
-        , expectedResult = undefined
+        , expectedResult = 3510
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December20-solution1"
         , testAction = S20.december20Solution1
-        , expectedResult = undefined
+        , expectedResult = 3700
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December20-solution2"
         , testAction = S20.december20Solution2
-        , expectedResult = undefined
+        , expectedResult = 10626948369382
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December21-solution1"
         , testAction = S21.twentyFirstDecemberSolution1
-        , expectedResult = undefined
+        , expectedResult = 54703080378102
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December21-solution2"
         , testAction = S21.twentyFirstDecemberSolution2
-        , expectedResult = undefined
+        , expectedResult = 3952673930912
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December22-solution1"
         , testAction = S22.twentySecondDecemberSolution1
-        , expectedResult = undefined
+        , expectedResult = 126350
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December22-solution2"
         , testAction = S22.twentySecondDecemberSolution2
-        , expectedResult = undefined
+        , expectedResult = 129339
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December23-solution1"
         , testAction = S23.twentyThirdDecemberSolution1
-        , expectedResult = undefined
+        , expectedResult = 3757
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December23-solution2"
         , testAction = S23.twentyThirdDecemberSolution2
-        , expectedResult = undefined
+        , expectedResult = 918
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December24-solution1"
         , testAction = S24.twentyFourthDecemberSolution1
-        , expectedResult = undefined
+        , expectedResult = 292
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December24-solution2"
         , testAction = S24.twentyFourthDecemberSolution2
-        , expectedResult = undefined
+        , expectedResult = 816
         }
     , TestCase
         { testName = "TwentyTwentyTwo-December25-solution1"
         , testAction = S25.twentyFifthDecemberSolution1
-        , expectedResult = undefined
+        , expectedResult = "122-2=200-0111--=200"
         }
     ]

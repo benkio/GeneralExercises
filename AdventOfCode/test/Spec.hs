@@ -1,8 +1,8 @@
 module Main where
 
+import Test.Tasty (TestTree, defaultMain, localOption, mkTimeout, testGroup)
+import Test.Tasty.HUnit (assertEqual, testCase)
 import TestCase (TestCase (..))
-import Test.Tasty (TestTree, defaultMain, testGroup, localOption, mkTimeout)
-import Test.Tasty.HUnit (testCase, assertEqual)
 import qualified TwentyFifteen.Tests as T2015
 import qualified TwentySixteen.Tests as T2016
 import qualified TwentyTwenty.Tests as T2020
@@ -27,9 +27,9 @@ main =
             [ testGroup "TwentyFifteen" $ fmap runTestWithTimeout T2015.tests
             , testGroup "TwentySixteen" $ fmap runTestWithTimeout T2016.tests
             , testGroup "TwentyTwenty" $ fmap runTestWithTimeout T2020.tests
-            -- , testGroup "TwentyTwentyOne" $ fmap runTestWithTimeout T2021.tests
-            -- , testGroup "TwentyTwentyTwo" $ fmap runTestWithTimeout T2022.tests
-            -- , testGroup "TwentyTwentyThree" $ fmap runTestWithTimeout T2023.tests
-            -- , testGroup "TwentyTwentyFour" $ fmap runTestWithTimeout T2024.tests
+            , testGroup "TwentyTwentyOne" $ fmap runTestWithTimeout T2021.tests
+            , testGroup "TwentyTwentyTwo" $ fmap runTestWithTimeout T2022.tests
+            , testGroup "TwentyTwentyThree" $ fmap runTestWithTimeout T2023.tests
+            , testGroup "TwentyTwentyFour" $ fmap runTestWithTimeout T2024.tests
             -- , testGroup "TwentyTwentyFive" $ fmap runTestWithTimeout T2025.tests
             ]

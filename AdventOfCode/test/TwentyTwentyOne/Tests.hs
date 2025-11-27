@@ -158,7 +158,7 @@ tests =
     , TestCase
         { testName = "TwentyTwentyOne-December13-solution2"
         , testAction = S13.december13Solution2
-        , expectedResult = "..##.####..##..#..#..##..###..###..###.  \n...#....#.#..#.#..#.#..#.#..#.#..#.#..# \n...#...#..#....#..#.#..#.#..#.#..#.###.  \n...#..#...#.##.#..#.####.###..###..#..# \n#..#.#....#..#.#..#.#..#.#....#.#..#..# \n.##..####..###..##..#..#.#....#..#.###.\n"
+        , expectedResult = "..##.####..##..#..#..##..###..###..###.\n...#....#.#..#.#..#.#..#.#..#.#..#.#..#\n...#...#..#....#..#.#..#.#..#.#..#.###.\n...#..#...#.##.#..#.####.###..###..#..#\n#..#.#....#..#.#..#.#..#.#....#.#..#..#\n.##..####..###..##..#..#.#....#..#.###.\n"
         }
     , TestCase
         { testName = "TwentyTwentyOne-December14-solution1"
@@ -210,16 +210,16 @@ tests =
         , testAction = S18.december18Solution2
         , expectedResult = 4635
         }
-    -- , TestCase
-    --     { testName = "TwentyTwentyOne-December19-solution1"
-    --     , testAction = S19.december19Solution1
-    --     , expectedResult = undefined
-    --     }
-    -- , TestCase
-    --     { testName = "TwentyTwentyOne-December19-solution2"
-    --     , testAction = S19.december19Solution2
-    --     , expectedResult = undefined
-    --     }
+    , TestCase
+        { testName = "TwentyTwentyOne-December19-solution1"
+        , testAction = S19.december19Solution1
+        , expectedResult = 405
+        }
+    , TestCase
+        { testName = "TwentyTwentyOne-December19-solution2"
+        , testAction = S19.december19Solution2
+        , expectedResult = 12306
+        }
     , TestCase
         { testName = "TwentyTwentyOne-December20-solution1"
         , testAction = S20.december20Solution1

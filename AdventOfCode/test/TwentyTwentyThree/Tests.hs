@@ -29,7 +29,7 @@ import qualified TwentyTwentyThree.December25 as S25
 
 tests :: [TestCase]
 tests =
-    [       TestCase
+    [ TestCase
         { testName = "TwentyTwentyThree-December01-solution1"
         , testAction = S1.december01Solution1
         , expectedResult = 56042
@@ -227,46 +227,46 @@ tests =
     , TestCase
         { testName = "TwentyTwentyThree-December21-solution1"
         , testAction = S21.twentyfirstDecemberSolution1
-        , expectedResult = undefined
+        , expectedResult = 3724
         }
     , TestCase
         { testName = "TwentyTwentyThree-December21-solution2"
         , testAction = S21.twentyfirstDecemberSolution2
-        , expectedResult = undefined
+        , expectedResult = 620348631910321
         }
     , TestCase
         { testName = "TwentyTwentyThree-December22-solution1"
         , testAction = S22.twentysecondDecemberSolution1
-        , expectedResult = undefined
+        , expectedResult = 391
         }
     , TestCase
         { testName = "TwentyTwentyThree-December22-solution2"
         , testAction = S22.twentysecondDecemberSolution2
-        , expectedResult = undefined
+        , expectedResult = 69601
         }
     , TestCase
         { testName = "TwentyTwentyThree-December23-solution1"
         , testAction = S23.twentythirdDecemberSolution1
-        , expectedResult = undefined
+        , expectedResult = 2130
+        }
+    , TestCase
+        { testName = "TwentyTwentyThree-December23-solution1"
+        , testAction = S23.twentythirdDecemberSolution2
+        , expectedResult = 6710
         }
     , TestCase
         { testName = "TwentyTwentyThree-December24-solution1"
         , testAction = S24.twentyfourthDecemberSolution1
-        , expectedResult = undefined
+        , expectedResult = 15107
         }
     , TestCase
         { testName = "TwentyTwentyThree-December24-solution2"
         , testAction = S24.twentyfourthDecemberSolution2
-        , expectedResult = undefined
+        , expectedResult = 856642398547748
         }
     , TestCase
         { testName = "TwentyTwentyThree-December25-solution1"
         , testAction = S25.twentyfifthDecemberSolution1
-        , expectedResult = undefined
-        }
-    , TestCase
-        { testName = "TwentyTwentyThree-December25-solution2"
-        , testAction = S25.twentyfifthDecemberSolution2
-        , expectedResult = undefined
+        , expectedResult = 551196
         }
     ]

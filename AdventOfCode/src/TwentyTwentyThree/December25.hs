@@ -68,8 +68,3 @@ solution1 cs = do
 
 twentyfifthDecemberSolution1 :: IO Int
 twentyfifthDecemberSolution1 = solution1 =<< input
-
-solution2 = undefined
-
-twentyfifthDecemberSolution2 :: IO Int
-twentyfifthDecemberSolution2 = undefined
