@@ -10,6 +10,14 @@ Contains all the advent of code years in haskell.
 - `hlint`
 - `apply-refactor`
 
+## Setting Up Environment
+
+You can easily create a `nix-shell` with all the necessary dependencies
+
+``` sh
+nix-shell
+```
+
 ## Compiling
 
 `stack build`
