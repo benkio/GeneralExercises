@@ -142,37 +142,37 @@ tests =
     , TestCase
         { testName = "TwentyTwentyThree-December12-solution1"
         , testAction = S12.december12Solution1
-        , expectedResult = undefined
+        , expectedResult = 6958
         }
     , TestCase
         { testName = "TwentyTwentyThree-December12-solution2"
         , testAction = S12.december12Solution2
-        , expectedResult = undefined
+        , expectedResult = 6555315065024
         }
     , TestCase
         { testName = "TwentyTwentyThree-December14-solution1"
         , testAction = S14.december14Solution1
-        , expectedResult = undefined
+        , expectedResult = 109661
         }
     , TestCase
         { testName = "TwentyTwentyThree-December14-solution2"
         , testAction = S14.december14Solution2
-        , expectedResult = undefined
+        , expectedResult = 90176
         }
     , TestCase
         { testName = "TwentyTwentyThree-December15-solution1"
         , testAction = S15.december15Solution1
-        , expectedResult = undefined
+        , expectedResult = 506869
         }
     , TestCase
         { testName = "TwentyTwentyThree-December15-solution2"
         , testAction = S15.december15Solution2
-        , expectedResult = undefined
+        , expectedResult = 271384
         }
     , TestCase
         { testName = "TwentyTwentyThree-December16-solution1"
         , testAction = S16.december16Solution1
-        , expectedResult = undefined
+        , expectedResult = 6816
         }
     , TestCase
         { testName = "TwentyTwentyThree-December16-solution2"
