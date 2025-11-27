@@ -33,57 +33,57 @@ tests =
     [       TestCase
         { testName = "TwentyTwentyFour-December01-solution1"
         , testAction = S1.december01Solution1
-        , expectedResult = undefined
+        , expectedResult = 2378066
         }
     , TestCase
         { testName = "TwentyTwentyFour-December01-solution2"
         , testAction = S1.december01Solution2
-        , expectedResult = undefined
+        , expectedResult = 18934359
         }
     , TestCase
         { testName = "TwentyTwentyFour-December02-solution1"
         , testAction = S2.december02Solution1
-        , expectedResult = undefined
+        , expectedResult = 510
         }
     , TestCase
         { testName = "TwentyTwentyFour-December02-solution2"
         , testAction = S2.december02Solution2
-        , expectedResult = undefined
+        , expectedResult = 553
         }
     , TestCase
         { testName = "TwentyTwentyFour-December03-solution1"
         , testAction = S3.december03Solution1
-        , expectedResult = undefined
+        , expectedResult = 189527826
         }
     , TestCase
         { testName = "TwentyTwentyFour-December03-solution2"
         , testAction = S3.december03Solution2
-        , expectedResult = undefined
+        , expectedResult = 63013756
         }
     , TestCase
         { testName = "TwentyTwentyFour-December04-solution1"
         , testAction = S4.december04Solution1
-        , expectedResult = undefined
+        , expectedResult = 2603
         }
     , TestCase
         { testName = "TwentyTwentyFour-December04-solution2"
         , testAction = S4.december04Solution2
-        , expectedResult = undefined
+        , expectedResult = 1965
         }
     , TestCase
         { testName = "TwentyTwentyFour-December05-solution1"
         , testAction = S5.december05Solution1
-        , expectedResult = undefined
+        , expectedResult = 6242
         }
     , TestCase
         { testName = "TwentyTwentyFour-December05-solution2"
         , testAction = S5.december05Solution2
-        , expectedResult = undefined
+        , expectedResult = 5169
         }
     , TestCase
         { testName = "TwentyTwentyFour-December06-solution1"
         , testAction = S6.december06Solution1
-        , expectedResult = undefined
+        , expectedResult = 5444
         }
     , TestCase
         { testName = "TwentyTwentyFour-December06-solution2"
