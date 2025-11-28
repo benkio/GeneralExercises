@@ -1,7 +1,7 @@
 module TwentySixteen.December17 where
 
 import qualified Data.ByteString.Lazy.Char8 as B
-import qualified Data.Digest.Pure.MD5 as M
+import Lib.MD5 (generateMD5)
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -12,9 +12,6 @@ type Coordinate = (Int, Int)
 
 input :: IO String
 input = readFile "input/2016/17December.txt"
-
-generateMD5 :: String -> String
-generateMD5 = show . M.md5 . B.pack
 
 gridMaxCoordinate :: Coordinate
 gridMaxCoordinate = (3, 3)

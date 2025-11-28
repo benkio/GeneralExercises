@@ -14,7 +14,7 @@ import qualified Data.Vector as Vector (
     (//),
  )
 import Text.Read (readMaybe)
-import TwentyFifteen.December04 (generateMD5)
+import Lib.MD5 (generateMD5)
 
 input :: IO String
 input = init <$> readFile "input/2016/5December.txt"
@@ -29,7 +29,7 @@ findPassword prefix (x : xs) countdown
         md5 !! 5 : findPassword prefix xs (countdown - 1)
     | otherwise = findPassword prefix xs countdown
   where
-    md5 = generateMD5 prefix x
+    md5 = generateMD5 $ prefix ++ show x
 
 solution1 :: String -> String
 solution1 prefix = findPassword prefix [0 ..] 8
@@ -50,7 +50,7 @@ findPasswordWithPosition prefix (x : xs) result
             ((Vector.//) result [(fromJust maybeIndex, md5 !! 6)])
     | otherwise = findPasswordWithPosition prefix xs result
   where
-    md5 = generateMD5 prefix x
+    md5 = generateMD5 $ prefix ++ show x
     maybeIndex =
         mfilter
             ( `elem`
