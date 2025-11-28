@@ -1,6 +1,7 @@
 module Lib.Parse (
     parseCommaSeparatedInts,
     parseGridWithElemSelection,
+    parseInstructionsStartEnd,
     parseNumGrid,
     parseTwoColumnNum,
     parseMove,
@@ -16,8 +17,8 @@ import Data.Maybe (mapMaybe)
 import Data.Void (Void)
 import Lib.Coord (Coord (..))
 import Lib.Move (Move (..))
-import Text.Megaparsec (Parsec, parse)
-import Text.Megaparsec.Char (newline, string)
+import Text.Megaparsec (Parsec, parse, choice, parseError)
+import Text.Megaparsec.Char (newline, string, space)
 import Text.Megaparsec.Char.Lexer (decimal, signed)
 
 {-
@@ -93,6 +94,9 @@ parseMove '^' = U
 parseMove '>' = R
 parseMove 'v' = D
 
+
+parseOrFail parseFunction = either (\e -> error ("[Parse]: 🚫 ERROR parsing " ++ show e)) id . parse (many (parseFunction <* newline)) ""
+
 {-
 5,4
 4,2
@@ -100,12 +104,26 @@ parseMove 'v' = D
 3,0
 -}
 parseCoords :: String -> [Coord]
-parseCoords = either (\e -> error ("[Parse]: error parsing choordinates " ++ show e)) id . parse (many parseCoord) ""
-  where
-    parseCoord :: Parsec Void String Coord
-    parseCoord = do
-        x <- decimal
-        string ","
-        y <- decimal
-        newline
-        return (x, y)
+parseCoords = parseOrFail parseCoord
+
+parseCoord :: Parsec Void String Coord
+parseCoord = do
+    x <- decimal
+    string ","
+    y <- decimal
+    return (x, y)
+
+-- turn on 887,9 through 959,629
+parseInstructionsStartEnd :: [String] -> String -> [(String, Coord, Coord)]
+parseInstructionsStartEnd validInstructions = parseOrFail (parseInstructionStartEnd validInstructions)
+
+parseInstructionStartEnd :: [String] -> Parsec Void String (String, Coord, Coord)
+parseInstructionStartEnd validInstructions = do
+  instruction <- choice ((fmap string validInstructions)++[fail ("Expected one of the following instructions "++(show validInstructions ))])
+  space
+  start <- parseCoord
+  space
+  string "through"
+  space
+  end <- parseCoord
+  return (instruction, start, end)

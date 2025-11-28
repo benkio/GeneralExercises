@@ -1,15 +1,16 @@
 module Lib.Coord (
-    Coord,
     cardinalNeighboors,
-    ordinalNeighboors,
-    manhattanDistance,
-    manhattanDistanceSigned,
-    manhattanDistance',
-    manhattanPath,
-    onTheSameLine,
+    coordPlus,
+    inside,
     isCardinalNeighboor,
     isOrdinalNeighboor,
-    coordPlus,
+    manhattanDistance',
+    manhattanDistance,
+    manhattanDistanceSigned,
+    manhattanPath,
+    onTheSameLine,
+    ordinalNeighboors,
+    Coord,
 )
 where
 
@@ -52,3 +53,10 @@ onTheSameLine :: Coord -> Coord -> Bool
 onTheSameLine (x, y) (a, b)
     | x == a || y == b = True
     | otherwise = False
+
+inside :: Coord -> Coord -> Coord -> Bool
+inside (x, y) (sx, sy) (ex, ey) =
+    x >= sx
+        && x <= ex
+        && y >= sy
+        && y <= ey

@@ -3,6 +3,7 @@ module Lib.List (
     (!?),
     find',
     null',
+    diffMap,
     pairsWith,
     pairs,
     rotate,
@@ -18,6 +19,9 @@ import Data.Maybe (fromMaybe, listToMaybe)
 
 (\\) :: (Eq a) => [a] -> [a] -> [a]
 (\\) xs c = filter (`notElem` c) xs
+
+diffMap :: (Eq b) => (a -> b) -> [a] -> [a] -> [a]
+diffMap f xs c = filter ((`notElem` (fmap f c)) . f) xs
 
 find' :: (a -> Bool) -> [a] -> Maybe a
 find' p [] = Nothing
