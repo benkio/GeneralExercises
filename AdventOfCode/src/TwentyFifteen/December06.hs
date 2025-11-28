@@ -1,99 +1,58 @@
 module TwentyFifteen.December06 where
 
-import qualified Data.Char as Char
-import Data.Map as M (
-    Map,
-    adjust,
-    alter,
-    delete,
-    elems,
-    empty,
-    insertWith,
-    size,
- )
-import Data.Maybe
+import Control.Parallel.Strategies
+import Lib.Coord
+import Lib.List (diffMap)
+import Lib.Parse
 
-type Coordinate = (Int, Int)
-
-data LightStatus
-    = On
-    | Off
-    | Toggle
-    deriving (Show, Read, Eq)
-
-data Instruction
-    = Instruction LightStatus Coordinate Coordinate
-    deriving (Show)
-
-litLights :: M.Map Coordinate a
-litLights = M.empty
-
-capitalized :: String -> String
-capitalized (h : t) = Char.toUpper h : map Char.toLower t
-capitalized [] = []
+validInstructions :: [String]
+validInstructions =
+    [ "toggle"
+    , "turn on"
+    , "turn off"
+    ]
 
 input :: IO [Instruction]
-input = fmap parseInstruction . lines <$> readFile "input/2015/6December.txt"
+input = parseInput <$> readFile "input/2015/6December.txt"
 
-parseInstruction :: String -> Instruction
-parseInstruction s =
-    let ws = words s
-        c2 = read ('(' : last ws ++ ")") :: (Int, Int)
-        c1 = read ('(' : (ws !! (length ws - 3)) ++ ")") :: (Int, Int)
-        t =
-            if head ws == "turn"
-                then ws !! 1
-                else head ws
-        t' = read (capitalized t) :: LightStatus
-     in Instruction t' c1 c2
+parseInput :: String -> [Instruction]
+parseInput = parseInstructionsStartEnd validInstructions
 
-instructionToGrid :: Instruction -> [Coordinate]
-instructionToGrid (Instruction _ (x1, y1) (x2, y2)) =
-    [(x, y) | x <- [x1 .. x2], y <- [y1 .. y2]]
+type Instruction = (String, Coord, Coord)
+type LightBlock = (Coord, Coord)
 
-applyInstruction ::
-    M.Map Coordinate LightStatus -> Instruction -> M.Map Coordinate LightStatus
-applyInstruction lights i@(Instruction On _ _) =
-    foldl
-        (\m (x, y) -> M.insertWith (\_ _ -> On) (x, y) On m)
-        lights
-        (instructionToGrid i)
-applyInstruction lights i@(Instruction Off _ _) =
-    foldl (\m (x, y) -> M.delete (x, y) m) lights (instructionToGrid i)
-applyInstruction lights i@(Instruction Toggle _ _) =
-    foldl
-        ( \m (x, y) ->
-            M.alter
-                ( \a ->
-                    if isJust a
-                        then Nothing
-                        else Just On
-                )
-                (x, y)
-                m
-        )
-        lights
-        (instructionToGrid i)
+applyInstructions :: [LightBlock] -> [Instruction] -> [Light]
+applyInstructions [] (("turn on", sc, ec) : is) = applyInstructions [(sc, ec)] is
+applyInstructions [] (("toggle", sc, ec) : is) = applyInstructions [(sc, ec)] is
+applyInstructions [] (_ : is) = applyInstructions [] is
+applyInstructions ls [] = ls
+
+-- Handle block collision and splitting, keeping only the light blocks
+-- applyInstructions ls (("turn on", sc, ec) : is) =
+--     let
+--         newTurnedLights = diffMap fst (lights 1 sc ec) ls
+--         newLights = ls ++ newTurnedLights
+--      in
+--         applyInstructions newLights is
+-- applyInstructions ls (("turn off", sc, ec) : is) =
+--     let
+--         (_, stillOn) = span (\(c, _) -> inside c sc ec) ls
+--      in
+--         applyInstructions stillOn is
+-- applyInstructions ls (("toggle", sc, ec) : is) =
+--     let
+--         (toggled, stillOn) = span (\(c, _) -> inside c sc ec) ls
+--         newTurnedLights = diffMap fst (lights 1 sc ec) ls
+--         newLights = stillOn ++ (filter ((== (-1)) . snd) . fmap (\(c, v) -> (c, v * (-1)))) toggled ++ newTurnedLights
+--      in
+--         applyInstructions newLights is
 
 solution1 :: [Instruction] -> Int
-solution1 is = M.size $ foldl applyInstruction litLights is
-
-adjustBrightness :: M.Map Coordinate Int -> Instruction -> M.Map Coordinate Int
-adjustBrightness lights i@(Instruction On _ _) =
-    foldl (\m (x, y) -> M.insertWith (+) (x, y) 1 m) lights (instructionToGrid i)
-adjustBrightness lights i@(Instruction Off _ _) =
-    foldl
-        (\m (x, y) -> M.adjust (\a -> max 0 (a - 1)) (x, y) m)
-        lights
-        (instructionToGrid i)
-adjustBrightness lights i@(Instruction Toggle _ _) =
-    foldl (\m (x, y) -> M.insertWith (+) (x, y) 2 m) lights (instructionToGrid i)
-
-solution2 :: [Instruction] -> Int
-solution2 is = (sum . M.elems) $ foldl adjustBrightness litLights is
+solution1 is = undefined
 
 december06Solution1 :: IO Int
 december06Solution1 = solution1 <$> input
 
+solution2 = undefined
 december06Solution2 :: IO Int
 december06Solution2 = solution2 <$> input
