@@ -1,6 +1,12 @@
 module Main where
 
-import TwentyTwentyFour.December23
+import TwentyFifteen.December06
 
 main :: IO ()
-main = december23Solution2 >>= print
+main = do
+    result <- december06Solution2
+    putStrLn $ "Result: " ++ show result
+    putStrLn $ "Expected: 14110788"
+    if result == 14110788
+        then putStrLn "✓ Test PASSED!"
+        else putStrLn $ "✗ Test FAILED! Difference: " ++ show (result - 14110788)

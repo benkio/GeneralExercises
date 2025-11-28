@@ -2,6 +2,7 @@ module Lib.Coord (
     cardinalNeighboors,
     coordPlus,
     inside,
+    insideRect,
     isCardinalNeighboor,
     isOrdinalNeighboor,
     manhattanDistance',
@@ -12,6 +13,7 @@ module Lib.Coord (
     ordinalNeighboors,
     subtractRect,
     coordsRect,
+    hasIntersectionRect,
     Coord,
 )
 where
@@ -20,7 +22,7 @@ import Data.Functor ((<&>))
 import Data.List (sortOn)
 import Data.Map (Map, toList, (!?))
 import qualified Data.Map as M (filterWithKey)
-import Data.Maybe (catMaybes, listToMaybe, mapMaybe)
+import Data.Maybe (catMaybes, listToMaybe, mapMaybe, isNothing)
 
 type Coord = (Int, Int)
 
@@ -70,12 +72,11 @@ normalizeRect :: (Coord, Coord) -> (Coord, Coord)
 normalizeRect ((x1, y1), (x2, y2)) = ((min x1 x2, min y1 y2), (max x1 x2, max y1 y2))
 
 -- | Check if two rectangles intersect
-hasIntersectionRect :: (Coord, Coord) -> (Coord, Coord) -> Bool
-hasIntersectionRect ((minX1, minY1), (maxX1, maxY1)) ((minX2, minY2), (maxX2, maxY2)) =
-    minX2 <= maxX1
-        && maxX2 >= minX1
-        && minY2 <= maxY1
-        && maxY2 >= minY1
+hasIntersectionRect :: (Coord, Coord) -> (Coord, Coord) -> Maybe (Coord, Coord)
+hasIntersectionRect ((minX1, minY1), (maxX1, maxY1)) ((minX2, minY2), (maxX2, maxY2))
+    | minX2 <= maxX1 && maxX2 >= minX1 && minY2 <= maxY1 && maxY2 >= minY1 =
+        Just ((max minX1 minX2, max minY1 minY2), (min maxX1 maxX2, min maxY1 maxY2))
+    | otherwise = Nothing
 
 -- | Check if the second rectangle is completely inside the first
 insideRect :: (Coord, Coord) -> (Coord, Coord) -> Bool
@@ -94,8 +95,7 @@ All output rectangles are guaranteed to be in (topLeft, bottomRight) format.
 -}
 subtractRect :: (Coord, Coord) -> (Coord, Coord) -> [(Coord, Coord)]
 subtractRect rect1@((minX1, minY1), (maxX1, maxY1)) rect2@((minX2, minY2), (maxX2, maxY2))
-    | not (hasIntersectionRect rect1 rect2) = [normalizeRect rect2]
-    | insideRect rect1 rect2 = []
+    | isNothing (hasIntersectionRect rect1 rect2) = [normalizeRect rect2]
     | otherwise =
         -- Split the second rectangle into parts that don't overlap with first
         -- All rectangles are constructed as (topLeft, bottomRight) and normalized
