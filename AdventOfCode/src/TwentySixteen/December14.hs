@@ -1,9 +1,9 @@
 module TwentySixteen.December14 where
 
 import qualified Data.ByteString.Lazy.Char8 as B
-import Lib.MD5 (generateMD5, generateMD5WithPrefix)
 import Data.List
 import Data.Maybe
+import Lib.MD5 (generateMD5, generateMD5WithPrefix)
 
 mD5s :: String -> [String]
 mD5s prefix = fmap (generateMD5WithPrefix prefix . show) [1 ..]
@@ -50,7 +50,7 @@ december14Solution1 =
 
 generateMD52016 :: String -> String -> String
 generateMD52016 prefix i =
-    iterate (generateMD5) (generateMD5WithPrefix prefix i) !! 2016
+    iterate generateMD5 (generateMD5WithPrefix prefix i) !! 2016
 
 mD52016s :: String -> [String]
 mD52016s prefix = fmap (generateMD52016 prefix . show) [1 ..]

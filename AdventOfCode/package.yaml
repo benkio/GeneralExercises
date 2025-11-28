@@ -32,6 +32,8 @@ dependencies:
 - aeson
 - scientific
 - text
+- tasty
+- tasty-hunit
 - random
 - split
 - ghc

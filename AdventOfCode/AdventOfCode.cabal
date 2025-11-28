@@ -31,10 +31,12 @@ library
       Lib.Math
       Lib.MD5
       Lib.Move
+      Lib.Par
       Lib.Parse
       Lib.Pathfinding
       Lib.Print
       Lib.Seq
+      Lib.String
       TwentyFifteen.December01
       TwentyFifteen.December02
       TwentyFifteen.December03
@@ -254,6 +256,8 @@ library
     , regex-tdfa
     , scientific
     , split
+    , tasty
+    , tasty-hunit
     , text
     , vector
   default-language: Haskell2010
@@ -280,6 +284,8 @@ executable AdventOfCode-exe
     , regex-tdfa
     , scientific
     , split
+    , tasty
+    , tasty-hunit
     , text
     , vector
   default-language: Haskell2010
@@ -316,6 +322,8 @@ test-suite AdventOfCode-test
     , regex-tdfa
     , scientific
     , split
+    , tasty
+    , tasty-hunit
     , text
     , vector
   default-language: Haskell2010

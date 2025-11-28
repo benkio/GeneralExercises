@@ -13,8 +13,8 @@ import qualified Data.Vector as Vector (
     map,
     (//),
  )
-import Text.Read (readMaybe)
 import Lib.MD5 (generateMD5)
+import Text.Read (readMaybe)
 
 input :: IO String
 input = init <$> readFile "input/2016/5December.txt"

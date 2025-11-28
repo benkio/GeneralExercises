@@ -1,10 +1,10 @@
 module TwentySixteen.December17 where
 
 import qualified Data.ByteString.Lazy.Char8 as B
-import Lib.MD5 (generateMD5)
 import Data.Functor
 import Data.List
 import Data.Maybe
+import Lib.MD5 (generateMD5)
 
 data Door = U | D | L | R deriving (Show, Eq, Ord)
 

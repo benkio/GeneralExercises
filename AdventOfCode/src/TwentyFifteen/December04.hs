@@ -1,7 +1,8 @@
 module TwentyFifteen.December04 where
 
-import qualified Data.ByteString.Lazy.Char8 as B
+import Data.Maybe (fromMaybe)
 import Lib.MD5 (generateMD5)
+import Lib.Par (findPar)
 
 input :: IO String
 input = readFile "input/2015/4December.txt"
@@ -15,18 +16,20 @@ testSolution1 :: Bool
 testSolution1 =
     ((\l -> l == [609043, 1048970]) . fmap solution1 . lines) inputTest
 
-bruteSearchLeadingZeros :: String -> [Int] -> Int -> Int
-bruteSearchLeadingZeros prefix (x : xs) zeros
-    | all ('0' ==) md5Prefix = x
-    | otherwise = bruteSearchLeadingZeros prefix xs zeros
+bruteSearchLeadingZeros :: String -> [Int] -> Int -> Maybe Int
+bruteSearchLeadingZeros prefix xs zeros =
+    findPar (all ('0' ==) . md5Prefix) xs
   where
-    md5Prefix = take zeros (generateMD5 (prefix ++ show x))
+    md5Prefix x = take zeros $ generateMD5 (prefix ++ show x)
 
 solution1 :: String -> Int
-solution1 s = bruteSearchLeadingZeros s [0 ..] 5
+solution1 s = fromMaybe (-1) $ bruteSearchLeadingZeros s [0 .. maxBoundSearch] 5
 
 solution2 :: String -> Int
-solution2 s = bruteSearchLeadingZeros s [0 ..] 6
+solution2 s = fromMaybe (-1) $ bruteSearchLeadingZeros s [0 .. maxBoundSearch] 6
+
+maxBoundSearch :: Int
+maxBoundSearch = 10000000
 
 december04Solution1 :: IO Int
 december04Solution1 = solution1 . init <$> input

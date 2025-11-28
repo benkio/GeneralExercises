@@ -44,3 +44,28 @@ Or on the whole project:
 
 Format all files:
 `fourmolu -c -i src/`
+
+## Testing
+
+Run all tests with `cabal test`
+
+### Run a specific test by name
+`cabal test --test-option="-p" --test-option="TwentyFifteen-December04-solution1"`
+Or using the short form:
+`cabal test --test-option="-p/TwentyFifteen-December04-solution1"`
+### Run all tests for a specific year
+`cabal test --test-option="-p" --test-option="TwentyFifteen"`
+Run all tests for a specific day
+`cabal test --test-option="-p" --test-option="December04"`
+### Pattern matching
+The -p flag accepts patterns, so you can use:
+
+- Match any test containing "December04" :: `cabal test --test-option="-p/December04"`
+- Match any test starting with "TwentyFifteen" :: `cabal test --test-option="-p/^TwentyFifteen"`
+
+### Alternative: Using test group names
+Since tests are organized in groups (e.g., "TwentyFifteen", "TwentySixteen"), you can also filter by group:
+
+`cabal test --test-option="-p" --test-option="TwentyFifteen"`
+
+The pattern matching is flexible, so you can use any substring of the test name to filter which tests run.
