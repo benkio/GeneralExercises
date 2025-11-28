@@ -97,7 +97,7 @@ lightBeamBounce vs cave ((c, d) : cs) = lightBeamBounce (insert (c, d) vs') cave
 
 solution1 :: PositionDirection -> Cave -> Int
 solution1 p cs =
-    -- traceShowId . 
+    -- traceShowId .
     (\x -> x - 1) . length . nubBy (\(a, _) (b, _) -> a == b) . elems $ lightBeamBounce empty cs [p]
 
 december16Solution1 :: IO Int

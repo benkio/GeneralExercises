@@ -84,17 +84,17 @@ mergeScanners (Scanner i bs) (Scanner _ bs') (x', y', z') transformationIndex =
 
 relativeScannerPositions :: [Coord] -> Scanner -> [Scanner] -> [Coord]
 relativeScannerPositions cs _ [] = (0, 0, 0) : cs
-relativeScannerPositions cs s (x : xs) = case -- traceShow (scannerId s, (length . bacons) s, fmap scannerId (x : xs)) 
-    matchScanner s x of
-    Just (scannerRelativePos, transformationIndex, _) -> relativeScannerPositions (cs ++ [scannerRelativePos]) (mergeScanners s x scannerRelativePos transformationIndex) xs
-    Nothing -> relativeScannerPositions cs s (xs ++ [x])
+relativeScannerPositions cs s (x : xs) =
+    case matchScanner s x of
+        Just (scannerRelativePos, transformationIndex, _) -> relativeScannerPositions (cs ++ [scannerRelativePos]) (mergeScanners s x scannerRelativePos transformationIndex) xs
+        Nothing -> relativeScannerPositions cs s (xs ++ [x])
 
 mergeAllScanners :: Scanner -> [Scanner] -> Scanner
 mergeAllScanners s [] = s
-mergeAllScanners s (x : xs) = case -- traceShow (scannerId s, (length . bacons) s, fmap scannerId (x : xs)) 
-    matchScanner s x of
-    Just (scannerRelativePos, transformationIndex, _) -> mergeAllScanners (mergeScanners s x scannerRelativePos transformationIndex) xs
-    Nothing -> mergeAllScanners s (xs ++ [x])
+mergeAllScanners s (x : xs) =
+    case matchScanner s x of
+        Just (scannerRelativePos, transformationIndex, _) -> mergeAllScanners (mergeScanners s x scannerRelativePos transformationIndex) xs
+        Nothing -> mergeAllScanners s (xs ++ [x])
 
 buildPairs [] = []
 buildPairs (s : ss) = [(s, x) | x <- ss] ++ buildPairs ss

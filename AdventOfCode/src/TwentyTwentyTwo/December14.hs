@@ -2,6 +2,7 @@
 
 module TwentyTwentyTwo.December14 where
 
+import Control.Monad (void, when)
 import Data.Foldable (foldlM)
 import Data.List (maximumBy, minimumBy, nub, sortOn)
 import Data.Map (Map, empty, filter, filterWithKey, findMax, findMin, insert, keys, lookup, size)
@@ -136,20 +137,18 @@ drawWaterfall m =
     let (minX, _) = (minimumBy (\(x, _) (x', _) -> x `compare` x') . keys) m
         (maxX, _) = (maximumBy (\(x, _) (x', _) -> x `compare` x') . keys) m
         (_, maxY) = (maximumBy (\(_, y) (_, y') -> y `compare` y') . keys) m
-     in foldlM
-            ( \_ y ->
-                foldlM
-                    ( \_ x ->
-                        if (x, y) == (500, 0)
-                            then -- putStr "+"
-                            return ()
-                            else -- putStr (maybe "." show (lookup (x, y) m))
-                            return ()
-                    )
-                    ()
-                    [minX .. maxX]
-                    -- >> putStr "\n"
-                    >> return ()
-            )
-            ()
-            [0 .. maxY]
+     in void $
+            foldlM
+                ( \_ y ->
+                    foldlM
+                        ( \_ x ->
+                            when ((x, y) == (500, 0)) $ return ()
+                            -- putStr "+"
+                            -- putStr (maybe "." show (lookup (x, y) m))
+                        )
+                        ()
+                        [minX .. maxX]
+                        -- >> putStr "\n"
+                )
+                ()
+                [0 .. maxY]

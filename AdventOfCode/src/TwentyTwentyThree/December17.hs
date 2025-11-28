@@ -75,14 +75,9 @@ loop grid@(HLM hlm) availableDirectiorF endConditionF =
     (snd . head . fst) $
         until
             ( \((n, v) : xs, s) ->
-                if v `mod` 100 == 0
-                    then
-                        -- trace
-                        --     (printf "debug: %s %s" (show (coord n, v)) (show (length xs, size s)))
-                            endConditionF
-                            n
-                            maxCoord
-                    else endConditionF n maxCoord
+                -- trace
+                --     (if v `mod` 100 == 0 then printf "debug: %s %s" (show (coord n, v)) (show (length xs, size s)) else "")
+                endConditionF n maxCoord
             )
             ( \(x : xs, s) ->
                 let (xs', s') = nextNodes s grid x maxCoord availableDirectiorF

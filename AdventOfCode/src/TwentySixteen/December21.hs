@@ -113,7 +113,6 @@ test = do
         encrypt = scanl applyInstruction s is
         decrypt = scanl unapplyInstruction s' (reverse is)
     -- print (zip3 (reverse encrypt) decrypt (reverse is))
-    return ()
     return $ show encrypt == show (reverse decrypt)
 
 december21Solution2 :: IO String

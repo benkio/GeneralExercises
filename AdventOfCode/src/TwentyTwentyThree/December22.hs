@@ -61,7 +61,7 @@ moveTetris tetris = go tetris S.empty
                     go
                         (fmap (either id id) nts)
                         (foldl (\s e -> S.insert (either id id e) s) rs rights)
-                else (ts,rs) -- trace (printf "debug: all fallen") (ts, rs)
+                else (ts, rs) -- trace (printf "debug: all fallen") (ts, rs)
 
 destroyableBlocks :: Tetris -> Int
 destroyableBlocks ts = length . filter (all isLeft) $ fmap (\i -> moveBlocksBelow (deleteAt i ts)) [0 .. length ts - 1]

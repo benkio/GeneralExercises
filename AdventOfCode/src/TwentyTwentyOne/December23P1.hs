@@ -70,7 +70,8 @@ removeUpdateVisitedStates cache =
         (cache, S.empty)
 
 allPossibleMovesStep :: Map Hallway Int -> Set (Hallway, Int) -> (Map Hallway Int, Set (Hallway, Int))
-allPossibleMovesStep cache states = -- traceShow (length states, M.size cache) $ 
+allPossibleMovesStep cache states =
+    -- traceShow (length states, M.size cache) $
     removeUpdateVisitedStates cache nextMoves
   where
     nextMoves = (S.unions . S.map (\(h, e) -> S.map (second (+ e)) (enterRoomMoves h `S.union` exitRoomMoves h))) states
