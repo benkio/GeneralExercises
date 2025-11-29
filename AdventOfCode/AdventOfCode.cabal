@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.38.1.
+-- This file has been generated from package.yaml by hpack version 0.38.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -11,11 +11,9 @@ author:         Enrico Benini
 maintainer:     benkio89@gmail.com
 copyright:      2020 Enrico Benini
 license:        BSD3
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    ChangeLog.md
 
 library
   exposed-modules:

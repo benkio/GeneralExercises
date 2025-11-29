@@ -4,28 +4,27 @@ Contains all the advent of code years in haskell.
 
 ## Tool Required
 
-- `stack`
-- `ormolu`
+- `fourmolu`
 - `fd`
 - `hlint`
-- `apply-refactor`
+- `ghcid`
 
 ## Setting Up Environment
 
 You can easily create a `nix-shell` with all the necessary dependencies
 
-``` sh
+```sh
 nix-shell
 ```
 
 ## Compiling
 
-`stack build`
+`cabal build`
 
 ## Running
 
 Execute the Main in `app/Main.hs`:
-`stack run`
+`cabal run`
 
 otherwise use `ghci` to run the code interpreted
 
@@ -50,20 +49,26 @@ Format all files:
 Run all tests with `cabal test`
 
 ### Run a specific test by name
+
 `cabal test --test-option="-p" --test-option="TwentyFifteen-December04-solution1"`
 Or using the short form:
 `cabal test --test-option="-p/TwentyFifteen-December04-solution1"`
+
 ### Run all tests for a specific year
+
 `cabal test --test-option="-p" --test-option="TwentyFifteen"`
 Run all tests for a specific day
 `cabal test --test-option="-p" --test-option="December04"`
+
 ### Pattern matching
+
 The -p flag accepts patterns, so you can use:
 
 - Match any test containing "December04" :: `cabal test --test-option="-p/December04"`
 - Match any test starting with "TwentyFifteen" :: `cabal test --test-option="-p/^TwentyFifteen"`
 
 ### Alternative: Using test group names
+
 Since tests are organized in groups (e.g., "TwentyFifteen", "TwentySixteen"), you can also filter by group:
 
 `cabal test --test-option="-p" --test-option="TwentyFifteen"`

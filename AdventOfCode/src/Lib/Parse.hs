@@ -10,16 +10,15 @@ module Lib.Parse (
 where
 
 import Control.Applicative (many)
-import Data.Bifunctor (bimap, first, second)
-import Data.Either (either, isRight, partitionEithers, rights)
+import Data.Either (partitionEithers)
 import Data.List.Split (wordsBy)
 import Data.Maybe (mapMaybe)
 import Data.Void (Void)
 import Lib.Coord (Coord (..))
 import Lib.Move (Move (..))
-import Text.Megaparsec (Parsec, parse, choice, parseError)
-import Text.Megaparsec.Char (newline, string, space)
-import Text.Megaparsec.Char.Lexer (decimal, signed)
+import Text.Megaparsec (Parsec, choice, parse)
+import Text.Megaparsec.Char (newline, space, string)
+import Text.Megaparsec.Char.Lexer (decimal)
 
 {-
   3   4
@@ -94,7 +93,6 @@ parseMove '^' = U
 parseMove '>' = R
 parseMove 'v' = D
 
-
 parseOrFail parseFunction = either (\e -> error ("[Parse]: 🚫 ERROR parsing " ++ show e)) id . parse (many (parseFunction <* newline)) ""
 
 {-
@@ -119,11 +117,11 @@ parseInstructionsStartEnd validInstructions = parseOrFail (parseInstructionStart
 
 parseInstructionStartEnd :: [String] -> Parsec Void String (String, Coord, Coord)
 parseInstructionStartEnd validInstructions = do
-  instruction <- choice ((fmap string validInstructions)++[fail ("Expected one of the following instructions "++(show validInstructions ))])
-  space
-  start <- parseCoord
-  space
-  string "through"
-  space
-  end <- parseCoord
-  return (instruction, start, end)
+    instruction <- choice ((fmap string validInstructions) ++ [fail ("Expected one of the following instructions " ++ (show validInstructions))])
+    space
+    start <- parseCoord
+    space
+    string "through"
+    space
+    end <- parseCoord
+    return (instruction, start, end)

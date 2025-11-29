@@ -2,12 +2,9 @@
 
 module TwentyFifteen.December06 where
 
-import Control.Parallel.Strategies
-import Data.Maybe (isJust)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Lib.Coord
-import Lib.List (diffMap)
 import Lib.Parse
 
 validInstructions :: [String]
@@ -80,9 +77,10 @@ applyInstructions' brightnessMap (("toggle", sc, ec) : is) =
 updateBrightnessDecrease :: Map Coord Int -> (Coord, Coord) -> Map Coord Int
 updateBrightnessDecrease brightnessMap rect =
     let
-      ((minX, minY), (maxX, maxY)) = normalizeRect rect
-      coords = [(x, y) | x <- [minX .. maxX], y <- [minY .. maxY]]
-     in foldl (\acc coord -> M.alter (Just . max 0 . maybe 0 (subtract 1)) coord acc) brightnessMap coords
+        ((minX, minY), (maxX, maxY)) = normalizeRect rect
+        coords = [(x, y) | x <- [minX .. maxX], y <- [minY .. maxY]]
+     in
+        foldl (\acc coord -> M.alter (Just . max 0 . maybe 0 (subtract 1)) coord acc) brightnessMap coords
   where
 
 solution2 :: [Instruction] -> Int

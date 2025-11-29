@@ -18,11 +18,7 @@ module Lib.Coord (
 )
 where
 
-import Data.Functor ((<&>))
-import Data.List (sortOn)
-import Data.Map (Map, toList, (!?))
-import qualified Data.Map as M (filterWithKey)
-import Data.Maybe (catMaybes, listToMaybe, mapMaybe, isNothing)
+import Data.Maybe (catMaybes, isNothing)
 
 type Coord = (Int, Int)
 

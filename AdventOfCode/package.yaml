@@ -8,7 +8,6 @@ copyright:           "2020 Enrico Benini"
 
 extra-source-files:
 - README.md
-- ChangeLog.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -20,23 +19,23 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/benkio/GeneralExercises/AdventOfCode#readme>
 
 dependencies:
-- base >= 4.15 && < 5
-- regex-tdfa
-- containers
-- mtl
-- vector
-- bytestring
-- cryptohash-md5
-- parallel
-- megaparsec
 - aeson
+- base >= 4.15 && < 5
+- bytestring
+- containers
+- cryptohash-md5
+- ghc
+- megaparsec
+- mtl
+- parallel
+- random
+- regex-tdfa
 - scientific
-- text
+- split
 - tasty
 - tasty-hunit
-- random
-- split
-- ghc
+- text
+- vector
 
 library:
   source-dirs: src
