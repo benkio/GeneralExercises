@@ -24,13 +24,14 @@ import qualified TwentyTwentyOne.December20 as S20
 import qualified TwentyTwentyOne.December21 as S21
 import qualified TwentyTwentyOne.December22 as S22
 import qualified TwentyTwentyOne.December23P1 as S23
+
 -- import qualified TwentyTwentyOne.December23P2 as S23P2
 import qualified TwentyTwentyOne.December24 as S24
 import qualified TwentyTwentyOne.December25 as S25
 
 tests :: [TestCase]
 tests =
-    [       TestCase
+    [ TestCase
         { testName = "TwentyTwentyOne-December01-solution1"
         , testAction = S1.december01Solution1
         , expectedResult = 1167
@@ -255,12 +256,12 @@ tests =
         , testAction = return S23.twentyThirdDecemberSolution1
         , expectedResult = 15365
         }
-    -- , TestCase
-    --     { testName = "TwentyTwentyOne-December23-solution2"
-    --     , testAction = S23P2.twentyThirdDecemberSolution2
-    --     , expectedResult = undefined
-    --     }
-    , TestCase
+    , -- , TestCase
+      --     { testName = "TwentyTwentyOne-December23-solution2"
+      --     , testAction = S23P2.twentyThirdDecemberSolution2
+      --     , expectedResult = 52055
+      --     }
+      TestCase
         { testName = "TwentyTwentyOne-December24-solution1"
         , testAction = S24.twentyFourthDecemberSolution1
         , expectedResult = 98998519596997
@@ -276,4 +277,3 @@ tests =
         , expectedResult = 353
         }
     ]
-

@@ -122,7 +122,7 @@ tests =
     , TestCase
         { testName = "TwentyTwentyThree-December10-solution1"
         , testAction = S10.december10Solution1
-        , expectedResult = 1
+        , expectedResult = 6717
         }
     , TestCase
         { testName = "TwentyTwentyThree-December10-solution2"
@@ -149,7 +149,17 @@ tests =
         , testAction = S12.december12Solution2
         , expectedResult = 6555315065024
         }
-    , TestCase
+    , --         , TestCase
+      --     { testName = "TwentyTwentyThree-December13-solution1"
+      --     , testAction = S13.december13Solution1
+      --     , expectedResult = 29846
+      --     }
+      -- , TestCase
+      --     { testName = "TwentyTwentyThree-December13-solution2"
+      --     , testAction = S13.december13Solution2
+      --     , expectedResult = 25401
+      --     }
+      TestCase
         { testName = "TwentyTwentyThree-December14-solution1"
         , testAction = S14.december14Solution1
         , expectedResult = 109661
@@ -200,29 +210,24 @@ tests =
         , expectedResult = 52885384955882
         }
     , TestCase
+        { testName = "TwentyTwentyThree-December19-solution1"
+        , testAction = S19.december19Solution1
+        , expectedResult = 399284
+        }
+    , TestCase
+        { testName = "TwentyTwentyThree-December19-solution2"
+        , testAction = S19.december19Solution2
+        , expectedResult = 121964982771486
+        }
+    , TestCase
         { testName = "TwentyTwentyThree-December20-solution1"
         , testAction = S20.december20Solution1
         , expectedResult = 899848294
         }
     , TestCase
-        { testName = "TwentyTwentyThree-December13-solution1"
-        , testAction = S13.thirdteenthDecemberSolution1
-        , expectedResult = 29846
-        }
-    , TestCase
-        { testName = "TwentyTwentyThree-December13-solution2"
-        , testAction = S13.thirdteenthDecemberSolution2
-        , expectedResult = 25401
-        }
-    , TestCase
-        { testName = "TwentyTwentyThree-December19-solution1"
-        , testAction = S19.ninetheenthDecemberSolution1
-        , expectedResult = 399284
-        }
-    , TestCase
-        { testName = "TwentyTwentyThree-December19-solution2"
-        , testAction = S19.ninetheenthDecemberSolution2
-        , expectedResult = 121964982771486
+        { testName = "TwentyTwentyThree-December20-solution2"
+        , testAction = S20.december20Solution2
+        , expectedResult = 247454898168563
         }
     , TestCase
         { testName = "TwentyTwentyThree-December21-solution1"

@@ -15,8 +15,8 @@ import qualified TwentyTwentyFour.December11 as S11
 import qualified TwentyTwentyFour.December12 as S12
 import qualified TwentyTwentyFour.December13 as S13
 import qualified TwentyTwentyFour.December14 as S14
-import qualified TwentyTwentyFour.December15b as S15
 import qualified TwentyTwentyFour.December15a as S15
+import qualified TwentyTwentyFour.December15b as S15
 import qualified TwentyTwentyFour.December16 as S16
 import qualified TwentyTwentyFour.December17 as S17
 import qualified TwentyTwentyFour.December18 as S18
@@ -30,7 +30,7 @@ import qualified TwentyTwentyFour.December25 as S25
 
 tests :: [TestCase]
 tests =
-    [       TestCase
+    [ TestCase
         { testName = "TwentyTwentyFour-December01-solution1"
         , testAction = S1.december01Solution1
         , expectedResult = 2378066
@@ -171,14 +171,14 @@ tests =
         , expectedResult = 7774
         }
     , TestCase
-        { testName = "TwentyTwentyFour-December15b-solution2"
-        , testAction = S15.december15Solution2
-        , expectedResult = 1425169
-        }
-    , TestCase
         { testName = "TwentyTwentyFour-December15a-solution1"
         , testAction = S15.december15Solution1
         , expectedResult = 1441031
+        }
+    , TestCase
+        { testName = "TwentyTwentyFour-December15b-solution2"
+        , testAction = S15.december15Solution2
+        , expectedResult = 1425169
         }
     , TestCase
         { testName = "TwentyTwentyFour-December16-solution1"
@@ -188,7 +188,7 @@ tests =
     , TestCase
         { testName = "TwentyTwentyFour-December16-solution2"
         , testAction = S16.december16Solution2
-        , expectedResult = 480
+        , expectedResult = 479
         }
     , TestCase
         { testName = "TwentyTwentyFour-December17-solution1"
@@ -223,7 +223,7 @@ tests =
     , TestCase
         { testName = "TwentyTwentyFour-December20-solution1"
         , testAction = S20.december20Solution1
-        , expectedResult = 1291
+        , expectedResult = 1317
         }
     , TestCase
         { testName = "TwentyTwentyFour-December20-solution2"

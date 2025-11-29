@@ -262,8 +262,8 @@ validatePasswordField xs = do
             , passportCid = passportCidField
             }
 
-december04Solution1 :: IO Int
-december04Solution1 = do
+december04Solution2 :: IO Int
+december04Solution2 = do
     inputData <- input
     let validatedPassports = fmap (validate @Passport) inputData
     (return . length . rights) validatedPassports

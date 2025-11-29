@@ -29,7 +29,7 @@ import qualified TwentyFifteen.December25 as S25
 
 tests :: [TestCase]
 tests =
-    [       TestCase
+    [ TestCase
         { testName = "TwentyFifteen-December01-solution1"
         , testAction = S1.december01Solution1
         , expectedResult = 232

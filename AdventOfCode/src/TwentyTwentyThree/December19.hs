@@ -55,8 +55,8 @@ filterAcceptedMachineParts fs ((m, s) : ms)
 
 solution1 (fs, ms) = sum . fmap machinePartRating $ filterAcceptedMachineParts fs (fmap (,"in") ms)
 
-ninetheenthDecemberSolution1 :: IO Int
-ninetheenthDecemberSolution1 = solution1 <$> input
+december19Solution1 :: IO Int
+december19Solution1 = solution1 <$> input
 
 parseMachinePart :: String -> MachinePart
 parseMachinePart i = MP{mp_x = xv, mp_m = mv, mp_a = av, mp_s = sv}
@@ -185,8 +185,8 @@ solution2 fs =
         . fmap metaMachinePartRating
         $ filterAcceptedMetaMachineParts fs [(mmp, "in")]
 
-ninetheenthDecemberSolution2 :: IO Int
-ninetheenthDecemberSolution2 = solution2 <$> input2
+december19Solution2 :: IO Int
+december19Solution2 = solution2 <$> input2
 
 parseMetaFlow :: String -> MetaFlow
 parseMetaFlow s = MF{mfId = fIdValue, mChecks = cs}

@@ -164,8 +164,8 @@ findHighPulseLoopForModule mid br = buttonPushNum secondHighPulseButtonResult
             )
             pushButton
 
--- december20Solution2 :: IO Int
--- december20Solution2 = solution2 <$> input
+december20Solution2 :: IO Int
+december20Solution2 = solution2 <$> input
 
 testInput :: Modules
 testInput =

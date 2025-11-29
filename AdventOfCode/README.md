@@ -42,7 +42,7 @@ Or on the whole project:
 ## Formatting
 
 Format all files:
-`fourmolu -c -i src/`
+`fourmolu -c -i src/ && fourmolu -c -i test/`
 
 ## Testing
 
