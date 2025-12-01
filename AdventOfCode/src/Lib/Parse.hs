@@ -118,7 +118,7 @@ parseInstructionsStartEnd validInstructions = parseOrFail (parseInstructionStart
 
 parseInstructionStartEnd :: [String] -> Parsec Void String (String, Coord, Coord)
 parseInstructionStartEnd validInstructions = do
-    instruction <- choice ((fmap string validInstructions) ++ [fail ("Expected one of the following instructions " ++ (show validInstructions))])
+    instruction <- choice (fmap string validInstructions ++ [fail ("Expected one of the following instructions " ++ show validInstructions)])
     space
     start <- parseCoord
     space

@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module TwentyFifteen.December06 where
 
 import Data.Map (Map)
@@ -28,7 +26,7 @@ applyInstructions [] (("turn on", sc, ec) : is) = applyInstructions [(sc, ec)] i
 applyInstructions [] (("toggle", sc, ec) : is) = applyInstructions [(sc, ec)] is
 applyInstructions [] (_ : is) = applyInstructions [] is
 applyInstructions ls [] = ls
-applyInstructions ls (("turn on", sc, ec) : is) = applyInstructions ((sc, ec) : (concatMap (subtractRect (sc, ec)) ls)) is
+applyInstructions ls (("turn on", sc, ec) : is) = applyInstructions ((sc, ec) : concatMap (subtractRect (sc, ec)) ls) is
 applyInstructions ls (("turn off", sc, ec) : is) = applyInstructions (concatMap (subtractRect (sc, ec)) ls) is
 applyInstructions ls (("toggle", sc, ec) : is) =
     let
@@ -80,8 +78,7 @@ updateBrightnessDecrease brightnessMap rect =
         ((minX, minY), (maxX, maxY)) = normalizeRect rect
         coords = [(x, y) | x <- [minX .. maxX], y <- [minY .. maxY]]
      in
-        foldl (\acc coord -> M.alter (Just . max 0 . maybe 0 (subtract 1)) coord acc) brightnessMap coords
-  where
+        foldl (flip (M.alter (Just . max 0 . maybe 0 (subtract 1)))) brightnessMap coords
 
 solution2 :: [Instruction] -> Int
 solution2 = sum . M.elems . applyInstructions' M.empty

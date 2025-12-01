@@ -1,6 +1,5 @@
 module TwentyTwentyFive.December01 where
 
-import Debug.Trace
 import Lib.Parse
 
 startingpoint :: Int
@@ -45,14 +44,12 @@ december01Solution1 = solution rotateNCount <$> input
 
 rotateNCount' :: (Int, Int) -> (String, Int) -> (Int, Int)
 rotateNCount' (dial, count) rotation@(r, clicks)
-    | dial == 0                 = trace (show (dial, newDial) ++ " " ++ show rotation ++ " 0-x " ++ (show (newDial, count'))) (newDial, count') -- 0 -> x
-    | newDial == 0              = trace (show (dial, newDial) ++ " " ++ show rotation ++ " x-0 " ++ (show (newDial, count' + 1))) (newDial, count' + 1) -- x -> 0 div
-    | restClicks + dial > 100 && restClicks + dial < 200 && r == "R" =
-      trace (show (dial, newDial) ++ " " ++ show rotation ++ " x-0R-x " ++ show (newDial, count' + 1)) (newDial, count' + 1)
-    | dial - restClicks < 0 && dial - restClicks > -100 && r == "L" =
-      trace (show (dial, newDial) ++ " " ++ show rotation ++ " x-0L-x " ++ show (newDial, count' + 1)) (newDial, count' + 1)
-    | otherwise                 =
-      trace (show (dial, newDial) ++ " " ++ show rotation ++  " x-x " ++ (show (newDial, count'))) (newDial, count') -- x -> x 99 + 2 || 2 + 250
+    | dial == 0 = (newDial, count')
+    | (newDial == 0) || (restClicks + dial > 100 && restClicks + dial < 200 && r == "R")
+        || (dial - restClicks < 0 && dial - restClicks > -100 && r == "L") =
+        (newDial, count' + 1)
+    | otherwise =
+        (newDial, count')
   where
     newDial = rotateDial dial rotation
     restClicks = clicks `mod` 100

@@ -21,7 +21,7 @@ import Data.Maybe (fromMaybe, listToMaybe)
 (\\) xs c = filter (`notElem` c) xs
 
 diffMap :: (Eq b) => (a -> b) -> [a] -> [a] -> [a]
-diffMap f xs c = filter ((`notElem` (fmap f c)) . f) xs
+diffMap f xs c = filter ((`notElem` fmap f c) . f) xs
 
 find' :: (a -> Bool) -> [a] -> Maybe a
 find' p [] = Nothing
