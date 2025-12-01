@@ -6,6 +6,7 @@ module Lib.Parse (
     parseTwoColumnNum,
     parseMove,
     parseCoords,
+    parseLeftRightNumber
 )
 where
 
@@ -125,3 +126,11 @@ parseInstructionStartEnd validInstructions = do
     space
     end <- parseCoord
     return (instruction, start, end)
+
+-- L68
+-- L30
+-- R48
+-- L5
+-- 
+parseLeftRightNumber :: String -> [(String, Int)]
+parseLeftRightNumber = fmap (\x -> (take 1 x, read (drop 1 x) :: Int )) . lines

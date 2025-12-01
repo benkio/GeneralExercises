@@ -1,24 +1,64 @@
 module TwentyTwentyFive.December01 where
 
-input :: IO a
-input = parseInput <$> readFile "input/2025/December01.txt"
+import Debug.Trace
+import Lib.Parse
 
-parseInput :: String -> a
-parseInput = undefined
+startingpoint :: Int
+startingpoint = 50
 
-testInput :: a
+input :: IO [(String, Int)]
+input = parseLeftRightNumber <$> readFile "input/2025/December01.txt"
+
+parseInput :: String -> [(String, Int)]
+parseInput = parseLeftRightNumber
+
+testInput :: [(String, Int)]
 testInput =
     parseInput
-        ""
+        "L68\n\
+        \L30\n\
+        \R48\n\
+        \L5\n\
+        \R60\n\
+        \L55\n\
+        \L1\n\
+        \L99\n\
+        \R14\n\
+        \L82\n"
 
-solution1 :: a -> Int
-solution1 = undefined
+rotateDial :: Int -> (String, Int) -> Int
+rotateDial dial ("R", value) = (dial + value) `mod` 100
+rotateDial dial ("L", value) = if out < 0 then 100 + out else out
+  where
+    out = (dial - value) `mod` 100
+
+solution :: ((Int, Int) -> (String, Int) -> (Int, Int)) -> [(String, Int)] -> Int
+solution go = snd . foldl go (startingpoint, 0)
+
+rotateNCount :: (Int, Int) -> (String, Int) -> (Int, Int)
+rotateNCount (dial, count) rotation = if newDial == 0 then (newDial, count + 1) else (newDial, count)
+  where
+    newDial = rotateDial dial rotation
 
 december01Solution1 :: IO Int
-december01Solution1 = solution1 <$> input
+december01Solution1 = solution rotateNCount <$> input
 
-solution2 :: a -> Int
-solution2 = undefined
+rotateNCount' :: (Int, Int) -> (String, Int) -> (Int, Int)
+rotateNCount' (dial, count) rotation@(r, clicks)
+    | dial == 0                 = trace (show (dial, newDial) ++ " " ++ show rotation ++ " 0-x " ++ (show (newDial, count'))) (newDial, count') -- 0 -> x
+    | newDial == 0              = trace (show (dial, newDial) ++ " " ++ show rotation ++ " x-0 " ++ (show (newDial, count' + 1))) (newDial, count' + 1) -- x -> 0 div
+    | restClicks + dial > 100 && restClicks + dial < 200 && r == "R" =
+      trace (show (dial, newDial) ++ " " ++ show rotation ++ " x-0R-x " ++ show (newDial, count' + 1)) (newDial, count' + 1)
+    | dial - restClicks < 0 && dial - restClicks > -100 && r == "L" =
+      trace (show (dial, newDial) ++ " " ++ show rotation ++ " x-0L-x " ++ show (newDial, count' + 1)) (newDial, count' + 1)
+    | otherwise                 =
+      trace (show (dial, newDial) ++ " " ++ show rotation ++  " x-x " ++ (show (newDial, count'))) (newDial, count') -- x -> x 99 + 2 || 2 + 250
+  where
+    newDial = rotateDial dial rotation
+    restClicks = clicks `mod` 100
+    fullRounds = abs (clicks `div` 100)
+    count' = count + fullRounds
 
+-- 5640 too low
 december01Solution2 :: IO Int
-december01Solution2 = solution2 <$> input
+december01Solution2 = solution rotateNCount' <$> input

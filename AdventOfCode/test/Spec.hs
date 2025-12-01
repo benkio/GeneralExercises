@@ -31,5 +31,5 @@ main =
             , testGroup "TwentyTwentyTwo" $ fmap runTestWithTimeout T2022.tests
             , testGroup "TwentyTwentyThree" $ fmap runTestWithTimeout T2023.tests
             , testGroup "TwentyTwentyFour" $ fmap runTestWithTimeout T2024.tests
-            -- , testGroup "TwentyTwentyFive" $ fmap runTestWithTimeout T2025.tests
+            , testGroup "TwentyTwentyFive" $ fmap runTestWithTimeout T2025.tests
             ]
