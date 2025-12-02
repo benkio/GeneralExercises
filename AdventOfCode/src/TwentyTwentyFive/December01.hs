@@ -45,7 +45,8 @@ december01Solution1 = solution rotateNCount <$> input
 rotateNCount' :: (Int, Int) -> (String, Int) -> (Int, Int)
 rotateNCount' (dial, count) rotation@(r, clicks)
     | dial == 0 = (newDial, count')
-    | (newDial == 0) || (restClicks + dial > 100 && restClicks + dial < 200 && r == "R")
+    | (newDial == 0)
+        || (restClicks + dial > 100 && restClicks + dial < 200 && r == "R")
         || (dial - restClicks < 0 && dial - restClicks > -100 && r == "L") =
         (newDial, count' + 1)
     | otherwise =

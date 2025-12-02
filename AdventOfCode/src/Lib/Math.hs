@@ -3,8 +3,11 @@ module Lib.Math (
     isInteger,
     calculateSlope,
     areParallel,
+    findDivisors,
 )
 where
+
+import Data.List (union)
 
 {-
 input (a,b) (c,d) (r1,r2)
@@ -36,3 +39,13 @@ areParallel (a, b) (c, d) = calculateSlope a b == calculateSlope c d
 
 isInteger :: (RealFrac a) => a -> Bool
 isInteger n = floor n == ceiling n
+
+findDivisors :: Int -> [Int]
+findDivisors n =
+    let
+        isqrt :: Int -> Int
+        isqrt x = floor . sqrt $ (fromIntegral x :: Float)
+        divisors = filter ((== 0) . mod n) [1 .. isqrt n]
+        divisors' = (fmap (div n) . drop 1) divisors
+     in
+        divisors `union` divisors'

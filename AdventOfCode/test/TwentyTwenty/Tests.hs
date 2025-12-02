@@ -58,17 +58,17 @@ tests =
         , testAction = S3.december03Solution2
         , expectedResult = 1666768320
         }
-    -- TODO: Add This
-    -- , TestCase
-    --     { testName = "TwentyTwenty-December04-solution1"
-    --     , testAction = S4.december04Solution1
-    --     , expectedResult = 237
-    --     },
-    , TestCase
-      { testName = "TwentyTwenty-December04-solution2"
-      , testAction = S4.december04Solution2
-      , expectedResult = 172
-      }
+    , -- TODO: Add This
+      -- , TestCase
+      --     { testName = "TwentyTwenty-December04-solution1"
+      --     , testAction = S4.december04Solution1
+      --     , expectedResult = 237
+      --     },
+      TestCase
+        { testName = "TwentyTwenty-December04-solution2"
+        , testAction = S4.december04Solution2
+        , expectedResult = 172
+        }
     , TestCase
         { testName = "TwentyTwenty-December05-solution1"
         , testAction = S5.december05Solution1
