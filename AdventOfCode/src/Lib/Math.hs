@@ -4,6 +4,7 @@ module Lib.Math (
     calculateSlope,
     areParallel,
     findDivisors,
+    intsToInt,
 )
 where
 
@@ -49,3 +50,6 @@ findDivisors n =
         divisors' = (fmap (div n) . drop 1) divisors
      in
         divisors `union` divisors'
+
+intsToInt :: [Int] -> Int
+intsToInt = sum . zipWith (*) (fmap (10 ^) [0 ..]) . reverse

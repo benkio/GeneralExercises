@@ -49,16 +49,16 @@ tests =
         , testAction = S2.december02Solution2
         , expectedResult = 66500947346
         }
-        -- , TestCase
-        --     { testName = "TwentyTwentyFive-December03-solution1"
-        --     , testAction = S3.december03Solution1
-        --     , expectedResult = undefined
-        --     }
-        -- , TestCase
-        --     { testName = "TwentyTwentyFive-December03-solution2"
-        --     , testAction = S3.december03Solution2
-        --     , expectedResult = undefined
-        --     }
+    , TestCase
+        { testName = "TwentyTwentyFive-December03-solution1"
+        , testAction = S3.december03Solution1
+        , expectedResult = 17443
+        }
+    , TestCase
+        { testName = "TwentyTwentyFive-December03-solution2"
+        , testAction = S3.december03Solution2
+        , expectedResult = 172167155440541
+        }
         -- , TestCase
         --     { testName = "TwentyTwentyFive-December04-solution1"
         --     , testAction = S4.december04Solution1

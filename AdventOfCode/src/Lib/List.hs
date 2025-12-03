@@ -1,18 +1,21 @@
 module Lib.List (
-    (\\),
     (!?),
+    (\\),
+    diffMap,
+    filterByMostConsecutiveEqElems,
+    filterByShortLength,
     find',
     null',
-    diffMap,
-    pairsWith,
     pairs,
-    rotate,
+    pairsWith,
     prependToLists,
-    filterByShortLength,
-    filterByMostConsecutiveEqElems,
+    rotate,
     slidingWindow,
+    subsetsTail,
 )
 where
+
+import Text.Printf (printf)
 
 import Data.List (group, groupBy, sortOn, tails)
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -76,3 +79,14 @@ xs !? n
             (const Nothing)
             xs
             n
+
+subsetsTail :: Int -> [a] -> [[a]]
+subsetsTail _ [] = []
+subsetsTail 0 _ = []
+subsetsTail 1 xs = fmap (: []) xs
+subsetsTail n (x : xs)
+    | n == length (x : xs) = [x : xs]
+    | n > length (x : xs) = error (printf "n(%d) is bigger then input list length" n)
+    | otherwise =
+        fmap (x :) (subsetsTail (n - 1) xs)
+            ++ subsetsTail n xs
